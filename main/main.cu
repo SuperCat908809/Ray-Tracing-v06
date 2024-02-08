@@ -79,8 +79,9 @@ __global__ void kernel(LaunchParams p) {
 
 	p.output_buffer[gid] = output_color;
 #else
+	float aspect_ratio = p.render_width / (float)p.render_height;
 	glm::vec3 o(0, 0, -4);
-	glm::vec3 hori(2, 0, 0);
+	glm::vec3 hori(2 * aspect_ratio, 0, 0);
 	glm::vec3 vert(0, 2, 0);
 	glm::vec3 llc = (hori + vert) * -0.5f + glm::vec3(0, 0, 1);
 
@@ -95,8 +96,7 @@ __global__ void kernel(LaunchParams p) {
 	TraceRecord rec{};
 	glm::vec4 output_color{};
 	if (sphere.Trace(ray, rec)) {
-		//output_color = glm::vec4(rec.n * 0.5f + 0.5f, 1.0f);
-		output_color = glm::vec4(1, 0, 0, 1);
+		output_color = glm::vec4(rec.n * 0.5f + 0.5f, 1.0f);
 	}
 	else {
 		float t = glm::normalize(ray.d).y * 0.5f + 0.5f;
@@ -146,7 +146,7 @@ int main() {
 
 	CUDA_ASSERT(cudaMemcpy(h_framebuffer, d_framebuffer, sizeof(glm::vec4) * p.render_width * p.render_height, cudaMemcpyDeviceToHost));
 
-	const char* output_path = "../renders/test_003.png";
+	const char* output_path = "../renders/test_004.png";
 	uint8_t* output_image_data = new uint8_t[p.render_width * p.render_height * 4];
 	for (int i = 0; i < p.render_width * p.render_height; i++) {
 		output_image_data[i * 4 + 0] = static_cast<uint8_t>(h_framebuffer[i][0] * 255.999f);
