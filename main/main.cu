@@ -61,9 +61,9 @@ __global__ void kernel(LaunchParams p) {
 	float u = x / (p.render_width - 1.0f);
 	float v = y / (p.render_height - 1.0f);
 
-#if 1
+#if 0
 	p.output_buffer[gid] = glm::vec4(u, v, 0, 1);
-#else
+#elif 1
 	glm::vec3 o(0, 0, -4);
 	glm::vec3 hori(2, 0, 0);
 	glm::vec3 vert(0, 2, 0);
@@ -73,6 +73,11 @@ __global__ void kernel(LaunchParams p) {
 	ray.o = o;
 	ray.d = llc + hori * u + vert * v;
 
+	float t = glm::normalize(ray.d).y * 0.5f + 0.5f;
+	glm::vec4 output_color = (1 - t) * glm::vec4(0.1f, 0.2f, 0.4f, 1.0f) + t * glm::vec4(0.9f, 0.9f, 0.99f, 1.0f);
+
+	p.output_buffer[gid] = output_color;
+#else
 	Sphere sphere{};
 	sphere.origin = glm::vec3(0);
 	sphere.radius = 1;
@@ -130,7 +135,7 @@ int main() {
 
 	CUDA_ASSERT(cudaMemcpy(h_framebuffer, d_framebuffer, sizeof(glm::vec4) * p.render_width * p.render_height, cudaMemcpyDeviceToHost));
 
-	const char* output_path = "../renders/test_001.png";
+	const char* output_path = "../renders/test_002.png";
 	uint8_t* output_image_data = new uint8_t[p.render_width * p.render_height * 4];
 	for (int i = 0; i < p.render_width * p.render_height; i++) {
 		output_image_data[i * 4 + 0] = static_cast<uint8_t>(h_framebuffer[i][0] * 255.999f);
