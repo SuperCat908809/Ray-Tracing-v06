@@ -14,13 +14,13 @@ FirstApp::FirstApp() {
 	float aspect = render_width / (float)render_height;
 	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
-	std::vector<glm::vec4> sphere_data{
-		{-2,     1, 0,    1},	// world left
-		{ 0,     1, 0,    1},	// world center
-		{ 2,     1, 0,    1},	// world right
-		{ 0, -1000, 0, 1000}	// world bottom
+	std::vector<Sphere> sphere_data {
+		{{-2,     1, 0},    1},
+		{{ 0,     1, 0},    1},
+		{{ 2,     1, 0},    1},
+		{{ 0, -1000, 0}, 1000}
 	};
-	sphere_list = std::make_unique<SphereList>(sphere_data);
+	sphere_list = std::make_unique<HittableList<Sphere>>(sphere_data);
 
 	renderer = std::make_unique<Renderer>(render_width, render_height, cam, sphere_list.get());
 
@@ -34,7 +34,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_009.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_010.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

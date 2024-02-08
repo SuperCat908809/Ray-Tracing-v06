@@ -32,37 +32,37 @@ struct Sphere {
 	glm::vec3 origin{ 0,0,0 };
 	float radius{ 1 };
 
+	__host__ __device__ Sphere(glm::vec3 origin, float radius) : origin(origin), radius(radius) {}
+
 	__host__ __device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
 		return g_trace_sphere(ray, rec, origin, radius);
 	}
 };
 
-struct SphereList {
+template <typename T>
+struct HittableList {
 private:
-	glm::vec4* spheres{};
-	int sphere_count{};
+	T* objects{};
+	int object_count{};
 
 public:
-	__host__ __device__ SphereList() = delete;
-	__host__ __device__ SphereList(const SphereList&) = delete;
-	__host__ __device__ SphereList& operator=(const SphereList&) = delete;
-	__host__ SphereList(std::vector<glm::vec4> sphere_data) {
-		CUDA_ASSERT(cudaMalloc(&spheres, sizeof(glm::vec4) * sphere_data.size()));
-		CUDA_ASSERT(cudaMemcpy(spheres, sphere_data.data(), sizeof(glm::vec4) * sphere_data.size(), cudaMemcpyHostToDevice));
-		sphere_count = sphere_data.size();
+	__host__ __device__ HittableList() = delete;
+	__host__ __device__ HittableList(const HittableList<Sphere>&) = delete;
+	__host__ __device__ HittableList& operator=(const HittableList&) = delete;
+	__host__ HittableList(std::vector<T> object_data) {
+		CUDA_ASSERT(cudaMalloc(&objects, sizeof(T) * object_data.size()));
+		CUDA_ASSERT(cudaMemcpy(objects, object_data.data(), sizeof(T) * object_data.size(), cudaMemcpyHostToDevice));
+		object_count = object_data.size();
 	}
-	__host__ ~SphereList() {
-		CUDA_ASSERT(cudaFree(spheres));
+	__host__ ~HittableList() {
+		CUDA_ASSERT(cudaFree(objects));
 	}
 
 	__device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
 		bool hit_any{ false };
 
-		for (int i = 0; i < sphere_count; i++) {
-			glm::vec4 s = spheres[i];
-			glm::vec3 origin = glm::vec3(s);
-			float radius = s.w;
-			hit_any |= g_trace_sphere(ray, rec, origin, radius);
+		for (int i = 0; i < object_count; i++) {
+			hit_any |= objects[i].ClosestIntersection(ray, rec);
 		}
 		// rec only gets updated when an intersection has been found.
 		// we want to discard the last rec if a closer one is found.

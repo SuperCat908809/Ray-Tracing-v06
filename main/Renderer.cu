@@ -4,11 +4,11 @@
 
 Renderer::Renderer(uint32_t render_width, uint32_t render_height,
 	const PinholeCamera& cam,
-	const SphereList* h_sphere_list)
+	const HittableList<Sphere>* h_sphere_list)
 	: render_width(render_width), render_height(render_height), cam(cam) {
 
-	CUDA_ASSERT(cudaMalloc(&d_sphere_list, sizeof(SphereList)));
-	CUDA_ASSERT(cudaMemcpy(d_sphere_list, h_sphere_list, sizeof(SphereList), cudaMemcpyHostToDevice));
+	CUDA_ASSERT(cudaMalloc(&d_sphere_list, sizeof(HittableList<Sphere>)));
+	CUDA_ASSERT(cudaMemcpy(d_sphere_list, h_sphere_list, sizeof(HittableList<Sphere>), cudaMemcpyHostToDevice));
 
 	CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
 }
@@ -26,7 +26,7 @@ struct LaunchParams {
 	uint32_t render_width{};
 	uint32_t render_height{};
 	PinholeCamera cam{};
-	SphereList* sphere_list{};
+	HittableList<Sphere>* sphere_list{};
 	glm::vec4* output_buffer{};
 };
 __global__ void kernel(LaunchParams p);

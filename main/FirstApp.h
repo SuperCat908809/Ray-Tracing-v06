@@ -27,7 +27,7 @@ class FirstApp {
 	uint32_t render_width{}, render_height{};
 	PinholeCamera cam{};
 	std::unique_ptr<Renderer> renderer{};
-	std::unique_ptr<SphereList> sphere_list{};
+	std::unique_ptr<HittableList<Sphere>> sphere_list{};
 	glm::vec4* host_output_framebuffer{};
 
 public:

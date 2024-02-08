@@ -11,7 +11,7 @@ class Renderer {
 	PinholeCamera cam{};
 
 	// cuda memory
-	SphereList* d_sphere_list{};
+	HittableList<Sphere>* d_sphere_list{};
 	glm::vec4* d_output_buffer{};
 
 public:
@@ -22,7 +22,7 @@ public:
 	Renderer(
 		uint32_t render_width, uint32_t render_height,
 		const PinholeCamera& cam,
-		const SphereList* h_sphere_list
+		const HittableList<Sphere>* h_sphere_list
 	);
 	~Renderer();
 
