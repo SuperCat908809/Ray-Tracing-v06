@@ -14,36 +14,48 @@
     <Filter Include="externals">
       <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Common">
+    <Filter Include="Main">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
-      <Filter>Common</Filter>
+      <Filter>Main</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Renderer.cu">
+      <Filter>Main</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="cu_geometry.cuh">
+    <ClInclude Include="cu_Geometry.cuh">
       <Filter>Geometry</Filter>
     </ClInclude>
     <ClInclude Include="cu_Cameras.cuh">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="cu_rtCommon.cuh">
-      <Filter>Common</Filter>
+      <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="cu_materials.cuh">
+    <ClInclude Include="cu_Materials.cuh">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.cuh">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstApp.h">
+      <Filter>Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstApp.cpp">
+      <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -32,15 +32,20 @@ struct Sphere {
 	glm::vec3 origin{ 0,0,0 };
 	float radius{ 1 };
 
-	__host__ __device__ bool Trace(Ray& ray, TraceRecord& rec) const {
+	__host__ __device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
 		return g_trace_sphere(ray, rec, origin, radius);
 	}
 };
 
 struct SphereList {
+private:
 	glm::vec4* spheres{};
 	int sphere_count{};
 
+public:
+	__host__ __device__ SphereList() = delete;
+	__host__ __device__ SphereList(const SphereList&) = delete;
+	__host__ __device__ SphereList& operator=(const SphereList&) = delete;
 	__host__ SphereList(std::vector<glm::vec4> sphere_data) {
 		CUDA_ASSERT(cudaMalloc(&spheres, sizeof(glm::vec4) * sphere_data.size()));
 		CUDA_ASSERT(cudaMemcpy(spheres, sphere_data.data(), sizeof(glm::vec4) * sphere_data.size(), cudaMemcpyHostToDevice));
@@ -50,7 +55,7 @@ struct SphereList {
 		CUDA_ASSERT(cudaFree(spheres));
 	}
 
-	__device__ bool Trace(Ray& ray, TraceRecord& rec) const {
+	__device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
 		bool hit_any{ false };
 
 		for (int i = 0; i < sphere_count; i++) {
