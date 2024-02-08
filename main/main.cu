@@ -11,68 +11,9 @@ using namespace std::string_literals;
 #include <glm/glm.hpp>
 #include <stb/stb_image_write.h>
 
-#define _MISS_DIST 1e9f
-
-struct Ray {
-	glm::vec3 o{ 0,0,0 }, d{ 0,0,1 };
-	float t{ _MISS_DIST };
-
-	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
-};
-
-struct TraceRecord {
-	glm::vec3 n{ 0,1,0 };
-};
-
-struct Sphere {
-	glm::vec3 origin{ 0,0,0 };
-	float radius{ 1 };
-
-	__host__ __device__ bool Trace(Ray& ray, TraceRecord& rec) const {
-		glm::vec3 oc = ray.o - origin;
-
-		float a = glm::dot(ray.d, ray.d);
-		float hb = glm::dot(ray.d, oc);
-		float c = glm::dot(oc, oc) - radius * radius;
-		float d = hb * hb - a * c;
-		if (d <= 0) return false;
-
-		d = sqrtf(d);
-		float t = (-hb - d) / a;
-		if (t < 1e-6f || t > ray.t) {
-			t = (-hb + d) / a;
-			if (t < 1e-6f || t > ray.t) return false;
-		}
-
-		ray.t = t;
-		rec.n = glm::normalize(ray.at(t) - origin);
-		return true;
-	}
-};
-
-struct PinholeCamera {
-	glm::vec3 o{}, u{}, v{}, w{};
-
-	__host__ __device__ PinholeCamera() {};
-	__host__ __device__ PinholeCamera(glm::vec3 lookfrom, glm::vec3 lookat, glm::vec3 up, float fov, float aspect_ratio) {
-		float theta = glm::radians(fov);
-		float viewport_width = tanf(theta * 0.5f);
-		float viewport_height = viewport_width / aspect_ratio;
-
-		o = lookfrom;
-		w = glm::normalize(lookat - lookfrom);
-		u = glm::normalize(glm::cross(up, w)) * viewport_width;
-		v = glm::normalize(glm::cross(w, u)) * viewport_height;
-	}
-
-	__host__ __device__ Ray sample_ray(float s, float t) const {
-		Ray ray{};
-		ray.o = o;
-		ray.d = w + u * s + v * t;
-		ray.t = _MISS_DIST;
-		return ray;
-	}
-};
+#include "cu_rtCommon.cuh"
+#include "cu_geometry.cuh"
+#include "cu_Cameras.cuh"
 
 struct LaunchParams {
 	uint32_t render_width{};
@@ -107,20 +48,7 @@ __global__ void kernel(LaunchParams p) {
 	p.output_buffer[gid] = output_color;
 }
 
-#define CUDA_CHECK(func) cudaAssert(func, #func, __FILE__, __LINE__)
-#define CUDA_ASSERT(func) try { CUDA_CHECK(func); } catch (const std::runtime_error& e) { assert(0); }
-inline void cudaAssert(cudaError_t code, const char* func, const char* file, const int line) {
-	if (code != cudaSuccess) {
-		fprintf(stderr, "GPU assert: %s %s\n%s %d\n%s :: %s",
-			cudaGetErrorName(code), func,
-			file, line,
-			cudaGetErrorName(code), cudaGetErrorString(code)
-		);
-		throw std::runtime_error(cudaGetErrorString(code));
-	}
-}
-
-void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
+void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
 	uint8_t* output_image_data = new uint8_t[width * height * 4];
 	for (int i = 0; i < width * height; i++) {
 		output_image_data[i * 4 + 0] = static_cast<uint8_t>(data[i][0] * 255.999f);
@@ -140,7 +68,7 @@ int main() {
 	p.render_width = 1280;
 	p.render_height = 720;
 
-	glm::vec3 lookfrom(0, 0, -4);
+	glm::vec3 lookfrom(0, 0, 4);
 	glm::vec3 lookat(0, 0, 0);
 	glm::vec3 up(0, 1, 0);
 	float fov = 90.0f;
@@ -169,7 +97,7 @@ int main() {
 
 	CUDA_ASSERT(cudaMemcpy(h_framebuffer, d_framebuffer, sizeof(glm::vec4) * p.render_width * p.render_height, cudaMemcpyDeviceToHost));
 
-	write_renderbuffer("../renders/test_005.png"s, p.render_width, p.render_height, h_framebuffer);
+	write_renderbuffer_png("../renders/test_006.png"s, p.render_width, p.render_height, h_framebuffer);
 
 
 	CUDA_ASSERT(cudaFreeHost(h_framebuffer));

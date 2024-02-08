@@ -1,32 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Geometry">
+      <UniqueIdentifier>{11f60267-4914-4c54-9903-5e7290379da4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="externals">
+      <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
-      <Filter>Source Files</Filter>
+      <Filter>Common</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\stb.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="glm_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="cu_geometry.cuh">
+      <Filter>Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="cu_Cameras.cuh">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="cu_rtCommon.cuh">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="cu_materials.cuh">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glm_utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClCompile Include="src\stb.cpp">
+      <Filter>externals</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -160,7 +160,11 @@
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cu_Cameras.cuh" />
+    <ClInclude Include="cu_geometry.cuh" />
+    <ClInclude Include="cu_rtCommon.cuh" />
     <ClInclude Include="glm_utils.h" />
+    <ClInclude Include="cu_materials.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
