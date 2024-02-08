@@ -1,4 +1,7 @@
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <string>
+using namespace std::string_literals;
 #include <assert.h>
 #include <stdexcept>
 #include <iostream>
@@ -47,9 +50,35 @@ struct Sphere {
 	}
 };
 
+struct PinholeCamera {
+	glm::vec3 o{}, u{}, v{}, w{};
+
+	__host__ __device__ PinholeCamera() {};
+	__host__ __device__ PinholeCamera(glm::vec3 lookfrom, glm::vec3 lookat, glm::vec3 up, float fov, float aspect_ratio) {
+		float theta = glm::radians(fov);
+		float viewport_width = tanf(theta * 0.5f);
+		float viewport_height = viewport_width / aspect_ratio;
+
+		o = lookfrom;
+		w = glm::normalize(lookat - lookfrom);
+		u = glm::normalize(glm::cross(up, w)) * viewport_width;
+		v = glm::normalize(glm::cross(w, u)) * viewport_height;
+	}
+
+	__host__ __device__ Ray sample_ray(float s, float t) const {
+		Ray ray{};
+		ray.o = o;
+		ray.d = w + u * s + v * t;
+		ray.t = _MISS_DIST;
+		return ray;
+	}
+};
+
 struct LaunchParams {
 	uint32_t render_width{};
 	uint32_t render_height{};
+	PinholeCamera cam{};
+	Sphere sphere{};
 	glm::vec4* output_buffer{};
 };
 
@@ -59,43 +88,15 @@ __global__ void kernel(LaunchParams p) {
 	if (x >= p.render_width || y >= p.render_height) return;
 
 	int gid = y * p.render_width + x;
-	float u = x / (p.render_width - 1.0f);
-	float v = y / (p.render_height - 1.0f);
+	float u = x / (p.render_width - 1.0f) * 2 - 1;
+	float v = y / (p.render_height - 1.0f) * 2 - 1;
+	glm::vec2 ndc(u, v);
 
-#if 0
-	p.output_buffer[gid] = glm::vec4(u, v, 0, 1);
-#elif 0
-	glm::vec3 o(0, 0, -4);
-	glm::vec3 hori(2, 0, 0);
-	glm::vec3 vert(0, 2, 0);
-	glm::vec3 llc = (hori + vert) * -0.5f + glm::vec3(0, 0, 1);
-
-	Ray ray{};
-	ray.o = o;
-	ray.d = llc + hori * u + vert * v;
-
-	float t = glm::normalize(ray.d).y * 0.5f + 0.5f;
-	glm::vec4 output_color = (1 - t) * glm::vec4(0.1f, 0.2f, 0.4f, 1.0f) + t * glm::vec4(0.9f, 0.9f, 0.99f, 1.0f);
-
-	p.output_buffer[gid] = output_color;
-#else
-	float aspect_ratio = p.render_width / (float)p.render_height;
-	glm::vec3 o(0, 0, -4);
-	glm::vec3 hori(2 * aspect_ratio, 0, 0);
-	glm::vec3 vert(0, 2, 0);
-	glm::vec3 llc = (hori + vert) * -0.5f + glm::vec3(0, 0, 1);
-
-	Ray ray{};
-	ray.o = o;
-	ray.d = llc + hori * u + vert * v;
-
-	Sphere sphere{};
-	sphere.origin = glm::vec3(0);
-	sphere.radius = 1;
+	Ray ray = p.cam.sample_ray(u, v);
 
 	TraceRecord rec{};
 	glm::vec4 output_color{};
-	if (sphere.Trace(ray, rec)) {
+	if (p.sphere.Trace(ray, rec)) {
 		output_color = glm::vec4(rec.n * 0.5f + 0.5f, 1.0f);
 	}
 	else {
@@ -104,7 +105,6 @@ __global__ void kernel(LaunchParams p) {
 	}
 
 	p.output_buffer[gid] = output_color;
-#endif
 }
 
 #define CUDA_CHECK(func) cudaAssert(func, #func, __FILE__, __LINE__)
@@ -120,11 +120,37 @@ inline void cudaAssert(cudaError_t code, const char* func, const char* file, con
 	}
 }
 
+void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
+	uint8_t* output_image_data = new uint8_t[width * height * 4];
+	for (int i = 0; i < width * height; i++) {
+		output_image_data[i * 4 + 0] = static_cast<uint8_t>(data[i][0] * 255.999f);
+		output_image_data[i * 4 + 1] = static_cast<uint8_t>(data[i][1] * 255.999f);
+		output_image_data[i * 4 + 2] = static_cast<uint8_t>(data[i][2] * 255.999f);
+		output_image_data[i * 4 + 3] = static_cast<uint8_t>(data[i][3] * 255.999f);
+	}
+
+	stbi_flip_vertically_on_write(true);
+	stbi_write_png(filepath.c_str(), width, height, 4, output_image_data, sizeof(uint8_t) * width * 4);
+	delete[] output_image_data;
+}
+
 int main() {
 
 	LaunchParams p{};
 	p.render_width = 1280;
 	p.render_height = 720;
+
+	glm::vec3 lookfrom(0, 0, -4);
+	glm::vec3 lookat(0, 0, 0);
+	glm::vec3 up(0, 1, 0);
+	float fov = 90.0f;
+	float aspect = p.render_width / (float)p.render_height;
+	p.cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
+
+	Sphere sphere{};
+	sphere.origin = glm::vec3(0, 0, 0);
+	sphere.radius = 1;
+	p.sphere = sphere;
 
 	glm::vec4* h_framebuffer{};
 	glm::vec4* d_framebuffer{};
@@ -135,10 +161,7 @@ int main() {
 	p.output_buffer = d_framebuffer;
 
 	dim3 threads{ 8, 8, 1 };
-	//dim3 blocks = dim3((p.render_width + threads.x - 1) / threads.x, (p.render_height + threads.y - 1) / threads.y, 1);
-	dim3 blocks{ 0,0,1 };
-	blocks.x = (p.render_width + threads.x - 1) / threads.x;
-	blocks.y = (p.render_height + threads.y - 1) / threads.y;
+	dim3 blocks = dim3((p.render_width + threads.x - 1) / threads.x, (p.render_height + threads.y - 1) / threads.y, 1);
 	kernel<<<blocks, threads>>>(p);
 	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());
@@ -146,18 +169,7 @@ int main() {
 
 	CUDA_ASSERT(cudaMemcpy(h_framebuffer, d_framebuffer, sizeof(glm::vec4) * p.render_width * p.render_height, cudaMemcpyDeviceToHost));
 
-	const char* output_path = "../renders/test_004.png";
-	uint8_t* output_image_data = new uint8_t[p.render_width * p.render_height * 4];
-	for (int i = 0; i < p.render_width * p.render_height; i++) {
-		output_image_data[i * 4 + 0] = static_cast<uint8_t>(h_framebuffer[i][0] * 255.999f);
-		output_image_data[i * 4 + 1] = static_cast<uint8_t>(h_framebuffer[i][1] * 255.999f);
-		output_image_data[i * 4 + 2] = static_cast<uint8_t>(h_framebuffer[i][2] * 255.999f);
-		output_image_data[i * 4 + 3] = static_cast<uint8_t>(h_framebuffer[i][3] * 255.999f);
-	}
-
-	stbi_flip_vertically_on_write(true);
-	stbi_write_png(output_path, p.render_width, p.render_height, 4, output_image_data, sizeof(uint8_t) * p.render_width * 4);
-	delete[] output_image_data;
+	write_renderbuffer("../renders/test_005.png"s, p.render_width, p.render_height, h_framebuffer);
 
 
 	CUDA_ASSERT(cudaFreeHost(h_framebuffer));
