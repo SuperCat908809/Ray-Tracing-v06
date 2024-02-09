@@ -39,29 +39,29 @@ namespace glm {
 	}
 
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> map(glm::vec<L, T, Q> val, glm::vec<L, T, Q> min, glm::vec<L, T, Q> max) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> map(const glm::vec<L, T, Q>& val, const glm::vec<L, T, Q>& min, const glm::vec<L, T, Q>& max) {
 		return val * (max - min) + min;
 	}
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> invmap(glm::vec<L, T, Q> val, glm::vec<L, T, Q> min, glm::vec<L, T, Q> max) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> invmap(const glm::vec<L, T, Q>& val, const glm::vec<L, T, Q>& min, const glm::vec<L, T, Q>& max) {
 		return (val - min) / (max - min);
 	}
 
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> map(glm::vec<L, T, Q> val,
-		glm::vec<L, T, Q> src_min, glm::vec<L, T, Q> src_max,
-		glm::vec<L, T, Q> dst_min, glm::vec<L, T, Q> dst_max) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> map(const glm::vec<L, T, Q>& val,
+		const glm::vec<L, T, Q>& src_min, const glm::vec<L, T, Q>& src_max,
+		const glm::vec<L, T, Q>& dst_min, const glm::vec<L, T, Q>& dst_max) {
 		return map(invmap(val, src_min, src_max), dst_min, dst_max);
 	}
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> invmap(glm::vec<L, T, Q> val,
-		glm::vec<L, T, Q> src_min, glm::vec<L, T, Q> src_max,
-		glm::vec<L, T, Q> dst_min, glm::vec<L, T, Q> dst_max) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> invmap(const glm::vec<L, T, Q>& val,
+		const glm::vec<L, T, Q>& src_min, const glm::vec<L, T, Q>& src_max,
+		const glm::vec<L, T, Q>& dst_min, const glm::vec<L, T, Q>& dst_max) {
 		return map(val, dst_min, dst_max, src_min, src_max);
 	}
 
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> clamp(glm::vec<L, T, Q> val, glm::vec<L, T, Q> min, glm::vec<L, T, Q> max) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> clamp(const glm::vec<L, T, Q>& val, const glm::vec<L, T, Q>& min, const glm::vec<L, T, Q>& max) {
 	#pragma unroll
 		for (int i = 0; i < L; i++) {
 			if (val[i] < min[i]) val[i] = min[i];
@@ -71,7 +71,7 @@ namespace glm {
 	}
 
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> linear_interpolate(glm::vec<L, T, Q> a, glm::vec<L, T, Q> b, T factor) {
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> linear_interpolate(const glm::vec<L, T, Q>& a, const glm::vec<L, T, Q>& b, const T& factor) {
 		return a + (b - a) * factor;
 	}
 
