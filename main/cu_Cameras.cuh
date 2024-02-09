@@ -19,9 +19,7 @@ struct PinholeCamera {
 	}
 
 	__host__ __device__ Ray sample_ray(float s, float t) const {
-		Ray ray{};
-		ray.o = o;
-		ray.d = w + u * s + v * t;
+		Ray ray(o, w + u * s + v * t);
 		return ray;
 	}
 };

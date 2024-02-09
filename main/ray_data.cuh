@@ -7,6 +7,8 @@
 struct Ray {
 	glm::vec3 o{ 0,0,0 }, d{ 0,0,1 };
 
+	__host__ __device__ Ray() = default;
+	__host__ __device__ Ray(glm::vec3 origin, glm::vec3 direction) : o(origin), d(direction) {}
 	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
 };
 

@@ -7,7 +7,8 @@
 
 class Renderer {
 
-	uint32_t render_width{}, render_height{}, samples_per_pixel{};
+	uint32_t render_width{}, render_height{};
+	uint32_t samples_per_pixel{}, max_depth{};
 	PinholeCamera cam{};
 
 	// cuda memory
@@ -21,7 +22,8 @@ public:
 	Renderer(const Renderer&) = delete;
 	Renderer& operator=(const Renderer&) = delete;
 	Renderer(
-		uint32_t render_width, uint32_t render_height, uint32_t samples_per_pixel,
+		uint32_t render_width, uint32_t render_height,
+		uint32_t samples_per_pixel, uint32_t max_depth,
 		const PinholeCamera& cam,
 		const HittableList<Sphere>* h_sphere_list
 	);

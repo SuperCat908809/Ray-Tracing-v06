@@ -70,6 +70,11 @@ namespace glm {
 		return val;
 	}
 
+	template <glm::length_t L, typename T, glm::qualifier Q>
+	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> linear_interpolate(glm::vec<L, T, Q> a, glm::vec<L, T, Q> b, T factor) {
+		return a + (b - a) * factor;
+	}
+
 };
 
 #endif // GLM_UTILS_H //
@@ -94,10 +99,18 @@ namespace glm {
 	}
 
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
-	__device__ inline glm::vec<L, float, Q> cu_random_in_unit(curandState_t* random_state) {
+	__device__ inline glm::vec<L, float, Q> cu_random_in_unit_vec(curandState_t* random_state) {
 		do {
 			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state);
 			if (glm::length2(rnd_v) < 1.0f) return rnd_v;
+		} while (true);
+	}
+
+	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
+	__device__ inline glm::vec<L, float, Q> cu_random_unit_vec(curandState_t* random_state) {
+		do {
+			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state);
+			if (!glm::near_zero(rnd_v) && glm::length2(rnd_v) < 1.0f) return glm::normalize(rnd_v);
 		} while (true);
 	}
 
