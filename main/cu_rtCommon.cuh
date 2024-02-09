@@ -19,6 +19,7 @@ struct Ray {
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };
 	float t{ _MISS_DIST };
+	bool hit_backface{ false };
 };
 
 #define CUDA_CHECK(func) cudaAssert(func, #func, __FILE__, __LINE__)

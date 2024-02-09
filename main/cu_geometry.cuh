@@ -25,6 +25,11 @@ __host__ __device__ inline bool g_trace_sphere(Ray& ray, TraceRecord& rec, glm::
 
 	rec.t = t;
 	rec.n = glm::normalize(ray.at(t) - origin);
+	if (glm::dot(ray.d, rec.n) > 0) {
+		// ray is inside the sphere
+		rec.n = -rec.n;
+		rec.hit_backface = true;
+	}
 	return true;
 }
 
