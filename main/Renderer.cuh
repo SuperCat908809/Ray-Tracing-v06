@@ -7,12 +7,13 @@
 
 class Renderer {
 
-	uint32_t render_width{}, render_height{};
+	uint32_t render_width{}, render_height{}, samples_per_pixel{};
 	PinholeCamera cam{};
 
 	// cuda memory
 	HittableList<Sphere>* d_sphere_list{};
 	glm::vec4* d_output_buffer{};
+	curandState_t* d_random_states{};
 
 public:
 
@@ -20,7 +21,7 @@ public:
 	Renderer(const Renderer&) = delete;
 	Renderer& operator=(const Renderer&) = delete;
 	Renderer(
-		uint32_t render_width, uint32_t render_height,
+		uint32_t render_width, uint32_t render_height, uint32_t samples_per_pixel,
 		const PinholeCamera& cam,
 		const HittableList<Sphere>* h_sphere_list
 	);
