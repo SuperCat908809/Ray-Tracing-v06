@@ -6,8 +6,9 @@
 namespace glm {
 	
 	template <glm::length_t L, typename T, glm::qualifier Q>
-	inline constexpr bool near_zero(const glm::vec<L, T, Q>& v, T epsilon = 1e-6f) {
+	inline constexpr bool near_zero(const glm::vec<L, T, Q>& v, T epsilon = 1e-9f) {
 		auto v2 = glm::abs(v);
+	#pragma unroll
 		for (int i = 0; i < L; i++) {
 			if (v2[i] > epsilon) {
 				return false;
@@ -19,6 +20,7 @@ namespace glm {
 	template <glm::length_t L, typename T, glm::qualifier Q>
 	inline constexpr T length2(const glm::vec<L, T, Q>& v) {
 		T sum{};
+	#pragma unroll
 		for (int i = 0; i < L; i++) {
 			sum += v[i] * v[i];
 		}

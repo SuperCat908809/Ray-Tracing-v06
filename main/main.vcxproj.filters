@@ -49,6 +49,12 @@
     <ClInclude Include="FirstApp.h">
       <Filter>Main</Filter>
     </ClInclude>
+    <ClInclude Include="ray_data.cuh">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">

@@ -162,12 +162,14 @@
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cuda_utils.h" />
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="cu_Geometry.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
     <ClInclude Include="FirstApp.h" />
     <ClInclude Include="glm_utils.h" />
     <ClInclude Include="cu_Materials.cuh" />
+    <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

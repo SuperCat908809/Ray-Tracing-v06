@@ -1,38 +1,29 @@
 #ifndef CU_RT_COMMON_H
 #define CU_RT_COMMON_H
 
-#include <stdexcept>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <limits>
+#include <memory>
 #include <assert.h>
+#include <stdexcept>
 
 #include <glm/glm.hpp>
 #include <cuda_runtime.h>
-
+#include <curand_kernel.h>
 
 #define _MISS_DIST FLT_MAX
 
-struct Ray {
-	glm::vec3 o{ 0,0,0 }, d{ 0,0,1 };
+#include "ray_data.cuh"
+#include "cuda_utils.h"
+#include "glm_utils.h"
 
-	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
-};
+inline constexpr int ceilDiv(int n, int d) { return (n + d - 1) / d; }
 
-struct TraceRecord {
-	glm::vec3 n{ 0,1,0 };
-	float t{ _MISS_DIST };
-	bool hit_backface{ false };
-};
-
-#define CUDA_CHECK(func) cudaAssert(func, #func, __FILE__, __LINE__)
-#define CUDA_ASSERT(func) try { CUDA_CHECK(func); } catch (const std::runtime_error& e) { assert(0); }
-inline void cudaAssert(cudaError_t code, const char* func, const char* file, const int line) {
-	if (code != cudaSuccess) {
-		fprintf(stderr, "GPU assert: %s %s\n%s %d\n%s :: %s",
-			cudaGetErrorName(code), func,
-			file, line,
-			cudaGetErrorName(code), cudaGetErrorString(code)
-		);
-		throw std::runtime_error(cudaGetErrorString(code));
-	}
-}
+#define RND (curand_uniform(random_state))
+#define RNDR(min, max) (curand_uniform(random_state) * (max - min) + min)
+#define RND3 (cu_random_uniform<3>(random_state))
+#define RNDR3(min, max) (glm::map(RND3, min, max))
+#define RND_IN_SPHERE (cu_random_in_unit<3>(random_state))
 
 #endif // CU_RT_COMMON_H //
