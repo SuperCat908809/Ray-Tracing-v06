@@ -15,10 +15,11 @@ FirstApp::FirstApp() {
 	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
 	std::vector<Sphere> sphere_data{};
-	sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0),   1));
-	sphere_data.push_back(Sphere(glm::vec3( 0,    1, 0),   1));
-	sphere_data.push_back(Sphere(glm::vec3( 2,    1, 0),   1));
-	sphere_data.push_back(Sphere(glm::vec3( 0, -100, 0), 100));
+	sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0),    1.00f));
+	//sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0), -  0.90f));
+	sphere_data.push_back(Sphere(glm::vec3( 0,    1, 0),    1.00f));
+	sphere_data.push_back(Sphere(glm::vec3( 2,    1, 0),    1.00f));
+	sphere_data.push_back(Sphere(glm::vec3( 0, -100, 0),  100.00f));
 	sphere_list = std::make_unique<HittableList<Sphere>>(sphere_data);
 
 	renderer = std::make_unique<Renderer>(render_width, render_height, 16, 8, cam, sphere_list.get());
@@ -33,7 +34,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_017.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_019.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

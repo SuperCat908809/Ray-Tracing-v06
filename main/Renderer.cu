@@ -50,7 +50,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	PinholeCamera cam{};
 	HittableList<Sphere>* sphere_list{};
-	MetalMaterial mat{};
+	LambertianMaterial mat{};
 	glm::vec4* output_buffer{};
 	curandState_t* random_states{};
 };
@@ -64,7 +64,7 @@ void Renderer::Render() {
 	params.max_depth = max_depth;
 	params.cam = cam;
 	params.sphere_list = d_sphere_list;
-	params.mat = MetalMaterial(glm::vec3(1.0f));
+	params.mat = LambertianMaterial(glm::vec3(0.5f));
 	params.output_buffer = d_output_buffer;
 	params.random_states = d_random_states;
 
