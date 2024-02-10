@@ -46,7 +46,7 @@ struct MetalMaterial {
 };
 
 
-__device__ float reflectance(float cos_theta, float ior_ratio) {
+__device__ inline float reflectance(float cos_theta, float ior_ratio) {
 	// use Schlick's approximation for reflectance
 	float r0 = (1 - ior_ratio) / (1 + ior_ratio);
 	r0 *= r0;
@@ -83,6 +83,65 @@ struct DielectricMaterial {
 	__host__ __device__ DielectricMaterial(glm::vec3 albedo, float ior) : albedo(albedo), ior(ior) {}
 
 	__device__ bool Scatter(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation) const {
+		return g_scatter_dielectric(ray, rec, random_state, scatter_ray, attenuation, albedo, ior);
+	}
+};
+
+
+
+// abstract class that all material structs should inherit from
+struct Material {
+
+	__device__ virtual bool Scatter(
+		const Ray& ray, const TraceRecord& rec,
+		curandState_t* random_state,
+		Ray& scatter_ray, glm::vec3& attenuation
+	) const = 0;
+};
+
+struct LambertianAbstract : public Material {
+	glm::vec3 albedo{ 1.0f };
+
+	__device__ LambertianAbstract() = default;
+	__device__ LambertianAbstract(glm::vec3 albedo) : albedo(albedo) {}
+
+	__device__ virtual bool Scatter(
+		const Ray& ray, const TraceRecord& rec,
+		curandState_t* random_state,
+		Ray& scatter_ray, glm::vec3& attenuation
+	) const override {
+		return g_scatter_lambertian(ray, rec, random_state, scatter_ray, attenuation, albedo);
+	}
+};
+
+struct MetalAbstract : public Material {
+	glm::vec3 albedo{ 1.0f };
+	float fuzz{ 0.1f };
+
+	__device__ MetalAbstract() = default;
+	__device__ MetalAbstract(glm::vec3 albedo, float fuzz) : albedo(albedo), fuzz(fuzz) {}
+
+	__device__ virtual bool Scatter(
+		const Ray& ray, const TraceRecord& rec,
+		curandState_t* random_state,
+		Ray& scatter_ray, glm::vec3& attenuation
+	) const override {
+		return g_scatter_metal(ray, rec, random_state, scatter_ray, attenuation, albedo, fuzz);
+	}
+};
+
+struct DielectricAbstract : public Material {
+	glm::vec3 albedo{ 1.0f };
+	float ior{ 1.333f };
+
+	__device__ DielectricAbstract() = default;
+	__device__ DielectricAbstract(glm::vec3 albedo, float ior) : albedo(albedo), ior(ior) {}
+
+	__device__ virtual bool Scatter(
+		const Ray& ray, const TraceRecord& rec,
+		curandState_t* random_state,
+		Ray& scatter_ray, glm::vec3& attenuation
+	) const override {
 		return g_scatter_dielectric(ray, rec, random_state, scatter_ray, attenuation, albedo, ior);
 	}
 };

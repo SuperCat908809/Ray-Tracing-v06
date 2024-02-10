@@ -36,11 +36,16 @@ __host__ __device__ inline bool g_trace_sphere(Ray& ray, TraceRecord& rec, glm::
 struct Sphere {
 	glm::vec3 origin{ 0,0,0 };
 	float radius{ 1 };
+	Material* mat_ptr{ nullptr };
 
-	__host__ __device__ Sphere(glm::vec3 origin, float radius) : origin(origin), radius(radius) {}
+	__host__ __device__ Sphere(glm::vec3 origin, float radius, Material* mat_ptr) : origin(origin), radius(radius), mat_ptr(mat_ptr) {}
 
 	__host__ __device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
-		return g_trace_sphere(ray, rec, origin, radius);
+		if (g_trace_sphere(ray, rec, origin, radius)) {
+			rec.mat_ptr = mat_ptr;
+			return true;
+		}
+		return false;
 	}
 };
 

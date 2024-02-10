@@ -12,9 +12,11 @@ struct Ray {
 	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
 };
 
+struct Material;
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };
 	float t{ _MISS_DIST };
+	Material* mat_ptr{ nullptr };
 	bool hit_backface{ false };
 };
 

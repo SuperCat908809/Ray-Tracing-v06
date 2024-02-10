@@ -4,6 +4,7 @@
 #include "cu_rtCommon.cuh"
 #include "cu_Cameras.cuh"
 #include "cu_Geometry.cuh"
+#include "cu_Materials.cuh"
 
 class Renderer {
 
@@ -29,8 +30,8 @@ public:
 	);
 	~Renderer();
 
-	void DownloadRenderbuffer(glm::vec4* host_dst) const;
 	void Render();
+	void DownloadRenderbuffer(glm::vec4* host_dst) const;
 };
 
 #endif // RENDERER_CLASS_H //
