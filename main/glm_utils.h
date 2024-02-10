@@ -60,18 +60,6 @@ namespace glm {
 		return map(val, dst_min, dst_max, src_min, src_max);
 	}
 
-#if 0
-	template <glm::length_t L, typename T, glm::qualifier Q>
-	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> clamp(const glm::vec<L, T, Q>& val, const glm::vec<L, T, Q>& min, const glm::vec<L, T, Q>& max) {
-	#pragma unroll
-		for (int i = 0; i < L; i++) {
-			if (val[i] < min[i]) val[i] = min[i];
-			if (val[i] > max[i]) val[i] = max[i];
-		}
-		return val;
-	}
-#endif
-
 	template <glm::length_t L, typename T, glm::qualifier Q>
 	GLM_UTIL_CUDA_BOTH inline constexpr glm::vec<L, T, Q> linear_interpolate(const glm::vec<L, T, Q>& a, const glm::vec<L, T, Q>& b, const T& factor) {
 		return a + (b - a) * factor;
