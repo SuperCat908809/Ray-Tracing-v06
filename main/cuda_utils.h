@@ -1,6 +1,7 @@
 #ifndef CUDA_UTILITIES_H
 #define CUDA_UTILITIES_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdexcept>
 #include <cuda_runtime.h>
