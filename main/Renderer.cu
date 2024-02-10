@@ -1,5 +1,4 @@
 #include "Renderer.cuh"
-#include "cu_Materials.cuh"
 #include <device_launch_parameters.h>
 
 
@@ -24,6 +23,8 @@ Renderer::Renderer(uint32_t render_width, uint32_t render_height,
 
 	CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
+
+	default_mat = std::make_unique<HandledDeviceAbstract<MetalAbstract>>(glm::vec3(0.95f), 0.1f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
@@ -50,7 +51,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	PinholeCamera cam{};
 	HittableList<Sphere>* sphere_list{};
-	LambertianMaterial mat{};
+	MetalAbstract* default_mat{};
 	glm::vec4* output_buffer{};
 	curandState_t* random_states{};
 };
@@ -64,9 +65,13 @@ void Renderer::Render() {
 	params.max_depth = max_depth;
 	params.cam = cam;
 	params.sphere_list = d_sphere_list;
-	params.mat = LambertianMaterial(glm::vec3(0.5f));
+	params.default_mat = default_mat->getPtr();
 	params.output_buffer = d_output_buffer;
 	params.random_states = d_random_states;
+
+	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
+	// therefore you must manually set a size that should encompass the entire program.
+	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
 
 	dim3 threads{ 8, 8, 1 };
 	dim3 blocks = dim3((render_width + threads.x - 1) / threads.x, (render_height + threads.y - 1) / threads.y, 1);
@@ -102,7 +107,11 @@ __global__ void kernel(LaunchParams p) {
 				Ray scatter_ray{};
 				glm::vec3 attenuation{};
 
-				if (p.mat.Scatter(cur_ray, rec, random_state, scatter_ray, attenuation)) {
+				//Material* mat_ptr = rec.mat_ptr == nullptr ? p.default_mat : rec.mat_ptr;
+				Material* mat_ptr = p.default_mat;
+				if (RND < 1e-5f) printf("x %4i, y %4i, s %4i : %p\n", x, y, sample_idx, rec.mat_ptr);
+
+				if (mat_ptr->Scatter(cur_ray, rec, random_state, scatter_ray, attenuation)) {
 					cur_ray = scatter_ray;
 					cur_attenuation *= attenuation;
 					continue;

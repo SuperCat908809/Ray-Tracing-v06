@@ -19,6 +19,7 @@ using namespace std::string_literals;
 #include "cu_rtCommon.cuh"
 #include "cu_Geometry.cuh"
 #include "cu_Cameras.cuh"
+#include "cu_Materials.cuh"
 
 #include "Renderer.cuh"
 
@@ -29,6 +30,12 @@ class FirstApp {
 	std::unique_ptr<Renderer> renderer{};
 	std::unique_ptr<HittableList<Sphere>> sphere_list{};
 	glm::vec4* host_output_framebuffer{};
+
+	// cuda memory
+	std::unique_ptr<HandledDeviceAbstract<LambertianAbstract>> ground_mat{};
+	std::unique_ptr<HandledDeviceAbstract<LambertianAbstract>> center_mat{};
+	std::unique_ptr<HandledDeviceAbstract<DielectricAbstract>> left_mat{};
+	std::unique_ptr<HandledDeviceAbstract<     MetalAbstract>> right_mat{};
 
 public:
 

@@ -14,12 +14,31 @@ FirstApp::FirstApp() {
 	float aspect = render_width / (float)render_height;
 	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
+	ground_mat = std::make_unique<HandledDeviceAbstract<LambertianAbstract>>(glm::vec3(0.8f, 0.8f, 0.0f));
+	center_mat = std::make_unique<HandledDeviceAbstract<LambertianAbstract>>(glm::vec3(0.1f, 0.2f, 0.5f));
+	left_mat   = std::make_unique<HandledDeviceAbstract<DielectricAbstract>>(glm::vec3(1.0f, 1.0f, 1.0f), 1.5f);
+	right_mat  = std::make_unique<HandledDeviceAbstract<     MetalAbstract>>(glm::vec3(0.8f, 0.6f, 0.2f), 0.0f);
+
+
+
+
+
+	/*
+	
+	
+
+	*/
+
+
+	
+	
+	
 	std::vector<Sphere> sphere_data{};
-	sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0),    1.00f));
-	//sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0), -  0.90f));
-	sphere_data.push_back(Sphere(glm::vec3( 0,    1, 0),    1.00f));
-	sphere_data.push_back(Sphere(glm::vec3( 2,    1, 0),    1.00f));
-	sphere_data.push_back(Sphere(glm::vec3( 0, -100, 0),  100.00f));
+	sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0),    1.00f, left_mat->getPtr()));
+	sphere_data.push_back(Sphere(glm::vec3(-2,    1, 0), -  0.90f, left_mat->getPtr()));
+	sphere_data.push_back(Sphere(glm::vec3( 0,    1, 0),    1.00f, center_mat->getPtr()));
+	sphere_data.push_back(Sphere(glm::vec3( 2,    1, 0),    1.00f, right_mat->getPtr()));
+	sphere_data.push_back(Sphere(glm::vec3( 0, -100, 0),  100.00f, ground_mat->getPtr()));
 	sphere_list = std::make_unique<HittableList<Sphere>>(sphere_data);
 
 	renderer = std::make_unique<Renderer>(render_width, render_height, 16, 8, cam, sphere_list.get());
@@ -34,7 +53,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_019.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_020.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
