@@ -19,4 +19,45 @@ inline void cudaAssert(cudaError_t code, const char* func, const char* file, con
 	}
 }
 
+
+template <typename T, typename... Args>
+__global__ inline void handledMakeOnDevice(T** ptr2, Args... args) {
+	if (!(threadIdx.x == 0 && blockIdx.x == 0)) return;
+
+	(*ptr2) = new T(args...);
+}
+
+template <typename T>
+__global__ inline void handledDeleteOnDevice(T** ptr2) {
+	if (!(threadIdx.x == 0 && blockIdx.x == 0)) return;
+
+	delete* ptr2;
+}
+
+template <typename T>
+struct HandledDeviceAbstract {
+private:
+	T* ptr{};
+	T** ptr2{};
+
+public:
+
+	template <typename... Args>
+	__host__ HandledDeviceAbstract(Args... args) {
+		CUDA_ASSERT(cudaMalloc(&ptr2, sizeof(T*)));
+		handledMakeOnDevice << <1, 1 >> > (ptr2, args...);
+		CUDA_ASSERT(cudaPeekAtLastError());
+		CUDA_ASSERT(cudaMemcpy(&ptr, ptr2, sizeof(T*), cudaMemcpyDeviceToHost));
+	}
+	__host__ ~HandledDeviceAbstract() {
+		handledDeleteOnDevice << <1, 1 >> > (ptr2);
+		CUDA_ASSERT(cudaPeekAtLastError());
+		CUDA_ASSERT(cudaDeviceSynchronize());
+		CUDA_ASSERT(cudaGetLastError());
+		CUDA_ASSERT(cudaFree(ptr2));
+	}
+
+	T* getPtr() const { return ptr; }
+};
+
 #endif // CUDA_UTILITIES_H //
