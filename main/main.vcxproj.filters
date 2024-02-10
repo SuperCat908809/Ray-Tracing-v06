@@ -26,6 +26,9 @@
     <CudaCompile Include="Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
+    <CudaCompile Include="FirstApp.cpp">
+      <Filter>Main</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
@@ -59,9 +62,6 @@
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
-    </ClCompile>
-    <ClCompile Include="FirstApp.cpp">
-      <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

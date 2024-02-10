@@ -158,7 +158,7 @@
     <CudaCompile Include="Renderer.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FirstApp.cpp" />
+    <CudaCompile Include="FirstApp.cpp" />
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
