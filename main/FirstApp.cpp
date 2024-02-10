@@ -27,9 +27,28 @@ FirstApp::FirstApp() {
 	
 	
 
+		Since cuda does not cross link with other translation units during compilation and linking, device code will be recompiled 
+		for every translation unit thus even if you make an object on the device, it cannot be used outside of that translation unit.
+		Other translation units may have access to the same function but since they are compiled seperately, they have duplicate 
+		instances of it and will not accept and device functions from any other translation unit.
+
+		This is why an instance of the abstract material struct, e.g. LambertianAbstract, if created in device code in Renderer.cu, 
+		it will execute properly. However, an identical instance of that struct made in FirstApp.cpp's device code cannot be used by 
+		Renderer.cu device code because the virtual function generated in FirstApp.cpp unit points to FirstApp.cpp's instance of the 
+		function.
+
+		Despite both units having a copy of the function, they cannot access each others compilations leading to this strange error 
+		that appears.
+
+		To remedy this, any virtual functions and structs/classes containing them should only be used by the unit that generated them.
+		This could be accomplished by a single source file to act as an 'environment' where all of these special case objects and 
+		functions can be made using opaque functions that are only implemented by this environment source file.
+
+
+	
 	*/
-
-
+	
+	
 	
 	
 	
