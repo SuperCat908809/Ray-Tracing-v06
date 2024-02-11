@@ -24,7 +24,7 @@ Renderer::Renderer(uint32_t render_width, uint32_t render_height,
 	CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
-	default_mat = std::make_unique<HandledDeviceAbstract<MetalAbstract>>(glm::vec3(0.95f), 0.1f);
+	default_mat = std::make_unique<HandledDeviceAbstract<DielectricAbstract>>(glm::vec3(1.0f), 1.5f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
@@ -51,7 +51,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	PinholeCamera cam{};
 	HittableList<Sphere>* sphere_list{};
-	MetalAbstract* default_mat{};
+	DielectricAbstract* default_mat{};
 	glm::vec4* output_buffer{};
 	curandState_t* random_states{};
 };
@@ -108,11 +108,12 @@ __global__ void kernel(LaunchParams p) {
 				glm::vec3 attenuation{};
 
 				//Material* mat_ptr = rec.mat_ptr == nullptr ? p.default_mat : rec.mat_ptr;
-				Material* mat_ptr = p.default_mat;
-				if (RND < 1e-5f) printf("x %4i, y %4i, s %4i : %p\n", x, y, sample_idx, rec.mat_ptr);
+				Material* mat_ptr = rec.mat_ptr;
+				//Material* mat_ptr = p.default_mat;
+				//if (RND < 1e-5f) printf("x %4i, y %4i, s %4i : %p\n", x, y, sample_idx, rec.mat_ptr);
 
 				if (mat_ptr->Scatter(cur_ray, rec, random_state, scatter_ray, attenuation)) {
-					cur_ray = scatter_ray;
+					cur_ray = Ray(scatter_ray.o + scatter_ray.d * 0.001f, scatter_ray.d);
 					cur_attenuation *= attenuation;
 					continue;
 				}

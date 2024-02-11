@@ -7,10 +7,12 @@ struct PinholeCamera {
 	glm::vec3 o{}, u{}, v{}, w{};
 
 	__host__ __device__ PinholeCamera() {};
-	__host__ __device__ PinholeCamera(glm::vec3 lookfrom, glm::vec3 lookat, glm::vec3 up, float fov, float aspect_ratio) {
-		float theta = glm::radians(fov);
-		float viewport_width = tanf(theta * 0.5f);
-		float viewport_height = viewport_width / aspect_ratio;
+	__host__ __device__ PinholeCamera(glm::vec3 lookfrom, glm::vec3 lookat, glm::vec3 up, float vfov, float aspect_ratio) {
+		float theta = glm::radians(vfov);
+		//float viewport_width = tanf(theta * 0.5f);
+		//float viewport_height = viewport_width / aspect_ratio;
+		float viewport_height = tanf(theta * 0.5f);
+		float viewport_width = viewport_height * aspect_ratio;
 
 		o = lookfrom;
 		w = glm::normalize(lookat - lookfrom);

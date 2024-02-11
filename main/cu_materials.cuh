@@ -9,7 +9,7 @@ __device__ inline bool g_scatter_lambertian(const Ray& ray, const TraceRecord& r
 	glm::vec3 ray_dir = rec.n + RND_ON_SPHERE;
 	if (glm::near_zero(ray_dir)) return false;
 
-	scatter_ray = Ray(ray.at(rec.t) + ray_dir * 0.0003f, ray_dir);
+	scatter_ray = Ray(ray.at(rec.t), ray_dir);
 	attenuation = albedo;
 	return true;
 }
@@ -28,7 +28,7 @@ struct LambertianMaterial {
 
 __device__ inline bool g_scatter_metal(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation, glm::vec3 albedo, float fuzz) {
 	glm::vec3 scatter_dir = glm::reflect(ray.d, rec.n) + fuzz * RND_IN_SPHERE;
-	scatter_ray = Ray(ray.at(rec.t) + scatter_dir * 0.0003f, scatter_dir);
+	scatter_ray = Ray(ray.at(rec.t), scatter_dir);
 	attenuation = albedo;
 	return true;
 }
@@ -48,13 +48,19 @@ struct MetalMaterial {
 
 __device__ inline float reflectance(float cos_theta, float ior_ratio) {
 	// use Schlick's approximation for reflectance
+	//float r0 = (1 - ior_ratio) / (1 + ior_ratio);
+	//r0 *= r0;
+	//return r0 + (1 - r0) * powf(1 - cos_theta, 5.0f);
+	//float r0 = (1 - ior_ratio) / (1 + ior_ratio);
+	//r0 = r0 * r0;
+	//return r0 + (1 - r0) * powf((1 - cos_theta), 5);
 	float r0 = (1 - ior_ratio) / (1 + ior_ratio);
-	r0 *= r0;
+	r0 = r0 * r0;
 	return r0 + (1 - r0) * powf(1 - cos_theta, 5.0f);
 }
 
 __device__ inline bool g_scatter_dielectric(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation, glm::vec3 albedo, float ior) {
-	float ior_ratio = rec.hit_backface ? ior : 1 / ior;
+	/*float ior_ratio = rec.hit_backface ? ior : 1 / ior;
 
 	glm::vec3 unit_dir = glm::normalize(ray.d);
 	float cos_theta = fminf(glm::dot(-unit_dir, rec.n), 1.0f);
@@ -72,6 +78,46 @@ __device__ inline bool g_scatter_dielectric(const Ray& ray, const TraceRecord& r
 
 	scatter_ray = Ray(ray.at(rec.t) + scatter_dir * 0.0003f, scatter_dir);
 	attenuation = albedo;
+	return true;*/
+
+
+
+	//attenuation = albedo;
+	//float refraction_ratio = !rec.hit_backface ? (1.0 / ior) : ior;
+
+	//glm::vec3 unit_direction = glm::normalize(ray.d);
+	//double cos_theta = fminf(glm::dot(-unit_direction, rec.n), 1.0f);
+	//double sin_theta = sqrtf(1.0 - cos_theta * cos_theta);
+
+	//bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+	//glm::vec3 direction{};
+	//if (cannot_refract || reflectance(cos_theta, refraction_ratio) > RND)
+	//	direction = glm::reflect(unit_direction, rec.n);
+	//else
+	//	direction = glm::refract(unit_direction, rec.n, refraction_ratio);
+
+	//scatter_ray = Ray(ray.at(rec.t) + direction * 0.003f, direction);
+	//return true;
+
+
+
+	attenuation = albedo;
+	float refraction_ratio = !rec.hit_backface ? (1.0f / ior) : ior;
+
+	glm::vec3 unit_direction = glm::normalize(ray.d);
+	float cos_theta = fminf(-glm::dot(unit_direction, rec.n), 1.0f);
+	float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
+
+	bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
+	glm::vec3 direction;
+	if (cannot_refract || reflectance(cos_theta, refraction_ratio) > RND)
+		direction = glm::reflect(unit_direction, rec.n);
+	else
+		direction = glm::refract(unit_direction, rec.n, refraction_ratio);
+
+
+
+	scatter_ray = Ray(ray.at(rec.t), direction);
 	return true;
 }
 

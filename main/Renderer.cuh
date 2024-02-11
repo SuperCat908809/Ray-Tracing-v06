@@ -17,7 +17,7 @@ class Renderer {
 	glm::vec4* d_output_buffer{};
 	curandState_t* d_random_states{};
 
-	std::unique_ptr<HandledDeviceAbstract<MetalAbstract>> default_mat{};
+	std::unique_ptr<HandledDeviceAbstract<DielectricAbstract>> default_mat{};
 
 public:
 
