@@ -18,6 +18,11 @@ struct TraceRecord {
 	float t{ _MISS_DIST };
 	Material* mat_ptr{ nullptr };
 	bool hit_backface{ false };
+
+	__host__ __device__ void set_face_normal(const Ray& r, const glm::vec3& outward_normal) {
+		hit_backface = glm::dot(r.d, outward_normal) > 0;
+		n = hit_backface ? -outward_normal : outward_normal;
+	}
 };
 
 #endif // RAY_STRUCT_H //

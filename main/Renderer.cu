@@ -112,10 +112,10 @@ __device__ glm::vec3 ray_color(const Ray& ray, const LaunchParams& p, curandStat
 
 		// offset ray from surface to avoid shadow acne
 		if (glm::dot(cur_ray.d, rec.n) > 0) {
-			cur_ray.o += rec.n * 0.001f;
+			cur_ray.o += rec.n * 0.0003f;
 		}
 		else {
-			cur_ray.o += -rec.n * 0.001f;
+			cur_ray.o += -rec.n * 0.0003f;
 		}
 	}
 
