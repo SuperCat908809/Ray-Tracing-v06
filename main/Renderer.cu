@@ -81,6 +81,48 @@ void Renderer::Render() {
 	CUDA_ASSERT(cudaGetLastError());
 }
 
+__device__ glm::vec3 ray_color(const Ray& ray, const LaunchParams& p, curandState* local_rand_state) {
+	Ray cur_ray = ray;
+	glm::vec3 cur_attenuation(1.0f);
+	//glm::vec3 cur_radiance(0.0f);
+
+	// bounce loop
+
+	for (int i = 0; i < p.max_depth; i++) {
+		TraceRecord rec{};
+
+		if (!p.sphere_list->ClosestIntersection(cur_ray, rec)) {
+			float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
+			glm::vec3 sky_radiance = glm::linear_interpolate(glm::vec3(0.1f, 0.2f, 0.4f), glm::vec3(0.9f, 0.9f, 0.99f), t);
+			return cur_attenuation * sky_radiance;
+		}
+
+		// evaluate surface material
+
+		Ray scattered{};
+		glm::vec3 attenuation{};
+		if (!rec.mat_ptr->Scatter(cur_ray, rec, local_rand_state, scattered, attenuation)) {
+			// ray absorbed
+			return glm::vec3(0.0f);
+		}
+
+		// accumulate material attenuation
+		cur_attenuation *= attenuation;
+		cur_ray = scattered;
+
+		// offset ray from surface to avoid shadow acne
+		if (glm::dot(cur_ray.d, rec.n) > 0) {
+			cur_ray.o += rec.n * 0.001f;
+		}
+		else {
+			cur_ray.o += -rec.n * 0.001f;
+		}
+	}
+
+	// max bounces exceeded, terminate sample
+	return glm::vec3(0.0f);
+}
+
 __global__ void kernel(LaunchParams p) {
 	int x = blockDim.x * blockIdx.x + threadIdx.x;
 	int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -93,8 +135,8 @@ __global__ void kernel(LaunchParams p) {
 	// sample at a random position inside a circle of radius 0.3 pixels centered at the pixel
 	glm::vec2 ndc = (glm::vec2(x, y) + glm::vec2(0.5f)) * pixel_size * 2.0f - 1.0f;
 	glm::vec3 accumulated_radiance(0.0f);
-	int samples_collected = 0;
 
+#if 0
 	for (int sample_idx = 0; sample_idx < p.samples_per_pixel; sample_idx++) {
 		glm::vec2 rnd_ndc_sample = ndc + glm::cu_random_in_unit_vec<2>(random_state) * pixel_size;
 		Ray cur_ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y);
@@ -117,19 +159,87 @@ __global__ void kernel(LaunchParams p) {
 					cur_attenuation *= attenuation;
 					continue;
 				}
-				break;
+				else {
+					// ray absorbed
+					break;
+				}
 			}
 			else {
 				float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
 				glm::vec3 sky_radiance = glm::linear_interpolate(glm::vec3(0.1f, 0.2f, 0.4f), glm::vec3(0.9f, 0.9f, 0.99f), t);
 				accumulated_radiance += cur_attenuation * sky_radiance;
-				samples_collected++;
 				break;
 			}
 		}
 	}
+#elif 0
+	for (int sample_idx = 0; sample_idx < p.samples_per_pixel; sample_idx++) {
+		glm::vec2 rnd_ndc_sample = ndc + glm::cu_random_in_unit_vec<2>(random_state) * pixel_size;
+		Ray cur_ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y);
+		glm::vec3 cur_attenuation(1.0f);
 
-	glm::vec4 output_color = glm::vec4(accumulated_radiance / (float)samples_collected, 1.0f);
+		int depth = 0;
+		for (;depth < p.max_depth; depth++) {
+			TraceRecord rec{};
+
+			if (p.sphere_list->ClosestIntersection(cur_ray, rec)) {
+				Ray scatter_ray{};
+				glm::vec3 attenuation{};
+
+				if (rec.mat_ptr->Scatter(cur_ray, rec, random_state, scatter_ray, attenuation)) {
+					// ray scatters from material
+					cur_ray = scatter_ray;
+					// offset ray from surface to avoid shadow acne
+					if (glm::dot(cur_ray.d, rec.n) > 0) {
+						cur_ray.o += rec.n * 0.001f;
+					}
+					else {
+						cur_ray.o += -rec.n * 0.001f;
+					}
+					cur_attenuation *= attenuation;
+					continue;
+				}
+				else {
+					// ray does not scatter. possibly absorbed
+					//accumulated_radiance += glm::vec3(0.0f); // nothing gets adds
+					break;
+				}
+			}
+			else {
+				// ray misses all scene geometry
+				float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
+				glm::vec3 sky_radiance = glm::linear_interpolate(glm::vec3(0.1f, 0.2f, 0.4f), glm::vec3(0.9f, 0.9f, 0.99f), t);
+				accumulated_radiance += cur_attenuation * sky_radiance;
+				break;
+			}
+		}
+
+		// If depth == p.max_depth then nothing is added to the radiance accumulation.
+		// Identical to ray being absorbed and can no longer scatter
+	}
+#else
+	// sample radiance accumulation
+	glm::vec3 col{};
+
+	for (int s = 0; s < p.samples_per_pixel; s++) {
+		// uniformly random point in pixel
+		glm::vec2 rnd_ndc_sample = ndc + glm::cu_random_in_unit_vec<2>(random_state) * pixel_size;
+
+		// sample ray from camera according to u, v coords
+		Ray ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y);
+
+		// gather incoming radiance for ray and add to radiance accumulation
+		col += ray_color(ray, p, random_state);
+	}
+
+	// average samples by dividing by sample count
+	col /= p.samples_per_pixel;
+#endif
+
+	//glm::vec3 average_radiance = accumulated_radiance / (float)p.samples_per_pixel;
+	glm::vec4 output_color = glm::vec4(col, 1.0f);
+
+	output_color = glm::clamp(output_color, glm::vec4(0), glm::vec4(1));
 
 	output_color[0] = sqrtf(output_color[0]);
 	output_color[1] = sqrtf(output_color[1]);

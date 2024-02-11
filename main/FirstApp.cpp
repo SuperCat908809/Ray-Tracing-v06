@@ -61,7 +61,7 @@ FirstApp::FirstApp() {
 	sphere_data.push_back(Sphere(glm::vec3( 0.0f, -100.5f, -1.0f), 100.0f, ground_mat->getPtr()));
 	sphere_data.push_back(Sphere(glm::vec3( 0.0f,    0.0f, -1.0f),   0.5f, center_mat->getPtr()));
 	sphere_data.push_back(Sphere(glm::vec3(-1.0f,    0.0f, -1.0f),   0.5f,   left_mat->getPtr()));
-	sphere_data.push_back(Sphere(glm::vec3(-1.0f,    0.0f, -1.0f),  -0.45f,   left_mat->getPtr()));
+	sphere_data.push_back(Sphere(glm::vec3(-1.0f,    0.0f, -1.0f),  -0.4f,   left_mat->getPtr()));
 	sphere_data.push_back(Sphere(glm::vec3( 1.0f,    0.0f, -1.0f),   0.5f,  right_mat->getPtr()));
 	sphere_list = std::make_unique<HittableList<Sphere>>(sphere_data);
 
@@ -77,7 +77,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_028.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_029.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
