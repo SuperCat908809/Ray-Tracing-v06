@@ -17,7 +17,6 @@
 #include "ray_data.cuh"
 #include "cuda_utils.h"
 #include "glm_utils.h"
-#include "handled_device_abstracts.cuh"
 
 inline constexpr int ceilDiv(int n, int d) { return (n + d - 1) / d; }
 

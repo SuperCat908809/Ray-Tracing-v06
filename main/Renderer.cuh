@@ -6,6 +6,8 @@
 #include "cu_Geometry.cuh"
 #include "cu_Materials.cuh"
 
+#include "handled_device_abstracts.cuh"
+
 class Renderer {
 
 	uint32_t render_width{}, render_height{};
@@ -17,7 +19,7 @@ class Renderer {
 	glm::vec4* d_output_buffer{};
 	curandState_t* d_random_states{};
 
-	std::unique_ptr<HandledDeviceAbstract<DielectricAbstract>> default_mat{};
+	std::unique_ptr<HandledDeviceAbstract<Material>> default_mat{};
 
 public:
 

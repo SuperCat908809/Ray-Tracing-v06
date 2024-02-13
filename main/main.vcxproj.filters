@@ -29,9 +29,6 @@
     <CudaCompile Include="FirstApp.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="handled_device_abstracts.cu">
-      <Filter>Utilities</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">

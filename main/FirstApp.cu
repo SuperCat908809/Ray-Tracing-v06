@@ -1,4 +1,4 @@
-#include "FirstApp.h"
+#include "FirstApp.cuh"
 
 #include <stb/stb_image_write.h>
 
@@ -31,7 +31,7 @@ FirstApp::FirstApp() {
 
 	world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(world_sphere_list->getDeviceArrayPtr(), world_sphere_list->getSize());
 
-	renderer = std::make_unique<Renderer>(render_width, render_height, 16, 8, cam, world_list->getPtr());
+	renderer = std::make_unique<Renderer>(render_width, render_height, 1024, 16, cam, world_list->getPtr());
 
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * render_width * render_height));
 }
@@ -43,7 +43,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_034.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_036.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

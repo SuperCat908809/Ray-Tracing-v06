@@ -162,8 +162,9 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="FirstApp.cu" />
-    <CudaCompile Include="handled_device_abstracts.cu" />
+    <CudaCompile Include="FirstApp.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="Renderer.cu" />
   </ItemGroup>

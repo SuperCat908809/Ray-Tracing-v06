@@ -23,7 +23,8 @@ Renderer::Renderer(uint32_t render_width, uint32_t render_height,
 	CUDA_ASSERT(cudaMemset(d_output_buffer, 0, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
-	default_mat = std::make_unique<HandledDeviceAbstract<DielectricAbstract>>(glm::vec3(1.0f), 1.5f);
+	default_mat = std::make_unique<HandledDeviceAbstract<Material>>();
+	default_mat->MakeOnDevice<MetalAbstract>(glm::vec3(1.0f), 0.1f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
@@ -49,7 +50,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	PinholeCamera cam{};
 	HittableList* world{};
-	DielectricAbstract* default_mat{};
+	Material* default_mat{};
 	glm::vec4* output_buffer{};
 	curandState_t* random_states{};
 };
@@ -110,13 +111,6 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandS
 		cur_ray = scattered;
 
 		// offset ray from surface to avoid shadow acne
-		//if (glm::dot(cur_ray.d, rec.n) > 0) {
-		//	cur_ray.o += rec.n * 0.0003f;
-		//}
-		//else {
-		//	cur_ray.o += -rec.n * 0.0003f;
-		//}
-		//cur_ray.o += (signbit(glm::dot(cur_ray.d, rec.n)) ? 1.0f : -1.0f) * rec.n * 0.0003f;
 		cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
 	}
 
