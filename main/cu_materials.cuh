@@ -14,18 +14,6 @@ __device__ inline bool g_scatter_lambertian(const Ray& ray, const TraceRecord& r
 	return true;
 }
 
-struct LambertianMaterial {
-	glm::vec3 albedo{ 0.5f };
-
-	__host__ __device__ LambertianMaterial() = default;
-	__host__ __device__ LambertianMaterial(glm::vec3 albedo) : albedo(albedo) {}
-
-	__device__ bool Scatter(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation) const {
-		return g_scatter_lambertian(ray, rec, random_state, scatter_ray, attenuation, albedo);
-	}
-};
-
-
 __device__ inline bool g_scatter_metal(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation, glm::vec3 albedo, float fuzz) {
 	glm::vec3 scatter_dir = glm::reflect(ray.d, rec.n) + fuzz * RND_IN_SPHERE;
 	scatter_ray = Ray(ray.at(rec.t), scatter_dir);
@@ -33,27 +21,9 @@ __device__ inline bool g_scatter_metal(const Ray& ray, const TraceRecord& rec, c
 	return true;
 }
 
-struct MetalMaterial {
-	glm::vec3 albedo{ 1.0f };
-	float fuzz{ 0.1f };
-
-	__host__ __device__ MetalMaterial() = default;
-	__host__ __device__ MetalMaterial(glm::vec3 albedo, float fuzz) : albedo(albedo), fuzz(fuzz) {}
-
-	__device__ bool Scatter(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation) const {
-		return g_scatter_metal(ray, rec, random_state, scatter_ray, attenuation, albedo, fuzz);
-	}
-};
-
 
 __device__ inline float reflectance(float cos_theta, float ior_ratio) {
 	// use Schlick's approximation for reflectance
-	//float r0 = (1 - ior_ratio) / (1 + ior_ratio);
-	//r0 *= r0;
-	//return r0 + (1 - r0) * powf(1 - cos_theta, 5.0f);
-	//float r0 = (1 - ior_ratio) / (1 + ior_ratio);
-	//r0 = r0 * r0;
-	//return r0 + (1 - r0) * powf((1 - cos_theta), 5);
 	float r0 = (1 - ior_ratio) / (1 + ior_ratio);
 	r0 = r0 * r0;
 	return r0 + (1 - r0) * powf(1 - cos_theta, 5.0f);
@@ -80,27 +50,6 @@ __device__ inline bool g_scatter_dielectric(const Ray& ray, const TraceRecord& r
 	attenuation = albedo;
 	return true;*/
 
-
-
-	//attenuation = albedo;
-	//float refraction_ratio = !rec.hit_backface ? (1.0 / ior) : ior;
-
-	//glm::vec3 unit_direction = glm::normalize(ray.d);
-	//double cos_theta = fminf(glm::dot(-unit_direction, rec.n), 1.0f);
-	//double sin_theta = sqrtf(1.0 - cos_theta * cos_theta);
-
-	//bool cannot_refract = refraction_ratio * sin_theta > 1.0;
-	//glm::vec3 direction{};
-	//if (cannot_refract || reflectance(cos_theta, refraction_ratio) > RND)
-	//	direction = glm::reflect(unit_direction, rec.n);
-	//else
-	//	direction = glm::refract(unit_direction, rec.n, refraction_ratio);
-
-	//scatter_ray = Ray(ray.at(rec.t) + direction * 0.003f, direction);
-	//return true;
-
-
-
 	attenuation = albedo;
 	float refraction_ratio = !rec.hit_backface ? (1.0f / ior) : ior;
 
@@ -115,16 +64,41 @@ __device__ inline bool g_scatter_dielectric(const Ray& ray, const TraceRecord& r
 	else
 		direction = glm::refract(unit_direction, rec.n, refraction_ratio);
 
-
-
 	scatter_ray = Ray(ray.at(rec.t), direction);
 	return true;
 }
 
-struct DielectricMaterial {
+
+class LambertianMaterial {
+	glm::vec3 albedo{ 0.5f };
+
+public:
+	__host__ __device__ LambertianMaterial() = default;
+	__host__ __device__ LambertianMaterial(glm::vec3 albedo) : albedo(albedo) {}
+
+	__device__ bool Scatter(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation) const {
+		return g_scatter_lambertian(ray, rec, random_state, scatter_ray, attenuation, albedo);
+	}
+};
+
+class MetalMaterial {
+	glm::vec3 albedo{ 1.0f };
+	float fuzz{ 0.1f };
+
+public:
+	__host__ __device__ MetalMaterial() = default;
+	__host__ __device__ MetalMaterial(glm::vec3 albedo, float fuzz) : albedo(albedo), fuzz(fuzz) {}
+
+	__device__ bool Scatter(const Ray& ray, const TraceRecord& rec, curandState_t* random_state, Ray& scatter_ray, glm::vec3& attenuation) const {
+		return g_scatter_metal(ray, rec, random_state, scatter_ray, attenuation, albedo, fuzz);
+	}
+};
+
+class DielectricMaterial {
 	glm::vec3 albedo{ 1.0f };
 	float ior{ 1.333f };
 
+public:
 	__host__ __device__ DielectricMaterial() = default;
 	__host__ __device__ DielectricMaterial(glm::vec3 albedo, float ior) : albedo(albedo), ior(ior) {}
 
@@ -136,8 +110,9 @@ struct DielectricMaterial {
 
 
 // abstract class that all material structs should inherit from
-struct Material {
-
+class Material {
+public:
+	__device__ virtual ~Material() {};
 	__device__ virtual bool Scatter(
 		const Ray& ray, const TraceRecord& rec,
 		curandState_t* random_state,
@@ -145,9 +120,10 @@ struct Material {
 	) const = 0;
 };
 
-struct LambertianAbstract : public Material {
+class LambertianAbstract : public Material {
 	glm::vec3 albedo{ 1.0f };
 
+public:
 	__device__ LambertianAbstract() = default;
 	__device__ LambertianAbstract(glm::vec3 albedo) : albedo(albedo) {}
 
@@ -160,10 +136,11 @@ struct LambertianAbstract : public Material {
 	}
 };
 
-struct MetalAbstract : public Material {
+class MetalAbstract : public Material {
 	glm::vec3 albedo{ 1.0f };
 	float fuzz{ 0.1f };
 
+public:
 	__device__ MetalAbstract() = default;
 	__device__ MetalAbstract(glm::vec3 albedo, float fuzz) : albedo(albedo), fuzz(fuzz) {}
 
@@ -176,10 +153,11 @@ struct MetalAbstract : public Material {
 	}
 };
 
-struct DielectricAbstract : public Material {
+class DielectricAbstract : public Material {
 	glm::vec3 albedo{ 1.0f };
 	float ior{ 1.333f };
 
+public:
 	__device__ DielectricAbstract() = default;
 	__device__ DielectricAbstract(glm::vec3 albedo, float ior) : albedo(albedo), ior(ior) {}
 

@@ -91,7 +91,7 @@ namespace glm {
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
 	__device__ inline glm::vec<L, float, Q> cu_random_in_unit_vec(curandState_t* random_state) {
 		do {
-			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state);
+			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state) * 2.0f - 1.0f;
 			if (glm::length2(rnd_v) < 1.0f) return rnd_v;
 		} while (true);
 	}
@@ -99,7 +99,7 @@ namespace glm {
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
 	__device__ inline glm::vec<L, float, Q> cu_random_unit_vec(curandState_t* random_state) {
 		do {
-			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state);
+			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state) * 2.0f - 1.0f;
 			if (!glm::near_zero(rnd_v) && glm::length2(rnd_v) < 1.0f) return glm::normalize(rnd_v);
 		} while (true);
 	}

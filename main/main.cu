@@ -16,7 +16,7 @@ using namespace std::string_literals;
 #include "cu_Cameras.cuh"
 
 #include "Renderer.cuh"
-#include "FirstApp.h"
+#include "FirstApp.cuh"
 
 int main() {
 

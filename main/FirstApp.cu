@@ -1,9 +1,7 @@
-#include "cuda_utils.h"
-#include <string>
-#include <stb/stb_image_write.h>
-#include <glm/glm.hpp>
-
 #include "FirstApp.h"
+
+#include <stb/stb_image_write.h>
+
 
 FirstApp::FirstApp() {
 	render_width = 1280;
@@ -20,29 +18,6 @@ FirstApp::FirstApp() {
 	center_mat = std::make_unique<HandledDeviceAbstract<LambertianAbstract>>(glm::vec3(0.1f, 0.2f, 0.5f));
 	left_mat   = std::make_unique<HandledDeviceAbstract<DielectricAbstract>>(glm::vec3(1.0f, 1.0f, 1.0f), 1.5f);
 	right_mat  = std::make_unique<HandledDeviceAbstract<     MetalAbstract>>(glm::vec3(0.8f, 0.6f, 0.2f), 0.0f);
-	
-
-	//std::vector<glm::vec3> sphere_positions{};
-	//sphere_positions.push_back(glm::vec3( 0.0f, -100.5f, -1.0f));
-	//sphere_positions.push_back(glm::vec3( 0.0f,    0.0f, -1.0f));
-	//sphere_positions.push_back(glm::vec3(-1.0f,    0.0f, -1.0f));
-	//sphere_positions.push_back(glm::vec3(-1.0f,    0.0f, -1.0f));
-	//sphere_positions.push_back(glm::vec3( 1.0f,    0.0f, -1.0f));
-
-	//std::vector<float> sphere_radii{};
-	//sphere_radii.push_back(100.0f);
-	//sphere_radii.push_back(  0.5f);
-	//sphere_radii.push_back(  0.5f);
-	//sphere_radii.push_back( -0.4f);
-	//sphere_radii.push_back(  0.5f);
-
-	//std::vector<Material*> sphere_materials{};
-	//sphere_materials.push_back(ground_mat->getPtr());
-	//sphere_materials.push_back(center_mat->getPtr());
-	//sphere_materials.push_back(  left_mat->getPtr());
-	//sphere_materials.push_back(  left_mat->getPtr());
-	//sphere_materials.push_back( right_mat->getPtr());
-
 
 	std::vector<Sphere::ConstructorParams> sphere_data{};
 	sphere_data.push_back(Sphere::ConstructorParams(glm::vec3( 0.0f, -100.5f, -1.0f), 100.0f, ground_mat->getPtr()));
@@ -54,7 +29,7 @@ FirstApp::FirstApp() {
 	world_sphere_list = std::make_unique<HandledDeviceAbstractArray<Hittable>>(sphere_data.size());
 	world_sphere_list->MakeOnDeviceVector<Sphere>(sphere_data.size(), 0, sphere_data);
 
-	world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(world_sphere_list->getDevicePtrArray(), world_sphere_list->getSize());
+	world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(world_sphere_list->getDeviceArrayPtr(), world_sphere_list->getSize());
 
 	renderer = std::make_unique<Renderer>(render_width, render_height, 16, 8, cam, world_list->getPtr());
 
@@ -68,7 +43,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_033.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_034.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

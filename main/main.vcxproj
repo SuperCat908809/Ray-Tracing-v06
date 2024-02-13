@@ -162,11 +162,12 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="FirstApp.cu" />
+    <CudaCompile Include="handled_device_abstracts.cu" />
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="Renderer.cu" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="FirstApp.cpp" />
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -174,9 +175,10 @@
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="cu_Geometry.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
-    <ClInclude Include="FirstApp.h" />
+    <ClInclude Include="FirstApp.cuh" />
     <ClInclude Include="glm_utils.h" />
     <ClInclude Include="cu_Materials.cuh" />
+    <ClInclude Include="handled_device_abstracts.cuh" />
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
   </ItemGroup>

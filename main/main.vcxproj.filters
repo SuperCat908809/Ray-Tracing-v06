@@ -26,8 +26,11 @@
     <CudaCompile Include="Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="FirstApp.cpp">
+    <CudaCompile Include="FirstApp.cu">
       <Filter>Main</Filter>
+    </CudaCompile>
+    <CudaCompile Include="handled_device_abstracts.cu">
+      <Filter>Utilities</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -49,13 +52,16 @@
     <ClInclude Include="Renderer.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="FirstApp.h">
-      <Filter>Main</Filter>
-    </ClInclude>
     <ClInclude Include="ray_data.cuh">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="cuda_utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstApp.cuh">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="handled_device_abstracts.cuh">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
