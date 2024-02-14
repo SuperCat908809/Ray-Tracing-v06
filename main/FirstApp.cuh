@@ -21,12 +21,9 @@ class FirstApp {
 	glm::vec4* host_output_framebuffer{};
 
 	// gpu memory
+	std::unique_ptr<HandledDeviceAbstractArray<Material>> sphere_materials{};
 	std::unique_ptr<HandledDeviceAbstractArray<Hittable>> world_sphere_list{};
 	std::unique_ptr<HandledDeviceAbstract<HittableList>> world_list{};
-	std::unique_ptr<HandledDeviceAbstract<LambertianAbstract>> ground_mat{};
-	std::unique_ptr<HandledDeviceAbstract<LambertianAbstract>> center_mat{};
-	std::unique_ptr<HandledDeviceAbstract<DielectricAbstract>> left_mat{};
-	std::unique_ptr<HandledDeviceAbstract<     MetalAbstract>> right_mat{};
 
 public:
 
