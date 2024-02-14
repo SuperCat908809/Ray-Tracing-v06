@@ -3,31 +3,7 @@
 
 #include "cu_rtCommon.cuh"
 
-// main code of geometry will be in global inline functions while I figure out the most performant method to join it all together into one program.
-
-__host__ __device__ inline bool g_trace_sphere(Ray& ray, TraceRecord& rec, glm::vec3 origin, float radius) {
-	glm::vec3 oc = ray.o - origin;
-
-	float a = glm::dot(ray.d, ray.d);
-	float hb = glm::dot(ray.d, oc);
-	float c = glm::dot(oc, oc) - radius * radius;
-	float d = hb * hb - a * c;
-	if (d <= 0) return false;
-
-	d = sqrtf(d);
-	float t = (-hb - d) / a;
-	if (t < 0.0f || t > rec.t) {
-		t = (-hb + d) / a;
-		if (t < 0.0f || t > rec.t)
-			return false;
-	}
-
-	rec.t = t;
-	glm::vec3 normal = (ray.at(rec.t) - origin) / radius; // a negative radius will flip the normal as intended
-	rec.set_face_normal(ray, normal);
-	return true;
-}
-
+// abstract class that all hittable classes should inherit from
 class Hittable {
 public:
 	__device__ virtual ~Hittable() {};
@@ -40,23 +16,31 @@ class Sphere : public Hittable {
 	Material* mat_ptr{ nullptr };
 
 public:
-	struct ConstructorParams {
-		glm::vec3 origin{};
-		float radius{ 1 };
-		Material* mat_ptr{ nullptr };
-
-		__host__ __device__ ConstructorParams(glm::vec3 origin, float radius, Material* mat_ptr) : origin(origin), radius(radius), mat_ptr(mat_ptr) {}
-	};
 
 	__device__ Sphere(glm::vec3 origin, float radius, Material* mat_ptr) : origin(origin), radius(radius), mat_ptr(mat_ptr) {}
-	__device__ Sphere(const ConstructorParams& p) : origin(p.origin), radius(p.radius), mat_ptr(p.mat_ptr) {}
 
 	__device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
-		if (g_trace_sphere(ray, rec, origin, radius)) {
-			rec.mat_ptr = mat_ptr;
-			return true;
+		glm::vec3 oc = ray.o - origin;
+
+		float a = glm::dot(ray.d, ray.d);
+		float hb = glm::dot(ray.d, oc);
+		float c = glm::dot(oc, oc) - radius * radius;
+		float d = hb * hb - a * c;
+		if (d <= 0) return false;
+
+		d = sqrtf(d);
+		float t = (-hb - d) / a;
+		if (t < 0.0f || t > rec.t) {
+			t = (-hb + d) / a;
+			if (t < 0.0f || t > rec.t)
+				return false;
 		}
-		return false;
+
+		rec.t = t;
+		glm::vec3 normal = (ray.at(rec.t) - origin) / radius; // a negative radius will flip the normal as intended
+		rec.set_face_normal(ray, normal);
+		rec.mat_ptr = mat_ptr;
+		return true;
 	}
 };
 

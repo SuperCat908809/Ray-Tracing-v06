@@ -54,7 +54,7 @@ struct LaunchParams {
 	glm::vec4* output_buffer{};
 	curandState_t* random_states{};
 };
-__global__ void kernel(LaunchParams p);
+__global__ void render_kernel(LaunchParams p);
 
 void Renderer::Render() {
 	LaunchParams params{};
@@ -74,15 +74,15 @@ void Renderer::Render() {
 
 	dim3 threads{ 8, 8, 1 };
 	dim3 blocks = dim3((render_width + threads.x - 1) / threads.x, (render_height + threads.y - 1) / threads.y, 1);
-	kernel<<<blocks, threads>>>(params);
+	render_kernel<<<blocks, threads>>>(params);
 	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());
 	CUDA_ASSERT(cudaGetLastError());
 }
 
-__device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandState* local_rand_state) {
+__device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandState* random_state) {
 	Ray cur_ray = ray;
-	glm::vec3 cur_attenuation(1.0f);
+	glm::vec3 accum_attenuation(1.0f);
 	//glm::vec3 accum_radiance(0.0f);
 
 	// bounce loop
@@ -93,32 +93,35 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandS
 		if (!p.world->ClosestIntersection(cur_ray, rec)) {
 			float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
 			glm::vec3 sky_radiance = glm::linear_interpolate(glm::vec3(0.1f, 0.2f, 0.4f), glm::vec3(0.9f, 0.9f, 0.99f), t);
-			return cur_attenuation * sky_radiance;
+			//return accum_attenuation * sky_radiance + accum_radiance;
+			return accum_attenuation * sky_radiance;
 		}
 
 		// evaluate surface material
+		// add emission multiplied by accum_attenuation to accum_radiance
 
 		Ray scattered{};
 		glm::vec3 attenuation{};
-		if (!rec.mat_ptr->Scatter(cur_ray, rec, local_rand_state, scattered, attenuation)) {
+		if (!rec.mat_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
 			// ray absorbed
-			// return accum_radiance;
+			//return accum_radiance;
 			return glm::vec3(0.0f);
 		}
 
 		// accumulate material attenuation
-		cur_attenuation *= attenuation;
+		accum_attenuation *= attenuation;
 		cur_ray = scattered;
 
 		// offset ray from surface to avoid shadow acne
 		cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
 	}
 
-	// max bounces exceeded, terminate sample
+	// max bounces exceeded
+	//return accum_radiance;
 	return glm::vec3(0.0f);
 }
 
-__global__ void kernel(LaunchParams p) {
+__global__ void render_kernel(LaunchParams p) {
 	int x = blockDim.x * blockIdx.x + threadIdx.x;
 	int y = blockDim.y * blockIdx.y + threadIdx.y;
 	if (x >= p.render_width || y >= p.render_height) return;
@@ -127,7 +130,6 @@ __global__ void kernel(LaunchParams p) {
 
 	int gid = y * p.render_width + x;
 	curandState_t* random_state = &p.random_states[gid];
-	// sample at a random position inside a circle of radius 0.3 pixels centered at the pixel
 	glm::vec2 ndc = (glm::vec2(x, y) + glm::vec2(0.5f)) * pixel_size * 2.0f - 1.0f;
 	glm::vec3 accumulated_radiance(0.0f);
 
@@ -146,6 +148,7 @@ __global__ void kernel(LaunchParams p) {
 
 	// tone mapping would be ideal but clamping will do for now
 	glm::vec3 col = glm::clamp(radiance, 0.0f, 1.0f);
+	// gamma correction equivalent to gamma 2.0
 	col = glm::sqrt(col);
 	glm::vec4 output_color = glm::vec4(col, 1.0f);
 

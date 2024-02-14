@@ -64,27 +64,6 @@ FirstApp::FirstApp() {
 	float aspect = render_width / (float)render_height;
 	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
-	//sphere_materials = std::make_unique<HandledDeviceAbstractArray<Material>>(4);
-	//sphere_materials->MakeSingleOnDevice<LambertianAbstract>(0, glm::vec3(0.8f, 0.8f, 0.0f));
-	//sphere_materials->MakeSingleOnDevice<LambertianAbstract>(1, glm::vec3(0.1f, 0.2f, 0.5f));
-	//sphere_materials->MakeSingleOnDevice<DielectricAbstract>(2, glm::vec3(1.0f, 1.0f, 1.0f), 1.5f);
-	//sphere_materials->MakeSingleOnDevice<     MetalAbstract>(3, glm::vec3(0.8f, 0.6f, 0.2f), 0.0f);
-
-	//auto mats = sphere_materials->getPtrVector();
-
-	//std::vector<Sphere::ConstructorParams> sphere_data{};
-	//sphere_data.push_back(Sphere::ConstructorParams(glm::vec3( 0.0f, -100.5f, -1.0f), 100.0f, mats[0]));
-	//sphere_data.push_back(Sphere::ConstructorParams(glm::vec3( 0.0f,    0.0f, -1.0f),   0.5f, mats[1]));
-	//sphere_data.push_back(Sphere::ConstructorParams(glm::vec3(-1.0f,    0.0f, -1.0f),   0.5f, mats[2]));
-	//sphere_data.push_back(Sphere::ConstructorParams(glm::vec3(-1.0f,    0.0f, -1.0f),  -0.4f, mats[2]));
-	//sphere_data.push_back(Sphere::ConstructorParams(glm::vec3( 1.0f,    0.0f, -1.0f),   0.5f, mats[3]));
-
-	//world_sphere_list = std::make_unique<HandledDeviceAbstractArray<Hittable>>(sphere_data.size());
-	//world_sphere_list->MakeOnDeviceVector<Sphere>(sphere_data.size(), 0, 0, sphere_data);
-
-	//world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(world_sphere_list->getDeviceArrayPtr(), world_sphere_list->getSize());
-
-
 	HandledDeviceAbstractArray<Material>* factory_materials{};
 	HandledDeviceAbstractArray<Hittable>* factory_spheres{};
 	HandledDeviceAbstract<HittableList>* factory_world{};
@@ -94,7 +73,7 @@ FirstApp::FirstApp() {
 	world_sphere_list = std::unique_ptr<HandledDeviceAbstractArray<Hittable>>(factory_spheres);
 	world_list = std::unique_ptr<HandledDeviceAbstract<HittableList>>(factory_world);
 
-	renderer = std::make_unique<Renderer>(render_width, render_height, 8, 8, cam, world_list->getPtr());
+	renderer = std::make_unique<Renderer>(render_width, render_height, 1024, 64, cam, world_list->getPtr());
 
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * render_width * render_height));
 }
