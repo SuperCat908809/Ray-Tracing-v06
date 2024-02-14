@@ -114,13 +114,13 @@ public:
 
 	size_t getSize() const { return ptrs.size(); }
 	T** getDeviceArrayPtr() const { return ptr2; }
-	std::vector<T*> getPtrArray() const { return ptrs; }
+	std::vector<T*> getPtrVector() const { return ptrs; }
 
 	template <typename T2, typename... Args>
 	void MakeOnDevice(size_t count, size_t array_offset, size_t input_offset, Args*... args) {
 		int threads = 32;
 		int blocks = ceilDiv(count, threads);
-		_makeArrayOnDevice<T, T2><<<blocks, threads>>>(count, ptr2 + array_offset, (args + input_offset)...);
+		_makeArrayOnDevice<T, T2, Args...><<<blocks, threads>>>(count, ptr2 + array_offset, (args + input_offset)...);
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		CUDA_ASSERT(cudaMemcpy(ptrs.data() + array_offset, ptr2 + array_offset, sizeof(T*) * count, cudaMemcpyDeviceToHost));
 	}
@@ -130,7 +130,7 @@ public:
 		CUDA_ASSERT(cudaMalloc(&d_arg, sizeof(Arg) * count));
 		CUDA_ASSERT(cudaMemcpy(d_arg, varg.data() + input_offset, sizeof(Arg) * count, cudaMemcpyHostToDevice));
 
-		MakeOnDevice<T2>(count, array_offset, 0, d_arg);
+		MakeOnDevice<T2, Arg>(count, array_offset, 0, d_arg);
 
 		CUDA_ASSERT(cudaFree(d_arg));
 	}

@@ -116,7 +116,7 @@ public:
 
 	size_t getSize() const { return ptrs.size(); }
 	T** getDevicePtrArray() const { return ptr2; }
-	std::vector<T*> getPtrArray() const { return ptrs; }
+	std::vector<T*> getPtrVector() const { return ptrs; }
 
 	template <typename T2, typename... Args>
 	void MakeOnDevice(size_t count, size_t offset, Args*... args) {
