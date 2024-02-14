@@ -28,6 +28,14 @@ __global__ inline void _makeArrayOnDevice(size_t count, T1** ptrs, Args*... args
 	ptrs[gid] = new T2(args[gid]...);
 }
 
+template <typename T, typename FactoryType>
+__global__ inline void _makeArrayOnDeviceFactory(size_t count, size_t input_offset, T** ptrs, FactoryType* f) {
+	int gid = threadIdx.x + blockIdx.x * blockDim.x;
+	if (gid >= count) return;
+
+	ptrs[gid] = f->operator()(gid + input_offset);
+}
+
 template <typename T>
 __global__ inline void _deleteArrayOnDevice(size_t count, T** ptrs) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -109,24 +117,32 @@ public:
 	std::vector<T*> getPtrArray() const { return ptrs; }
 
 	template <typename T2, typename... Args>
-	void MakeOnDevice(size_t count, size_t offset, Args*... args) {
+	void MakeOnDevice(size_t count, size_t array_offset, size_t input_offset, Args*... args) {
 		int threads = 32;
 		int blocks = ceilDiv(count, threads);
-		_makeArrayOnDevice<T, T2><<<blocks, threads>>>(count, ptr2 + offset, args...);
+		_makeArrayOnDevice<T, T2><<<blocks, threads>>>(count, ptr2 + array_offset, (args + input_offset)...);
 		CUDA_ASSERT(cudaDeviceSynchronize());
-		CUDA_ASSERT(cudaMemcpy(ptrs.data() + offset, ptr2 + offset, sizeof(T*) * count, cudaMemcpyDeviceToHost));
+		CUDA_ASSERT(cudaMemcpy(ptrs.data() + array_offset, ptr2 + array_offset, sizeof(T*) * count, cudaMemcpyDeviceToHost));
 	}
 	template <typename T2, typename Arg>
-	void MakeOnDeviceVector(size_t count, size_t offset, std::vector<Arg> varg) {
+	void MakeOnDeviceVector(size_t count, size_t array_offset, size_t input_offset, std::vector<Arg> varg) {
 		Arg* d_arg{};
 		CUDA_ASSERT(cudaMalloc(&d_arg, sizeof(Arg) * count));
-		CUDA_ASSERT(cudaMemcpy(d_arg, varg.data(), sizeof(Arg) * count, cudaMemcpyHostToDevice));
+		CUDA_ASSERT(cudaMemcpy(d_arg, varg.data() + input_offset, sizeof(Arg) * count, cudaMemcpyHostToDevice));
 
-		MakeOnDevice<T2>(count, offset, d_arg);
+		MakeOnDevice<T2>(count, array_offset, 0, d_arg);
 
 		CUDA_ASSERT(cudaFree(d_arg));
 	}
-	void DeleteOnDevice(size_t count, size_t offset = 0) {
+	template <typename DeviceFactoryType>
+	void MakeOnDeviceFactory(size_t count, size_t array_offset, size_t input_offset, DeviceFactoryType* d_factory) {
+		int threads = 32;
+		int blocks = ceilDiv(count, threads);
+		_makeArrayOnDeviceFactory<T, DeviceFactoryType><<<blocks, threads>>>(count, input_offset, ptr2 + array_offset, d_factory);
+		CUDA_ASSERT(cudaDeviceSynchronize());
+		CUDA_ASSERT(cudaMemcpy(ptrs.data() + array_offset, ptr2 + array_offset, sizeof(T*) * count, cudaMemcpyDeviceToHost));
+	}
+	void DeleteOnDevice(size_t count, size_t offset) {
 		int threads = 32;
 		int blocks = ceilDiv(count, threads);
 		_deleteArrayOnDevice<T><<<blocks, threads>>>(count, ptr2);

@@ -27,11 +27,11 @@ FirstApp::FirstApp() {
 	sphere_data.push_back(Sphere::ConstructorParams(glm::vec3( 1.0f,    0.0f, -1.0f),   0.5f,  right_mat->getPtr()));
 
 	world_sphere_list = std::make_unique<HandledDeviceAbstractArray<Hittable>>(sphere_data.size());
-	world_sphere_list->MakeOnDeviceVector<Sphere>(sphere_data.size(), 0, sphere_data);
+	world_sphere_list->MakeOnDeviceVector<Sphere>(sphere_data.size(), 0, 0, sphere_data);
 
 	world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(world_sphere_list->getDeviceArrayPtr(), world_sphere_list->getSize());
 
-	renderer = std::make_unique<Renderer>(render_width, render_height, 1024, 16, cam, world_list->getPtr());
+	renderer = std::make_unique<Renderer>(render_width, render_height, 8, 8, cam, world_list->getPtr());
 
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * render_width * render_height));
 }
@@ -43,7 +43,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	renderer->Render();
 	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_036.png"s, render_width, render_height, host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_037.png"s, render_width, render_height, host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
