@@ -124,6 +124,12 @@ public:
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		CUDA_ASSERT(cudaMemcpy(ptrs.data() + array_offset, ptr2 + array_offset, sizeof(T*) * count, cudaMemcpyDeviceToHost));
 	}
+	template <typename T2, typename... Args>
+	void MakeSingleOnDevice(size_t offset, Args... args) {
+		_makeOnDevice<T, T2, Args...><<<1, 1>>>(ptr2 + offset, args...);
+		CUDA_ASSERT(cudaDeviceSynchronize());
+		CUDA_ASSERT(cudaMemcpy(&ptrs[offset], ptr2 + offset, sizeof(T*), cudaMemcpyDeviceToHost));
+	}
 	template <typename T2, typename Arg>
 	void MakeOnDeviceVector(size_t count, size_t array_offset, size_t input_offset, std::vector<Arg> varg) {
 		Arg* d_arg{};
