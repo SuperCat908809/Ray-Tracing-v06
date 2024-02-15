@@ -199,9 +199,9 @@ public:
 	};
 
 	SceneBook1FinaleFactory(
-		HandledDeviceAbstractArray<Material>** materials,
-		HandledDeviceAbstractArray<Hittable>** sphere_list,
-		HandledDeviceAbstract<HittableList>** world_list
+		std::unique_ptr<HandledDeviceAbstractArray<Material>>& materials,
+		std::unique_ptr<HandledDeviceAbstractArray<Hittable>>& sphere_list,
+		std::unique_ptr<HandledDeviceAbstract<HittableList>>& world_list
 	) {
 		_populateWorld();
 
@@ -218,10 +218,10 @@ public:
 		size_t   metal_offset = lambert_offset + lambert_params.size();
 		size_t  dielec_offset =   metal_offset +   metal_params.size();
 
-		(*materials) = new HandledDeviceAbstractArray<Material>(sphere_params.size());
-		(*materials)->MakeOnDeviceFactory<d_LambertFactory>(lambert_params.size(), lambert_offset, 0, lambert_factory);
-		(*materials)->MakeOnDeviceFactory<d_MetalFactory  >(  metal_params.size(),   metal_offset, 0,   metal_factory);
-		(*materials)->MakeOnDeviceFactory<d_DielecFactory >( dielec_params.size(),  dielec_offset, 0,  dielec_factory);
+		materials = std::make_unique<HandledDeviceAbstractArray<Material>>(sphere_params.size());
+		materials->MakeOnDeviceFactory<d_LambertFactory>(lambert_params.size(), lambert_offset, 0, lambert_factory);
+		materials->MakeOnDeviceFactory<d_MetalFactory  >(  metal_params.size(),   metal_offset, 0,   metal_factory);
+		materials->MakeOnDeviceFactory<d_DielecFactory >( dielec_params.size(),  dielec_offset, 0,  dielec_factory);
 
 		CUDA_ASSERT(cudaFree(d_lambert_params));
 		CUDA_ASSERT(cudaFree(d_metal_params  ));
@@ -229,15 +229,15 @@ public:
 
 
 		SphereParams* d_sphere_params = _copyToDevice(sphere_params);
-		d_SphereFactory sphere_factory(d_sphere_params, (*materials)->getDeviceArrayPtr(), lambert_offset, metal_offset, dielec_offset);
+		d_SphereFactory sphere_factory(d_sphere_params, materials->getDeviceArrayPtr(), lambert_offset, metal_offset, dielec_offset);
 
-		(*sphere_list) = new HandledDeviceAbstractArray<Hittable>(sphere_params.size());
-		(*sphere_list)->MakeOnDeviceFactory<d_SphereFactory>(sphere_params.size(), 0, 0, sphere_factory);
+		sphere_list = std::make_unique<HandledDeviceAbstractArray<Hittable>>(sphere_params.size());
+		sphere_list->MakeOnDeviceFactory<d_SphereFactory>(sphere_params.size(), 0, 0, sphere_factory);
 
 		CUDA_ASSERT(cudaFree(d_sphere_params));
 
 
-		(*world_list) = new HandledDeviceAbstract<HittableList>((*sphere_list)->getDeviceArrayPtr(), (*sphere_list)->getSize());
+		world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(sphere_list->getDeviceArrayPtr(), sphere_list->getSize());
 	}
 };
 
@@ -252,14 +252,7 @@ FirstApp::FirstApp() {
 	float aspect = render_width / (float)render_height;
 	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
-	HandledDeviceAbstractArray<Material>* factory_materials{};
-	HandledDeviceAbstractArray<Hittable>* factory_spheres{};
-	HandledDeviceAbstract<HittableList>* factory_world{};
-	SceneBook1FinaleFactory(&factory_materials, &factory_spheres, &factory_world);
-
-	sphere_materials = std::unique_ptr<HandledDeviceAbstractArray<Material>>(factory_materials);
-	world_sphere_list = std::unique_ptr<HandledDeviceAbstractArray<Hittable>>(factory_spheres);
-	world_list = std::unique_ptr<HandledDeviceAbstract<HittableList>>(factory_world);
+	SceneBook1FinaleFactory(sphere_materials, world_sphere_list, world_list);
 
 	renderer = std::make_unique<Renderer>(render_width, render_height, 1024, 32, cam, world_list->getPtr());
 
