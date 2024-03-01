@@ -20,11 +20,13 @@ using namespace std::string_literals;
 
 int main() {
 
-	FirstApp* app = new FirstApp();
+	{
 
-	app->Run();
+		dAbstract<Material> mat_ptr2 = dAbstract<Material>::MakeAbstract<MetalAbstract>(glm::vec3(1.0f), 0.05f);
 
-	delete app;
+		FirstApp app = FirstApp::MakeApp();
+		app.Run();
+	}
 
 	CUDA_ASSERT(cudaDeviceReset());
 

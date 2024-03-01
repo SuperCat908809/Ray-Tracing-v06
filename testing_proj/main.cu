@@ -45,24 +45,24 @@ __global__ inline void _deleteOnDevice(T** ptr) {
 
 
 template <typename T>
-class HandledDeviceAbstract {
+class dAbstract {
 	T* ptr{};
 	T** ptr2{};
 
 public:
 
-	HandledDeviceAbstract() = delete;
-	HandledDeviceAbstract(const HandledDeviceAbstract&) = delete;
-	HandledDeviceAbstract& operator=(const HandledDeviceAbstract&) = delete;
+	dAbstract() = delete;
+	dAbstract(const dAbstract&) = delete;
+	dAbstract& operator=(const dAbstract&) = delete;
 
 	template <typename... Args>
-	HandledDeviceAbstract(Args... args) {
+	dAbstract(Args... args) {
 		CUDA_ASSERT(cudaMalloc(&ptr2, sizeof(T*)));
 		_makeOnDevice<<<1, 1>>>(ptr2, args...);
 		CUDA_ASSERT(cudaGetLastError());
 		CUDA_ASSERT(cudaMemcpy(&ptr, ptr2, sizeof(T*), cudaMemcpyDeviceToHost));
 	}
-	__host__ ~HandledDeviceAbstract() {
+	__host__ ~dAbstract() {
 		_deleteOnDevice<<<1, 1>>>(ptr2);
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		CUDA_ASSERT(cudaFree(ptr2));
@@ -106,7 +106,7 @@ public:
 		memset(ptrs.data(), 0, size);
 	}
 	~HandledDeviceAbstractArray() {
-		int count = (int)getSize();
+		int count = (int)getLength();
 		int threads = 32;
 		int blocks = ceilDiv(count, threads);
 		_deleteArrayOnDevice<T><<<blocks, threads>>>(count, ptr2);
@@ -114,7 +114,7 @@ public:
 		CUDA_ASSERT(cudaFree(ptr2));
 	}
 
-	size_t getSize() const { return ptrs.size(); }
+	size_t getLength() const { return ptrs.size(); }
 	T** getDevicePtrArray() const { return ptr2; }
 	std::vector<T*> getPtrVector() const { return ptrs; }
 

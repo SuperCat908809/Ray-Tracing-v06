@@ -67,4 +67,9 @@
       <Filter>externals</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="handled_device_abstracts.inl">
+      <Filter>Utilities</Filter>
+    </None>
+  </ItemGroup>
 </Project>

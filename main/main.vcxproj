@@ -187,6 +187,9 @@
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="handled_device_abstracts.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.2.targets" />

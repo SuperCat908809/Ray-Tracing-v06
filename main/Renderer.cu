@@ -10,36 +10,52 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 	curand_init(seed, gid, 0, &random_states[gid]);
 }
 
-Renderer::Renderer(uint32_t render_width, uint32_t render_height,
+Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
 	const PinholeCamera& cam,
-	HittableList* d_world_ptr)
-	: render_width(render_width), render_height(render_height),
-	samples_per_pixel(samples_per_pixel), max_depth(max_depth),
-	cam(cam),
-	d_world_ptr(d_world_ptr) {
+	HittableList* d_world_ptr) {
+
+	glm::vec4* d_output_buffer{};
+	curandState_t* d_random_states{};
 
 	CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMemset(d_output_buffer, 0, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
-	default_mat = std::make_unique<HandledDeviceAbstract<Material>>();
-	default_mat->MakeOnDevice<MetalAbstract>(glm::vec3(1.0f), 0.1f);
+	dAbstract<Material> default_mat = dAbstract<Material>::MakeAbstract<MetalAbstract>(glm::vec3(1.0f), 0.1f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
 	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, d_random_states);
 	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());
-	CUDA_ASSERT(cudaGetLastError());
+
+
+	return Renderer(M{
+		{ render_width },
+		{ render_height },
+		{ samples_per_pixel },
+		{ max_depth },
+		{ cam },
+		{ d_world_ptr },
+		{ d_output_buffer },
+		{ d_random_states },
+		{ std::move(default_mat) },
+	});
+}
+Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
+	other.m.d_output_buffer = nullptr;
+	other.m.d_random_states = nullptr;
 }
 Renderer::~Renderer() {
-	CUDA_ASSERT(cudaFree(d_output_buffer));
-	CUDA_ASSERT(cudaFree(d_random_states));
+	if (m.d_output_buffer != nullptr)
+		CUDA_ASSERT(cudaFree(m.d_output_buffer));
+	if (m.d_random_states != nullptr)
+		CUDA_ASSERT(cudaFree(m.d_random_states));
 }
 
 void Renderer::DownloadRenderbuffer(glm::vec4* host_dst) const {
-	CUDA_ASSERT(cudaMemcpy(host_dst, d_output_buffer, sizeof(glm::vec4) * render_width * render_height, cudaMemcpyDeviceToHost));
+	CUDA_ASSERT(cudaMemcpy(host_dst, m.d_output_buffer, sizeof(glm::vec4) * m.render_width * m.render_height, cudaMemcpyDeviceToHost));
 }
 
 
@@ -58,22 +74,22 @@ __global__ void render_kernel(LaunchParams p);
 
 void Renderer::Render() {
 	LaunchParams params{};
-	params.render_width = render_width;
-	params.render_height = render_height;
-	params.samples_per_pixel = samples_per_pixel;
-	params.max_depth = max_depth;
-	params.cam = cam;
-	params.world = d_world_ptr;
-	params.default_mat = default_mat->getPtr();
-	params.output_buffer = d_output_buffer;
-	params.random_states = d_random_states;
+	params.render_width = m.render_width;
+	params.render_height = m.render_height;
+	params.samples_per_pixel = m.samples_per_pixel;
+	params.max_depth = m.max_depth;
+	params.cam = m.cam;
+	params.world = m.d_world_ptr;
+	params.default_mat = m.default_mat.getPtr();
+	params.output_buffer = m.d_output_buffer;
+	params.random_states = m.d_random_states;
 
 	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
 	// therefore you must manually set a size that should encompass the entire program.
 	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
 
 	dim3 threads{ 8, 8, 1 };
-	dim3 blocks = dim3((render_width + threads.x - 1) / threads.x, (render_height + threads.y - 1) / threads.y, 1);
+	dim3 blocks = dim3((m.render_width + threads.x - 1) / threads.x, (m.render_height + threads.y - 1) / threads.y, 1);
 	render_kernel<<<blocks, threads>>>(params);
 	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());

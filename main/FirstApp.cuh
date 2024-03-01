@@ -13,21 +13,32 @@ using namespace std::string_literals;
 #include "handled_device_abstracts.cuh"
 #include "Renderer.cuh"
 
+struct _SceneDescription {
+	dAbstractArray<Material> sphere_materials;
+	dAbstractArray<Hittable> world_sphere_list;
+	dAbstract<HittableList> world_list;
+};
+
 class FirstApp {
 
-	uint32_t render_width{}, render_height{};
-	PinholeCamera cam{};
-	std::unique_ptr<Renderer> renderer{};
-	glm::vec4* host_output_framebuffer{};
+	struct M {
+		uint32_t render_width{}, render_height{};
+		PinholeCamera cam{};
+		glm::vec4* host_output_framebuffer{};
+		Renderer renderer;
 
-	// gpu memory
-	std::unique_ptr<HandledDeviceAbstractArray<Material>> sphere_materials{};
-	std::unique_ptr<HandledDeviceAbstractArray<Hittable>> world_sphere_list{};
-	std::unique_ptr<HandledDeviceAbstract<HittableList>> world_list{};
+		_SceneDescription _sceneDesc;
+	} m;
+
+	FirstApp(M m) : m(std::move(m)) {}
 
 public:
 
-	FirstApp();
+	FirstApp(const FirstApp&) = delete;
+	FirstApp& operator=(const FirstApp&) = delete;
+
+	static FirstApp MakeApp();
+	FirstApp(FirstApp&& other) : m(std::move(other.m)) {}
 	~FirstApp();
 
 	void Run();

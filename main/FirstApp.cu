@@ -4,6 +4,7 @@
 
 #include <stb/stb_image_write.h>
 
+#if 0
 class Scene1Factory {
 public:
 
@@ -37,23 +38,24 @@ public:
 	};
 
 	Scene1Factory(
-		HandledDeviceAbstractArray<Material>** materials,
-		HandledDeviceAbstractArray<Hittable>** spheres,
-		HandledDeviceAbstract<HittableList>** world_list
+		dAbstractArray<Material>** materials,
+		dAbstractArray<Hittable>** spheres,
+		dAbstract<HittableList>** world_list
 	) {
-		HandledDeviceAbstract<d_MatFactory> matFact{};
+		dAbstract<d_MatFactory> matFact{};
 		matFact.MakeOnDevice<d_MatFactory>();
 		
-		(*materials) = new HandledDeviceAbstractArray<Material>(4);
+		(*materials) = new dAbstractArray<Material>(4);
 		(*materials)->MakeOnDeviceFactoryPtr<d_MatFactory>(4, 0, 0, matFact.getPtr());
 
-		HandledDeviceAbstract<d_SphereFactory> sphereFact((*materials)->getDeviceArrayPtr());
-		(*spheres) = new HandledDeviceAbstractArray<Hittable>(5);
+		dAbstract<d_SphereFactory> sphereFact((*materials)->getDeviceArrayPtr());
+		(*spheres) = new dAbstractArray<Hittable>(5);
 		(*spheres)->MakeOnDeviceFactoryPtr<d_SphereFactory>(5, 0, 0, sphereFact.getPtr());
 
-		(*world_list) = new HandledDeviceAbstract<HittableList>((*spheres)->getDeviceArrayPtr(), 5);
+		(*world_list) = new dAbstract<HittableList>((*spheres)->getDeviceArrayPtr(), 5);
 	}
 };
+#endif
 
 class SceneBook1FinaleFactory {
 
@@ -142,9 +144,11 @@ class SceneBook1FinaleFactory {
 	}
 
 	std::vector<LambertParams> lambert_params{};
-	std::vector<MetalParams> metal_params{};
-	std::vector<DielecParams> dielec_params{};
-	std::vector<SphereParams> sphere_params{};
+	std::vector<  MetalParams>   metal_params{};
+	std::vector< DielecParams>  dielec_params{};
+	std::vector< SphereParams>  sphere_params{};
+
+	SceneBook1FinaleFactory() = default;
 
 public:
 
@@ -198,75 +202,89 @@ public:
 		}
 	};
 
-	SceneBook1FinaleFactory(
-		std::unique_ptr<HandledDeviceAbstractArray<Material>>& materials,
-		std::unique_ptr<HandledDeviceAbstractArray<Hittable>>& sphere_list,
-		std::unique_ptr<HandledDeviceAbstract<HittableList>>& world_list
-	) {
-		_populateWorld();
+	static _SceneDescription MakeScene() {
+		SceneBook1FinaleFactory factory{};
 
-		LambertParams* d_lambert_params = _copyToDevice(lambert_params);
+		factory._populateWorld();
+
+		LambertParams* d_lambert_params = _copyToDevice(factory.lambert_params);
 		d_LambertFactory lambert_factory(d_lambert_params);
 
-		MetalParams* d_metal_params = _copyToDevice(metal_params);
+		MetalParams* d_metal_params = _copyToDevice(factory.metal_params);
 		d_MetalFactory metal_factory(d_metal_params);
 
-		DielecParams* d_dielec_params = _copyToDevice(dielec_params);
+		DielecParams* d_dielec_params = _copyToDevice(factory.dielec_params);
 		d_DielecFactory dielec_factory(d_dielec_params);
 
 		size_t lambert_offset = 0;
-		size_t   metal_offset = lambert_offset + lambert_params.size();
-		size_t  dielec_offset =   metal_offset +   metal_params.size();
+		size_t   metal_offset = lambert_offset + factory.lambert_params.size();
+		size_t  dielec_offset = metal_offset + factory.metal_params.size();
 
-		materials = std::make_unique<HandledDeviceAbstractArray<Material>>(sphere_params.size());
-		materials->MakeOnDeviceFactory<d_LambertFactory>(lambert_params.size(), lambert_offset, 0, lambert_factory);
-		materials->MakeOnDeviceFactory<d_MetalFactory  >(  metal_params.size(),   metal_offset, 0,   metal_factory);
-		materials->MakeOnDeviceFactory<d_DielecFactory >( dielec_params.size(),  dielec_offset, 0,  dielec_factory);
+		dAbstractArray<Material> materials = dAbstractArray<Material>::MakeArray(factory.sphere_params.size());
+		materials.MakeOnDeviceFactory<d_LambertFactory>(factory.lambert_params.size(), lambert_offset, 0, lambert_factory);
+		materials.MakeOnDeviceFactory<d_MetalFactory  >(factory.  metal_params.size(),   metal_offset, 0,   metal_factory);
+		materials.MakeOnDeviceFactory<d_DielecFactory >(factory. dielec_params.size(),  dielec_offset, 0,  dielec_factory);
 
 		CUDA_ASSERT(cudaFree(d_lambert_params));
 		CUDA_ASSERT(cudaFree(d_metal_params  ));
 		CUDA_ASSERT(cudaFree(d_dielec_params ));
 
 
-		SphereParams* d_sphere_params = _copyToDevice(sphere_params);
-		d_SphereFactory sphere_factory(d_sphere_params, materials->getDeviceArrayPtr(), lambert_offset, metal_offset, dielec_offset);
+		SphereParams* d_sphere_params = _copyToDevice(factory.sphere_params);
+		d_SphereFactory sphere_factory(d_sphere_params, materials.getDeviceArrayPtr(), lambert_offset, metal_offset, dielec_offset);
 
-		sphere_list = std::make_unique<HandledDeviceAbstractArray<Hittable>>(sphere_params.size());
-		sphere_list->MakeOnDeviceFactory<d_SphereFactory>(sphere_params.size(), 0, 0, sphere_factory);
+		dAbstractArray<Hittable> sphere_list = dAbstractArray<Hittable>::MakeArray(factory.sphere_params.size());
+		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, sphere_factory);
 
 		CUDA_ASSERT(cudaFree(d_sphere_params));
 
 
-		world_list = std::make_unique<HandledDeviceAbstract<HittableList>>(sphere_list->getDeviceArrayPtr(), sphere_list->getSize());
+		dAbstract<HittableList> world_list = dAbstract<HittableList>::MakeAbstract(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
+
+		return _SceneDescription{
+			{ std::move(materials) },
+			{ std::move(sphere_list) },
+			{ std::move(world_list) },
+		};
 	}
 };
 
-FirstApp::FirstApp() {
-	render_width = 1280;
-	render_height = 720;
+FirstApp FirstApp::MakeApp() {
+	uint32_t _width = 1280;
+	uint32_t _height = 720;
 
 	glm::vec3 lookfrom(13, 2, 3);
 	glm::vec3 lookat(0, 0, 0);
 	glm::vec3 up(0, 1, 0);
 	float fov = 20.0f;
-	float aspect = render_width / (float)render_height;
-	cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
+	float aspect = _width / (float)_height;
+	PinholeCamera cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
 
-	SceneBook1FinaleFactory(sphere_materials, world_sphere_list, world_list);
+	_SceneDescription scene_desc = SceneBook1FinaleFactory::MakeScene();
 
-	renderer = std::make_unique<Renderer>(render_width, render_height, 1024, 32, cam, world_list->getPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 8, cam, scene_desc.world_list.getPtr());
 
-	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * render_width * render_height));
+	glm::vec4* host_output_framebuffer{};
+	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
+
+	return FirstApp(M{
+		{ _width },
+		{ _height },
+		{ cam },
+		{ host_output_framebuffer },
+		{ std::move(renderer) },
+		{ std::move(scene_desc) },
+	});
 }
 FirstApp::~FirstApp() {
-	CUDA_ASSERT(cudaFreeHost(host_output_framebuffer));
+	CUDA_ASSERT(cudaFreeHost(m.host_output_framebuffer));
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data);
 void FirstApp::Run() {
-	renderer->Render();
-	renderer->DownloadRenderbuffer(host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_039.png"s, render_width, render_height, host_output_framebuffer);
+	m.renderer.Render();
+	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_040.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
