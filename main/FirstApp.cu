@@ -209,21 +209,34 @@ public:
 
 		LambertParams* d_lambert_params = _copyToDevice(factory.lambert_params);
 		d_LambertFactory lambert_factory(d_lambert_params);
+		d_LambertFactory* d_lambert_factory{ nullptr };
+		CUDA_ASSERT(cudaMalloc((void**)&d_lambert_factory, sizeof(d_LambertFactory)));
+		CUDA_ASSERT(cudaMemcpy(d_lambert_factory, &lambert_factory, sizeof(d_LambertFactory), cudaMemcpyHostToDevice));
 
 		MetalParams* d_metal_params = _copyToDevice(factory.metal_params);
 		d_MetalFactory metal_factory(d_metal_params);
+		d_MetalFactory* d_metal_factory{ nullptr };
+		CUDA_ASSERT(cudaMalloc((void**)&d_metal_factory, sizeof(d_MetalFactory)));
+		CUDA_ASSERT(cudaMemcpy(d_metal_factory, &metal_factory, sizeof(d_MetalFactory), cudaMemcpyHostToDevice));
 
 		DielecParams* d_dielec_params = _copyToDevice(factory.dielec_params);
 		d_DielecFactory dielec_factory(d_dielec_params);
+		d_DielecFactory* d_dielec_factory{ nullptr };
+		CUDA_ASSERT(cudaMalloc((void**)&d_dielec_factory, sizeof(d_DielecFactory)));
+		CUDA_ASSERT(cudaMemcpy(d_dielec_factory, &dielec_factory, sizeof(d_DielecFactory), cudaMemcpyHostToDevice));
 
 		size_t lambert_offset = 0;
 		size_t   metal_offset = lambert_offset + factory.lambert_params.size();
 		size_t  dielec_offset = metal_offset + factory.metal_params.size();
 
-		dAbstractArray<Material> materials = dAbstractArray<Material>::MakeArray(factory.sphere_params.size());
-		materials.MakeOnDeviceFactory<d_LambertFactory>(factory.lambert_params.size(), lambert_offset, 0, lambert_factory);
-		materials.MakeOnDeviceFactory<d_MetalFactory  >(factory.  metal_params.size(),   metal_offset, 0,   metal_factory);
-		materials.MakeOnDeviceFactory<d_DielecFactory >(factory. dielec_params.size(),  dielec_offset, 0,  dielec_factory);
+		dAbstractArray<Material> materials(factory.sphere_params.size());
+		materials.MakeOnDeviceFactory<d_LambertFactory>(factory.lambert_params.size(), lambert_offset, 0, d_lambert_factory);
+		materials.MakeOnDeviceFactory<d_MetalFactory  >(factory.  metal_params.size(),   metal_offset, 0,   d_metal_factory);
+		materials.MakeOnDeviceFactory<d_DielecFactory >(factory. dielec_params.size(),  dielec_offset, 0,  d_dielec_factory);
+
+		CUDA_ASSERT(cudaFree(d_lambert_factory));
+		CUDA_ASSERT(cudaFree(d_metal_factory  ));
+		CUDA_ASSERT(cudaFree(d_dielec_factory ));
 
 		CUDA_ASSERT(cudaFree(d_lambert_params));
 		CUDA_ASSERT(cudaFree(d_metal_params  ));
@@ -232,19 +245,23 @@ public:
 
 		SphereParams* d_sphere_params = _copyToDevice(factory.sphere_params);
 		d_SphereFactory sphere_factory(d_sphere_params, materials.getDeviceArrayPtr(), lambert_offset, metal_offset, dielec_offset);
+		d_SphereFactory* d_sphere_factory{ nullptr };
+		CUDA_ASSERT(cudaMalloc((void**)&d_sphere_factory, sizeof(d_SphereFactory)));
+		CUDA_ASSERT(cudaMemcpy(d_sphere_factory, &sphere_factory, sizeof(d_SphereFactory), cudaMemcpyHostToDevice));
 
-		dAbstractArray<Hittable> sphere_list = dAbstractArray<Hittable>::MakeArray(factory.sphere_params.size());
-		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, sphere_factory);
+		dAbstractArray<Hittable> sphere_list(factory.sphere_params.size());
+		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, d_sphere_factory);
 
+		CUDA_ASSERT(cudaFree(d_sphere_factory));
 		CUDA_ASSERT(cudaFree(d_sphere_params));
 
 
-		dAbstract<HittableList> world_list = dAbstract<HittableList>::MakeAbstract(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
+		dAbstract<HittableList> world_list = dAbstract<HittableList>::MakeAbstract<HittableList>(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
 
 		return _SceneDescription{
-			{ std::move(materials) },
-			{ std::move(sphere_list) },
-			{ std::move(world_list) },
+			std::move(materials),
+			std::move(sphere_list),
+			std::move(world_list)
 		};
 	}
 };

@@ -3,18 +3,24 @@
 
 #include "cuda_utils.h"
 
-
+#if 0
 template <typename T>
 class dAbstract {
 
 	struct M {
-		T* ptr;
-		T** ptr2;
+		T* ptr{ nullptr };
+		T** ptr2{ nullptr };
 
-		static const M null;
-	} m;
+		M() = default;
+		M& operator=(M&& other) {
+			*this = other;
+			other = M();
+		}
+		M(M&& other) : ptr(other.ptr), ptr2(other.ptr2) { other.ptr = nullptr; other.ptr2 = nullptr; }
+	} m{};
 
 	// private constructor called by factory //
+	dAbstract() {}
 	dAbstract(M m) : m(std::move(m)) {}
 
 public:
@@ -32,9 +38,7 @@ public:
 
 	// move assignment and constructor //
 	dAbstract<T>& operator=(dAbstract<T>&& other);
-	dAbstract(dAbstract<T>&& other) : m(std::move(other.m)) {
-		other.m = dAbstract<T>::M::null;
-	}
+	dAbstract(dAbstract<T>&& other) : m(std::move(other.m)) {}
 
 	// accessors //
 	T* getPtr() const { return m.ptr; }
@@ -47,23 +51,54 @@ public:
 	// delete abstract from the device //
 	void DeleteOnDevice();
 };
-
+#else
 template <typename T>
-const dAbstract<T>::M dAbstract<T>::M::null{ nullptr, nullptr };
+class dAbstract {
+
+	T* ptr{ nullptr };
+	T** ptr2{ nullptr };
+
+	void _delete();
+
+	dAbstract() {};
+
+public:
+
+	dAbstract(const dAbstract&) = delete;
+	dAbstract& operator=(const dAbstract&) = delete;
+
+	template <typename T2, typename... Args>
+	static dAbstract MakeAbstract(Args... args);
+	~dAbstract();
+
+	dAbstract(dAbstract&& other);
+	dAbstract& operator=(dAbstract&& other);
+
+	T* getPtr() { return ptr; }
+	T** getPtr2() { return ptr2; }
+	const T* getPtr() const { return ptr; }
+	const T** getPtr2() const { return ptr2; }
+};
+#endif
 
 
-
+#if 0
 template <typename T>
 class dAbstractArray {
 
 	struct M {
-		size_t length{};
-		T** ptr2{};
+		size_t length{ 0ull };
+		T** ptr2{ nullptr };
 
-		static const M null;
-	} m;
+		M& operator=(M&& other) {
+			*this = other;
+			other = M();
+		}
+		M(M&& other) : length(other.length), ptr2(other.ptr2) { other.length = 0ull; other.ptr2 = nullptr; }
+	} m{};
 
 	// private constructor called by factory //
+	dAbstractArray() {}
 	dAbstractArray(M m) : m(std::move(m)) {}
 
 public:
@@ -80,9 +115,7 @@ public:
 	
 	// move assignment and constructor //
 	dAbstractArray<T>& operator=(dAbstractArray<T>&& other);
-	dAbstractArray(dAbstractArray<T>&& other) : m(std::move(other.m)) {
-		other.m = dAbstractArray<T>::M::null;
-	}
+	dAbstractArray(dAbstractArray<T>&& other) : m(std::move(other.m)) {}
 
 	// accessors //
 	size_t getLength() const { return m.length; }
@@ -115,9 +148,41 @@ public:
 	// delete a range of abstracts from the device //
 	void DeleteOnDevice(size_t count, size_t offset);
 };
-
+#else
 template <typename T>
-const dAbstractArray<T>::M dAbstractArray<T>::M::null{ 0ull, nullptr };
+class dAbstractArray {
+	
+	size_t length{ 0ull };
+	T** ptr2{ nullptr };
+
+	void _delete();
+
+public:
+
+	dAbstractArray(const dAbstractArray&) = delete;
+	dAbstractArray& operator=(const dAbstractArray&) = delete;
+
+	dAbstractArray(size_t size);
+	~dAbstractArray();
+
+	dAbstractArray(dAbstractArray&& other);
+	dAbstractArray& operator=(dAbstractArray&& other);
+
+	size_t getLength() const { return length; }
+	const T** getDeviceArrayPtr() const { return ptr2; }
+	T** getDeviceArrayPtr() { return ptr2; }
+	std::vector<T*> getPtrVector();
+	std::vector<const T*> getPtrVector() const;
+
+	template <typename T2, typename... Args>
+	void MakeOnDevice(size_t count, size_t offset, size_t input_offset, Args*... args);
+
+	template <typename DeviceFactoryType>
+	void MakeOnDeviceFactory(size_t count, size_t offset, size_t input_offset, DeviceFactoryType* factory);
+
+	void DeleteOnDevice(size_t count, size_t offset);
+};
+#endif
 
 #include "handled_device_abstracts.inl"
 
