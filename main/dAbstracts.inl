@@ -132,6 +132,8 @@ dAbstract<T>& dAbstract<T>::operator=(dAbstract<T>&& other) {
 
 	other.ptr = nullptr;
 	other.ptr2 = nullptr;
+
+	return *this;
 }
 
 template <typename T>
@@ -276,6 +278,8 @@ dAbstractArray<T>& dAbstractArray<T>::operator=(dAbstractArray<T>&& other) {
 
 	other.length = 0ull;
 	other.ptr2 = nullptr;
+
+	return *this;
 }
 
 

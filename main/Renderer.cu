@@ -10,6 +10,13 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 	curand_init(seed, gid, 0, &random_states[gid]);
 }
 
+void Renderer::_delete() {
+	if (m.d_output_buffer != nullptr)
+		CUDA_ASSERT(cudaFree(m.d_output_buffer));
+	if (m.d_random_states != nullptr)
+		CUDA_ASSERT(cudaFree(m.d_random_states));
+}
+
 Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
 	const PinholeCamera& cam,
@@ -19,7 +26,6 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	curandState_t* d_random_states{};
 
 	CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
-	CUDA_ASSERT(cudaMemset(d_output_buffer, 0, sizeof(glm::vec4) * render_width * render_height));
 	CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
 	dAbstract<Material> default_mat = dAbstract<Material>::MakeAbstract<MetalAbstract>(glm::vec3(1.0f), 0.1f);
@@ -27,31 +33,37 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
 	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, d_random_states);
-	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());
 
 
 	return Renderer(M{
-		{ render_width },
-		{ render_height },
-		{ samples_per_pixel },
-		{ max_depth },
-		{ cam },
-		{ d_world_ptr },
-		{ d_output_buffer },
-		{ d_random_states },
-		{ std::move(default_mat) },
+		render_width,
+		render_height,
+		samples_per_pixel,
+		max_depth,
+		cam,
+		d_world_ptr,
+		d_output_buffer,
+		d_random_states,
+		std::move(default_mat)
 	});
 }
 Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
 	other.m.d_output_buffer = nullptr;
 	other.m.d_random_states = nullptr;
 }
+Renderer& Renderer::operator=(Renderer&& other) {
+	_delete();
+
+	m = std::move(other.m);
+
+	other.m.d_output_buffer = nullptr;
+	other.m.d_random_states = nullptr;
+
+	return *this;
+}
 Renderer::~Renderer() {
-	if (m.d_output_buffer != nullptr)
-		CUDA_ASSERT(cudaFree(m.d_output_buffer));
-	if (m.d_random_states != nullptr)
-		CUDA_ASSERT(cudaFree(m.d_random_states));
+	_delete();
 }
 
 void Renderer::DownloadRenderbuffer(glm::vec4* host_dst) const {

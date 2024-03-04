@@ -23,6 +23,8 @@ class Renderer {
 		dAbstract<Material> default_mat;
 	} m;
 
+	void _delete();
+
 	Renderer(M m) : m(std::move(m)) {}
 
 public:
@@ -37,6 +39,7 @@ public:
 		HittableList* d_world_ptr
 	);
 	Renderer(Renderer&& other);
+	Renderer& operator=(Renderer&& other);
 	~Renderer();
 
 	void Render();
