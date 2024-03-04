@@ -183,12 +183,12 @@
     <ClInclude Include="FirstApp.cuh" />
     <ClInclude Include="glm_utils.h" />
     <ClInclude Include="cu_Materials.cuh" />
-    <ClInclude Include="handled_device_abstracts.cuh" />
+    <ClInclude Include="dAbstracts.cuh" />
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="handled_device_abstracts.inl" />
+    <None Include="dAbstracts.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,7 +1,7 @@
-#ifndef HANDLED_DEVICE_ABSTRACT_CLASSES_INL
-#define HANDLED_DEVICE_ABSTRACT_CLASSES_INL
+#ifndef D_ABSTRACT_CLASSES_INL
+#define D_ABSTRACT_CLASSES_INL
 
-#include "handled_device_abstracts.cuh"
+#include "dAbstracts.cuh"
 
 template <typename T1, typename T2, typename... Args>
 __global__ inline void _makeOnDevice(T1** ptr, Args... args) {
@@ -323,4 +323,4 @@ void dAbstractArray<T>::DeleteOnDevice(size_t count, size_t offset) {
 }
 #endif
 
-#endif // HANDLED_DEVICE_ABSTRACT_CLASSES_INL //
+#endif // D_ABSTRACT_CLASSES_INL //

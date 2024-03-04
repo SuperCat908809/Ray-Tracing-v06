@@ -1,5 +1,5 @@
-#ifndef HANDLED_DEVICE_ABSTRACT_CLASSES_H
-#define HANDLED_DEVICE_ABSTRACT_CLASSES_H
+#ifndef D_ABSTRACT_CLASSES_H
+#define D_ABSTRACT_CLASSES_H
 
 #include "cuda_utils.h"
 
@@ -184,6 +184,6 @@ public:
 };
 #endif
 
-#include "handled_device_abstracts.inl"
+#include "dAbstracts.inl"
 
-#endif // HANDLED_DEVICE_ABSTRACT_CLASSES_H //
+#endif // D_ABSTRACT_CLASSES_H //

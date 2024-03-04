@@ -10,7 +10,7 @@ using namespace std::string_literals;
 #include "cu_Cameras.cuh"
 #include "cu_Materials.cuh"
 
-#include "handled_device_abstracts.cuh"
+#include "dAbstracts.cuh"
 #include "Renderer.cuh"
 
 struct _SceneDescription {

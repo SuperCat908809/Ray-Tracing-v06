@@ -6,7 +6,7 @@
 #include "cu_Geometry.cuh"
 #include "cu_Materials.cuh"
 
-#include "handled_device_abstracts.cuh"
+#include "dAbstracts.cuh"
 
 class Renderer {
 

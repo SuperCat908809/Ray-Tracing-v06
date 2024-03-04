@@ -58,7 +58,7 @@
     <ClInclude Include="FirstApp.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="handled_device_abstracts.cuh">
+    <ClInclude Include="dAbstracts.cuh">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,7 +68,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="handled_device_abstracts.inl">
+    <None Include="dAbstracts.inl">
       <Filter>Utilities</Filter>
     </None>
   </ItemGroup>
