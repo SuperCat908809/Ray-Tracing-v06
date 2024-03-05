@@ -101,11 +101,9 @@ void Renderer::Render() {
 	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
 
 	dim3 threads{ 8, 8, 1 };
-	dim3 blocks = dim3((m.render_width + threads.x - 1) / threads.x, (m.render_height + threads.y - 1) / threads.y, 1);
+	dim3 blocks = dim3(ceilDiv(m.render_width, threads.x), ceilDiv(m.render_height, threads.y), 1);
 	render_kernel<<<blocks, threads>>>(params);
-	CUDA_ASSERT(cudaPeekAtLastError());
 	CUDA_ASSERT(cudaDeviceSynchronize());
-	CUDA_ASSERT(cudaGetLastError());
 }
 
 __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandState* random_state) {
