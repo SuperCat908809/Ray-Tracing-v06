@@ -1,8 +1,12 @@
 #include "FirstApp.cuh"
 
 #include <curand.h>
-
 #include <stb/stb_image_write.h>
+
+#include "dobj.cuh"
+#include "darray.cuh"
+#include "cuHostRND.h"
+
 
 #if 0
 class Scene1Factory {
@@ -57,25 +61,26 @@ public:
 };
 #endif
 
+#if 0
 class SceneBook1FinaleFactory {
 
-	static std::vector<float> _makeNUniforms(size_t N, size_t seed) {
-		curandGenerator_t gen;
-		float* d_rnd_uniforms{};
-		cudaMalloc(&d_rnd_uniforms, sizeof(float) * N);
+	//static std::vector<float> _makeNUniforms(size_t N, size_t seed) {
+	//	curandGenerator_t gen;
+	//	float* d_rnd_uniforms{};
+	//	cudaMalloc(&d_rnd_uniforms, sizeof(float) * N);
 
-		curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_XORWOW);
-		curandSetPseudoRandomGeneratorSeed(gen, seed);
-		curandGenerateUniform(gen, d_rnd_uniforms, N);
+	//	curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_XORWOW);
+	//	curandSetPseudoRandomGeneratorSeed(gen, seed);
+	//	curandGenerateUniform(gen, d_rnd_uniforms, N);
 
-		std::vector<float> rnds{};
-		rnds.resize(N);
-		cudaMemcpy(rnds.data(), d_rnd_uniforms, sizeof(float) * N, cudaMemcpyDeviceToHost);
+	//	std::vector<float> rnds{};
+	//	rnds.resize(N);
+	//	cudaMemcpy(rnds.data(), d_rnd_uniforms, sizeof(float) * N, cudaMemcpyDeviceToHost);
 
-		curandDestroyGenerator(gen);
-		cudaFree(d_rnd_uniforms);
-		return rnds;
-	}
+	//	curandDestroyGenerator(gen);
+	//	cudaFree(d_rnd_uniforms);
+	//	return rnds;
+	//}
 
 	template <typename T>
 	static T* _copyToDevice(const std::vector<T>& v) {
@@ -91,15 +96,15 @@ class SceneBook1FinaleFactory {
 	struct DielecParams  { glm::vec3 albedo; float    ior; };
 	struct SphereParams  { glm::vec3 origin; float radius; MatIdx mat_type; size_t mat_index; };
 
-	void _makeSphere(int a, int b, std::vector<float>& rnds, int& rnd_offset) {
-	#define rnd (rnds[rnd_offset++])
+	void _makeSphere(int a, int b) {
+	#define rnd (host_rnd.next())
 
 		float choose_mat = rnd;
 		glm::vec3 pos(a + 0.9f * rnd, 0.2f, b + 0.9f * rnd);
 
 		if (glm::length(pos - glm::vec3(4, 0.2f, 0)) > 0.9f) {
 			if (choose_mat < 0.8f) {
-				// diffse
+				// diffuse
 				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
 				sphere_params.push_back({ pos, 0.2f, lambert, lambert_params.size() });
 				lambert_params.push_back({ albedo });
@@ -120,16 +125,13 @@ class SceneBook1FinaleFactory {
 	}
 
 	void _populateWorld() {
-		int rnd_offset = 0;
-		auto rnds = _makeNUniforms(4096, 1984);
-
 		// ground sphere
 		sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, lambert, lambert_params.size()});
 		lambert_params.push_back({ glm::vec3(0.5f) });
 
 		for (int a = -11; a < 11; a++) {
 			for (int b = -11; b < 11; b++) {
-				_makeSphere(a, b, rnds, rnd_offset);
+				_makeSphere(a, b);
 			}
 		}
 
@@ -147,6 +149,7 @@ class SceneBook1FinaleFactory {
 	std::vector<  MetalParams>   metal_params{};
 	std::vector< DielecParams>  dielec_params{};
 	std::vector< SphereParams>  sphere_params{};
+	cuHostRND host_rnd{ 512, 1984 };
 
 	SceneBook1FinaleFactory() = default;
 
@@ -265,6 +268,146 @@ public:
 		};
 	}
 };
+#else
+
+class SceneBook1FinaleFactory {
+public:
+	enum MaterialID { LAMBERTIAN, METAL, DIELECTRIC };
+	struct MaterialParams {
+		MaterialID matID;
+		union {
+			struct { glm::vec3 albedo; }				lambert;
+			struct { glm::vec3 albedo; float fuzz; }	  metal;
+			struct { glm::vec3 albedo; float  ior; }	 dielec;
+		};
+
+		static MaterialParams MakeLambert(glm::vec3 albedo            ) { MaterialParams p; p.matID = LAMBERTIAN; p.lambert = { albedo       }; return p; }
+		static MaterialParams   MakeMetal(glm::vec3 albedo, float fuzz) { MaterialParams p; p.matID =      METAL; p.metal   = { albedo, fuzz }; return p; }
+		static MaterialParams  MakeDielec(glm::vec3 albedo, float  ior) { MaterialParams p; p.matID = DIELECTRIC; p.dielec  = { albedo,  ior }; return p; }
+
+
+		__device__ Material* MakeMaterial() const {
+			switch (matID) {
+			case LAMBERTIAN: return new LambertianAbstract(lambert.albedo);
+			case      METAL: return new      MetalAbstract(metal.albedo, metal.fuzz);
+			case DIELECTRIC: return new DielectricAbstract(dielec.albedo, dielec.ior);
+			}
+		}
+	};
+
+	class d_MaterialFactory {
+		MaterialParams* p{};
+	public:
+		__host__ __device__ d_MaterialFactory(MaterialParams* p) : p(p) {}
+		__device__ Material* operator()(size_t index) const { return p[index].MakeMaterial(); }
+	};
+
+	struct SphereParams {
+		glm::vec3 origin;
+		float radius;
+		size_t material_index;
+		__device__ Hittable* MakeSphere(Material** material_array) const { return new Sphere(origin, radius, material_array[material_index]); }
+	};
+
+	class d_SphereFactory {
+		SphereParams* p{};
+		Material** mats;
+	public:
+		__host__ __device__ d_SphereFactory(SphereParams* p, Material** mats) : p(p), mats(mats) {}
+		__device__ Hittable* operator()(size_t index) const { return p[index].MakeSphere(mats); }
+	};
+
+private:
+	void _make_sphere(int a, int b) {
+	#define rnd (host_rnd.next())
+
+		float choose_mat = rnd;
+		glm::vec3 pos(a + 0.9f * rnd, 0.2f, b + 0.9f * rnd);
+
+		if (glm::length(pos - glm::vec3(4, 0.2f, 0)) > 0.9f) {
+			if (choose_mat < 0.8f) {
+				// diffuse
+				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
+				sphere_params.push_back({ pos, 0.2f, material_params.size() });
+				material_params.push_back(MaterialParams::MakeLambert(albedo));
+			}
+			else if (choose_mat < 0.95f) {
+				// metal
+				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * 0.5f + 0.5f;
+				float fuzz = rnd * 0.5f;
+				sphere_params.push_back({ pos, 0.2f, material_params.size() });
+				material_params.push_back(MaterialParams::MakeMetal(albedo, fuzz));
+			}
+			else {
+				// glass
+				sphere_params.push_back({ pos, 0.2f, material_params.size() });
+				material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
+			}
+		}
+	}
+
+	void _populate_world() {
+		// ground sphere
+		sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, material_params.size() });
+		material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.5f)));
+
+		for (int a = -11; a < 11; a++) {
+			for (int b = -11; b < 11; b++) {
+				_make_sphere(a, b);
+			}
+		}
+
+		sphere_params.push_back({ glm::vec3(0,1,0),1,material_params.size() });
+		material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
+
+		sphere_params.push_back({ glm::vec3(-4,1,0),1,material_params.size() });
+		material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.4f, 0.2f, 0.1f)));
+
+		sphere_params.push_back({ glm::vec3(4,1,0),1,material_params.size() });
+		material_params.push_back(MaterialParams::MakeMetal(glm::vec3(0.7f, 0.6f, 0.5f), 0));
+	}
+
+	
+
+	std::vector<MaterialParams> material_params{};
+	std::vector<  SphereParams>   sphere_params{};
+	cuHostRND host_rnd{ 512, 1984 };
+
+public:
+
+	static _SceneDescription MakeScene() {
+		SceneBook1FinaleFactory factory{};
+
+		factory._populate_world();
+
+		darray<MaterialParams> d_mat_params(factory.material_params);
+		d_MaterialFactory material_factory(d_mat_params.getPtr());
+		dobj<d_MaterialFactory> d_mat_factory(material_factory);
+
+		dAbstractArray<Material> materials(factory.material_params.size());
+		materials.MakeOnDeviceFactory<d_MaterialFactory>(factory.material_params.size(), 0, 0, d_mat_factory.getPtr());
+
+
+		darray<SphereParams> d_sphere_params(factory.sphere_params);
+		d_SphereFactory sphere_factory(d_sphere_params.getPtr(), materials.getDeviceArrayPtr());
+		dobj<d_SphereFactory> d_sphere_factory(sphere_factory);
+
+		dAbstractArray<Hittable> sphere_list(factory.sphere_params.size());
+		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, d_sphere_factory.getPtr());
+
+		
+		dAbstract<HittableList> world_list = dAbstract<HittableList>::MakeAbstract<HittableList>(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
+
+
+		return _SceneDescription{
+			std::move(materials),
+			std::move(sphere_list),
+			std::move(world_list)
+		};
+	}
+};
+
+#endif
 
 FirstApp FirstApp::MakeApp() {
 	uint32_t _width = 1280;
