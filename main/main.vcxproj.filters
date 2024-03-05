@@ -64,6 +64,12 @@
     <ClInclude Include="cuHostRND.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="darray.cuh">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="dobj.cuh">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">

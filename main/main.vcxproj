@@ -182,10 +182,12 @@
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="cu_Geometry.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
+    <ClInclude Include="dobj.cuh" />
     <ClInclude Include="FirstApp.cuh" />
     <ClInclude Include="glm_utils.h" />
     <ClInclude Include="cu_Materials.cuh" />
     <ClInclude Include="dAbstracts.cuh" />
+    <ClInclude Include="darray.cuh" />
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
   </ItemGroup>
