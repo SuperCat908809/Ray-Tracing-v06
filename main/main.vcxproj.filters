@@ -61,10 +61,16 @@
     <ClInclude Include="dAbstracts.cuh">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="cuHostRND.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
+    </ClCompile>
+    <ClCompile Include="cuHostRND.cpp">
+      <Filter>Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

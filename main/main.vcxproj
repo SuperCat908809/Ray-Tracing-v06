@@ -173,10 +173,12 @@
     <CudaCompile Include="Renderer.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cuHostRND.cpp" />
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cuda_utils.h" />
+    <ClInclude Include="cuHostRND.h" />
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="cu_Geometry.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
