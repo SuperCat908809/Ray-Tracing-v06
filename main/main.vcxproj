@@ -182,6 +182,7 @@
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="cu_Geometry.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
+    <ClInclude Include="dmemory.cuh" />
     <ClInclude Include="dobj.cuh" />
     <ClInclude Include="FirstApp.cuh" />
     <ClInclude Include="glm_utils.h" />

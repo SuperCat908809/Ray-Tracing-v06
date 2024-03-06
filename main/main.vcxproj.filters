@@ -18,6 +18,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Utilities\CUDA utilities">
+      <UniqueIdentifier>{be2271b7-91e8-4de5-b786-fdedce516d54}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -52,23 +55,26 @@
     <ClInclude Include="ray_data.cuh">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="cuda_utils.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="FirstApp.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="dAbstracts.cuh">
-      <Filter>Utilities</Filter>
+    <ClInclude Include="dobj.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda_utils.h">
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
     <ClInclude Include="cuHostRND.h">
-      <Filter>Utilities</Filter>
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="dAbstracts.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
     <ClInclude Include="darray.cuh">
-      <Filter>Utilities</Filter>
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
-    <ClInclude Include="dobj.cuh">
-      <Filter>Utilities</Filter>
+    <ClInclude Include="dmemory.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -76,12 +82,12 @@
       <Filter>externals</Filter>
     </ClCompile>
     <ClCompile Include="cuHostRND.cpp">
-      <Filter>Utilities</Filter>
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="dAbstracts.inl">
-      <Filter>Utilities</Filter>
+      <Filter>Utilities\CUDA utilities</Filter>
     </None>
   </ItemGroup>
 </Project>
