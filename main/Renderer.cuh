@@ -7,6 +7,8 @@
 #include "cu_Materials.cuh"
 
 #include "dAbstracts.cuh"
+#include "darray.cuh"
+#include "dobj.cuh"
 
 class Renderer {
 
@@ -17,10 +19,12 @@ class Renderer {
 
 		// cuda memory
 		HittableList* d_world_ptr{};
-		glm::vec4* d_output_buffer{};
-		curandState_t* d_random_states{};
+		//glm::vec4* d_output_buffer{};
+		//curandState_t* d_random_states{};
+		darray<glm::vec4> d_output_buffer;
+		darray<curandState_t> d_random_states;
 
-		dAbstract<Material> default_mat;
+		dobj<Material> default_mat;
 	} m;
 
 	void _delete();

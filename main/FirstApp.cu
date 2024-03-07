@@ -270,51 +270,126 @@ public:
 };
 #else
 
-class SceneBook1FinaleFactory {
+#if 0
+class MaterialCollection {
+	dAbstractArray<Material> material_ptrs;
+	dmemory material_data;
+};
+
+class MaterialCollectionFactory {
 public:
 	enum MaterialID { LAMBERTIAN, METAL, DIELECTRIC };
 	struct MaterialParams {
-		MaterialID matID;
 		union {
-			struct { glm::vec3 albedo; }				lambert;
-			struct { glm::vec3 albedo; float fuzz; }	  metal;
-			struct { glm::vec3 albedo; float  ior; }	 dielec;
+			struct { MaterialID matID; } matID;
+			struct { MaterialID matID; glm::vec3 albedo;             } lambert;
+			struct { MaterialID matID; glm::vec3 albedo; float fuzz; }   metal;
+			struct { MaterialID matID; glm::vec3 albedo; float  ior; }  dielec;
 		};
 
-		static MaterialParams MakeLambert(glm::vec3 albedo            ) { MaterialParams p; p.matID = LAMBERTIAN; p.lambert = { albedo       }; return p; }
-		static MaterialParams   MakeMetal(glm::vec3 albedo, float fuzz) { MaterialParams p; p.matID =      METAL; p.metal   = { albedo, fuzz }; return p; }
-		static MaterialParams  MakeDielec(glm::vec3 albedo, float  ior) { MaterialParams p; p.matID = DIELECTRIC; p.dielec  = { albedo,  ior }; return p; }
-
-
-		__device__ Material* MakeMaterial() const {
-			switch (matID) {
-			case LAMBERTIAN: return new LambertianAbstract(lambert.albedo);
-			case      METAL: return new      MetalAbstract(metal.albedo, metal.fuzz);
-			case DIELECTRIC: return new DielectricAbstract(dielec.albedo, dielec.ior);
+		__device__ Material* MakeMaterial(Material* location) const {
+			switch (matID.matID) {
+			case LAMBERTIAN: return new (location) LambertianAbstract(lambert.albedo             );
+			case      METAL: return new (location)      MetalAbstract(  metal.albedo,  metal.fuzz);
+			case DIELECTRIC: return new (location) DielectricAbstract( dielec.albedo, dielec.ior );
 			}
 		}
 	};
 
-	class d_MaterialFactory {
-		MaterialParams* p{};
+	class MaterialFactory {
+		MaterialParams* p;
+		Material* reserved_location_root;
+		size_t* reserved_locations;
 	public:
-		__host__ __device__ d_MaterialFactory(MaterialParams* p) : p(p) {}
-		__device__ Material* operator()(size_t index) const { return p[index].MakeMaterial(); }
+		__host__ __device__ MaterialFactory(MaterialParams* p, Material* reserved_location_root, size_t* reserved_locations) :
+			p(p),
+			reserved_location_root(reserved_location_root),
+			reserved_locations(reserved_locations) {}
+		__device__ Material* operator()(size_t index) const { return p[index].MakeMaterial(reserved_location_root + reserved_locations[index]); }
 	};
+
+private:
+	MaterialCollectionFactory(const MaterialCollectionFactory&) = delete;
+	MaterialCollectionFactory& operator=(const MaterialCollectionFactory&) = delete;
+
+	std::vector<MaterialParams> queued_materials;
+public:
+
+
+	/*
+	==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+	== All constructed materials will be placed in the same buffer in device memory. This will be achived using the placement new operator.
+	== On the host, when a material is queued, it should be given a pointer offset that indicates a location after all previous materials 
+	==   and meets the classes alignment requirements.
+	== This offset will be added to the pointer that indicates the start of the buffer which will only be known at runtime.
+	==
+	== The dAbstractArray class should be told to only call the destructor of the materials, not delete which will corrupt memory
+	==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+	*/
+
+
+
+	MaterialCollectionFactory() = default;
+
+	size_t QueueLambert(glm::vec3 albedo            ) { MaterialParams p { .lambert = { LAMBERTIAN, albedo       } }; queued_materials.push_back(p); return queued_materials.size() - 1; }
+	size_t   QueueMetal(glm::vec3 albedo, float fuzz) { MaterialParams p { .metal   = {      METAL, albedo, fuzz } }; queued_materials.push_back(p); return queued_materials.size() - 1; }
+	size_t  QueueDielec(glm::vec3 albedo, float  ior) { MaterialParams p { .dielec  = { DIELECTRIC, albedo,  ior } }; queued_materials.push_back(p); return queued_materials.size() - 1; }
+
+	MaterialCollection MakeCollection() {
+		darray<MaterialParams> params(queued_materials);
+		auto material_factory = dobj<MaterialFactory>::Make(params.getPtr());
+
+		dAbstractArray<Material> materials(queued_materials.size());
+		materials.MakeOnDeviceFactory(queued_materials.size(), 0, 0, material_factory.getPtr());
+	}
+};
+#endif
+
+class SceneBook1FinaleFactory {
+public:
+	//enum MaterialID { LAMBERTIAN, METAL, DIELECTRIC };
+	//struct MaterialParams {
+	//	MaterialID matID;
+	//	union {
+	//		struct { glm::vec3 albedo; }				lambert;
+	//		struct { glm::vec3 albedo; float fuzz; }	  metal;
+	//		struct { glm::vec3 albedo; float  ior; }	 dielec;
+	//	};
+
+	//	static MaterialParams MakeLambert(glm::vec3 albedo            ) { MaterialParams p; p.matID = LAMBERTIAN; p.lambert = { albedo       }; return p; }
+	//	static MaterialParams   MakeMetal(glm::vec3 albedo, float fuzz) { MaterialParams p; p.matID =      METAL; p.metal   = { albedo, fuzz }; return p; }
+	//	static MaterialParams  MakeDielec(glm::vec3 albedo, float  ior) { MaterialParams p; p.matID = DIELECTRIC; p.dielec  = { albedo,  ior }; return p; }
+
+
+	//	__device__ Material* MakeMaterial() const {
+	//		switch (matID) {
+	//		case LAMBERTIAN: return new LambertianAbstract(lambert.albedo);
+	//		case      METAL: return new      MetalAbstract(metal.albedo, metal.fuzz);
+	//		case DIELECTRIC: return new DielectricAbstract(dielec.albedo, dielec.ior);
+	//		}
+	//	}
+	//};
+
+	//class d_MaterialFactory {
+	//	MaterialParams* p{};
+	//public:
+	//	__host__ __device__ d_MaterialFactory(MaterialParams* p) : p(p) {}
+	//	__device__ Material* operator()(size_t index) const { return p[index].MakeMaterial(); }
+	//};
 
 	struct SphereParams {
 		glm::vec3 origin;
 		float radius;
-		size_t material_index;
-		__device__ Hittable* MakeSphere(Material** material_array) const { return new Sphere(origin, radius, material_array[material_index]); }
+		Material* mat_ptr;
+		__device__ Hittable* MakeSphere() const { return new Sphere(origin, radius, mat_ptr); }
 	};
 
 	class d_SphereFactory {
 		SphereParams* p{};
-		Material** mats;
+		//Material** mats;
 	public:
-		__host__ __device__ d_SphereFactory(SphereParams* p, Material** mats) : p(p), mats(mats) {}
-		__device__ Hittable* operator()(size_t index) const { return p[index].MakeSphere(mats); }
+		__host__ __device__ d_SphereFactory(SphereParams* p) : p(p) {}
+		__device__ Hittable* operator()(size_t index) const { return p[index].MakeSphere(); }
 	};
 
 private:
@@ -328,28 +403,38 @@ private:
 			if (choose_mat < 0.8f) {
 				// diffuse
 				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
-				sphere_params.push_back({ pos, 0.2f, material_params.size() });
-				material_params.push_back(MaterialParams::MakeLambert(albedo));
+				
+				auto material = dobj<LambertianAbstract>::Make(albedo);
+				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				materials.push_back(std::move(material));
+				//material_params.push_back(MaterialParams::MakeLambert(albedo));
 			}
 			else if (choose_mat < 0.95f) {
 				// metal
 				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * 0.5f + 0.5f;
 				float fuzz = rnd * 0.5f;
-				sphere_params.push_back({ pos, 0.2f, material_params.size() });
-				material_params.push_back(MaterialParams::MakeMetal(albedo, fuzz));
+
+				auto material = dobj<MetalAbstract>::Make(albedo, fuzz);
+				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				materials.push_back(std::move(material));
+				//material_params.push_back(MaterialParams::MakeMetal(albedo, fuzz));
 			}
 			else {
 				// glass
-				sphere_params.push_back({ pos, 0.2f, material_params.size() });
-				material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
+				auto material = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
+				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				materials.push_back(std::move(material));
+				//material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
 			}
 		}
 	}
 
 	void _populate_world() {
 		// ground sphere
-		sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, material_params.size() });
-		material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.5f)));
+		auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.5f));
+		sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, ground_mat.getPtr() });
+		materials.push_back(std::move(ground_mat));
+		//material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.5f)));
 
 		for (int a = -11; a < 11; a++) {
 			for (int b = -11; b < 11; b++) {
@@ -357,20 +442,27 @@ private:
 			}
 		}
 
-		sphere_params.push_back({ glm::vec3(0,1,0),1,material_params.size() });
-		material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
+		auto center_mat = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
+		sphere_params.push_back({ glm::vec3(0,1,0),1, center_mat.getPtr()});
+		materials.push_back(std::move(center_mat));
+		//material_params.push_back(MaterialParams::MakeDielec(glm::vec3(1.0f), 1.5f));
 
-		sphere_params.push_back({ glm::vec3(-4,1,0),1,material_params.size() });
-		material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.4f, 0.2f, 0.1f)));
+		auto left_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.4f, 0.2f, 0.1f));
+		sphere_params.push_back({ glm::vec3(-4,1,0),1,left_mat.getPtr()});
+		materials.push_back(std::move(left_mat));
+		//material_params.push_back(MaterialParams::MakeLambert(glm::vec3(0.4f, 0.2f, 0.1f)));
 
-		sphere_params.push_back({ glm::vec3(4,1,0),1,material_params.size() });
-		material_params.push_back(MaterialParams::MakeMetal(glm::vec3(0.7f, 0.6f, 0.5f), 0));
+		auto right_mat = dobj<MetalAbstract>::Make(glm::vec3(0.7f, 0.6f, 0.5f), 0);
+		sphere_params.push_back({ glm::vec3(4,1,0),1,right_mat.getPtr()});
+		materials.push_back(std::move(right_mat));
+		//material_params.push_back(MaterialParams::MakeMetal(glm::vec3(0.7f, 0.6f, 0.5f), 0));
 	}
 
 	
 
-	std::vector<MaterialParams> material_params{};
-	std::vector<  SphereParams>   sphere_params{};
+	//std::vector<MaterialParams> material_params{};
+	std::vector<dobj<Material>> materials;
+	std::vector<  SphereParams> sphere_params;
 	cuHostRND host_rnd{ 512, 1984 };
 
 public:
@@ -380,27 +472,26 @@ public:
 
 		factory._populate_world();
 
-		darray<MaterialParams> d_mat_params(factory.material_params);
-		d_MaterialFactory material_factory(d_mat_params.getPtr());
-		dobj<d_MaterialFactory> d_mat_factory(material_factory);
+		//darray<MaterialParams> d_mat_params(factory.material_params);
+		//d_MaterialFactory material_factory(d_mat_params.getPtr());
+		//auto d_mat_factory = dobj<d_MaterialFactory>::Make(material_factory);
 
-		dAbstractArray<Material> materials(factory.material_params.size());
-		materials.MakeOnDeviceFactory<d_MaterialFactory>(factory.material_params.size(), 0, 0, d_mat_factory.getPtr());
+		//dAbstractArray<Material> materials(factory.material_params.size());
+		//materials.MakeOnDeviceFactory<d_MaterialFactory>(factory.material_params.size(), 0, 0, d_mat_factory.getPtr());
 
 
 		darray<SphereParams> d_sphere_params(factory.sphere_params);
-		d_SphereFactory sphere_factory(d_sphere_params.getPtr(), materials.getDeviceArrayPtr());
-		dobj<d_SphereFactory> d_sphere_factory(sphere_factory);
+		d_SphereFactory sphere_factory(d_sphere_params.getPtr());
+		auto d_sphere_factory = dobj<d_SphereFactory>::Make(sphere_factory);
 
 		dAbstractArray<Hittable> sphere_list(factory.sphere_params.size());
 		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, d_sphere_factory.getPtr());
 
 		
-		dAbstract<HittableList> world_list = dAbstract<HittableList>::MakeAbstract<HittableList>(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
+		auto world_list = dobj<HittableList>::Make(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
 
-
-		return _SceneDescription{
-			std::move(materials),
+		return _SceneDescription {
+			std::move(factory.materials),
 			std::move(sphere_list),
 			std::move(world_list)
 		};
@@ -428,12 +519,12 @@ FirstApp FirstApp::MakeApp() {
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
 
 	return FirstApp(M{
-		{ _width },
-		{ _height },
-		{ cam },
-		{ host_output_framebuffer },
-		{ std::move(renderer) },
-		{ std::move(scene_desc) },
+		_width,
+		_height,
+		cam,
+		host_output_framebuffer,
+		std::move(renderer),
+		std::move(scene_desc),
 	});
 }
 FirstApp::~FirstApp() {
@@ -448,15 +539,16 @@ void FirstApp::Run() {
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
-	uint8_t* output_image_data = new uint8_t[width * height * 4];
+	//uint8_t* output_image_data = new uint8_t[width * height * 4];
+	std::vector<uint8_t> output_image_data(width * height * 4);
 	for (uint32_t i = 0; i < width * height; i++) {
-		output_image_data[i * 4 + 0] = static_cast<uint8_t>(data[i][0] * 255.999f);
-		output_image_data[i * 4 + 1] = static_cast<uint8_t>(data[i][1] * 255.999f);
-		output_image_data[i * 4 + 2] = static_cast<uint8_t>(data[i][2] * 255.999f);
-		output_image_data[i * 4 + 3] = static_cast<uint8_t>(data[i][3] * 255.999f);
+		output_image_data.push_back(static_cast<uint8_t>(data[i][0] * 255.999f));
+		output_image_data.push_back(static_cast<uint8_t>(data[i][1] * 255.999f));
+		output_image_data.push_back(static_cast<uint8_t>(data[i][2] * 255.999f));
+		output_image_data.push_back(static_cast<uint8_t>(data[i][3] * 255.999f));
 	}
 
 	stbi_flip_vertically_on_write(true);
-	stbi_write_png(filepath.c_str(), width, height, 4, output_image_data, sizeof(uint8_t) * width * 4);
-	delete[] output_image_data;
+	stbi_write_png(filepath.c_str(), width, height, 4, output_image_data.data(), sizeof(uint8_t) * width * 4);
+	//delete[] output_image_data;
 }

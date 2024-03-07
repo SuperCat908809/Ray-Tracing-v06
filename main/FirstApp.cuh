@@ -10,13 +10,16 @@ using namespace std::string_literals;
 #include "cu_Cameras.cuh"
 #include "cu_Materials.cuh"
 
+#include "dobj.cuh"
+#include "darray.cuh"
 #include "dAbstracts.cuh"
 #include "Renderer.cuh"
 
 struct _SceneDescription {
-	dAbstractArray<Material> sphere_materials;
+	//dAbstractArray<Material> sphere_materials;
+	std::vector<dobj<Material>> materials;
 	dAbstractArray<Hittable> world_sphere_list;
-	dAbstract<HittableList> world_list;
+	dobj<HittableList> world_list;
 };
 
 class FirstApp {
