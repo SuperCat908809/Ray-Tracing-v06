@@ -19,9 +19,9 @@ __global__ void _destruct_dobj(T* obj_ptr) {
 	}
 }
 
-template <typename T, bool destructObj = true>
+template <typename T, bool destruct = false>
 class dobj {
-	template <typename U, bool destruct>
+	template <typename U, bool d>
 	friend class dobj;
 
 	dmemory dmem;
@@ -33,27 +33,27 @@ public:
 	dobj(const dobj&) = delete;
 	dobj& operator=(const dobj&) = delete;
 
-	template <typename U = T, bool destruct = true> requires std::derived_from<U, T> && (destruct == destructObj)
+	template <typename U> requires std::derived_from<U, T>
 	dobj(dobj<U, destruct>&& other) noexcept : dmem(std::move(other.dmem)) {}
 
 	template <typename U> requires std::derived_from<U, T>
-	dobj<T>& operator=(dobj<U>&& other) noexcept { dmem = std::move(other.dmem); return *this; }
+	dobj<T>& operator=(dobj<U, destruct>&& other) noexcept { dmem = std::move(other.dmem); return *this; }
 
 	~dobj() {
-		if (destructObj) {
+		if (destruct) {
 			_destruct_dobj<T><<<1, 1>>>(getPtr());
 			CUDA_ASSERT(cudaDeviceSynchronize());
 		}
 	}
 
 	template <typename... Args>
-	static dobj<T> Make(const Args&... args) {
+	static dobj Make(const Args&... args) {
 		dobj device_obj;
 		_make_dobj<T><<<1, 1>>>(device_obj.getPtr(), args...);
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		return device_obj;
 	}
-	template <typename U = T> requires std::derived_from<U, T>
+	template <typename U> requires std::derived_from<U, T>
 	static dobj<T> Copy(const U& obj) {
 		dobj<U> device_obj;
 		CUDA_ASSERT(cudaMemcpy(device_obj.getPtr(), &obj, sizeof(U), cudaMemcpyHostToDevice));
