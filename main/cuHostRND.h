@@ -25,7 +25,7 @@ public:
 	cuHostRND(cuHostRND&& other) noexcept;
 	cuHostRND& operator=(cuHostRND&& other) noexcept;
 
-	cuHostRND(size_t capacity, size_t seed);
+	cuHostRND(size_t capacity, size_t seed, size_t offset = 0, curandOrdering_t ordering = CURAND_ORDERING_PSEUDO_DEFAULT);
 	~cuHostRND();
 
 	float next();

@@ -39,11 +39,13 @@ cuHostRND& cuHostRND::operator=(cuHostRND&& other) noexcept {
 	return *this;
 }
 
-cuHostRND::cuHostRND(size_t capacity, size_t seed) {
+cuHostRND::cuHostRND(size_t capacity, size_t seed, size_t offset, curandOrdering_t ordering) : rnd_uniforms(capacity), head(0ull) {
 	rnd_uniforms.resize(capacity);
 
 	curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_XORWOW);
 	curandSetPseudoRandomGeneratorSeed(gen, seed);
+	curandSetGeneratorOffset(gen, offset);
+	curandSetGeneratorOrdering(gen, ordering);
 
 	_populate_buffer();
 }
