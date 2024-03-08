@@ -19,8 +19,10 @@ public:
 	dAbstractArray(const dAbstractArray&) = delete;
 	dAbstractArray& operator=(const dAbstractArray&) = delete;
 
-	dAbstractArray(size_t size);
-	~dAbstractArray();
+	dAbstractArray(size_t size) : ptrs(size) {}
+	~dAbstractArray() {
+		_delete();
+	}
 
 	template <typename U> requires std::derived_from<U, T>
 	dAbstractArray(dAbstractArray<U, destruct>&& other);

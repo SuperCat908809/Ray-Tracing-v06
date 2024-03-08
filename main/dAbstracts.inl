@@ -45,13 +45,6 @@ void dAbstractArray<T, d>::_delete() {
 	if (d)
 		DeleteOnDevice(getLength(), 0);
 }
-
-template <typename T, bool d>
-dAbstractArray<T, d>::dAbstractArray(size_t size) : ptrs(size) {}
-
-template <typename T, bool d>
-dAbstractArray<T, d>::~dAbstractArray() {
-	_delete();
 }
 
 template <typename T, bool d>
