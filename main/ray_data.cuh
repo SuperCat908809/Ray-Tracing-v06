@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <cuda_runtime.h>
 
+
 struct Ray {
 	glm::vec3 o{ 0,0,0 }, d{ 0,0,1 };
 
@@ -12,6 +13,7 @@ struct Ray {
 	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
 };
 
+#define _MISS_DIST FLT_MAX
 class Material;
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };

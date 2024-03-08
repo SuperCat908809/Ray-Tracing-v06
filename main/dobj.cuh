@@ -1,9 +1,11 @@
 #ifndef DEVICE_OBJECT_CLASS_H
 #define DEVICE_OBJECT_CLASS_H
 
-#include "cuda_utils.h"
+#include <cuda_runtime.h>
+#include "cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
+
 
 template <typename T, typename... Args>
 __global__ void _make_dobj(T* obj_ptr, Args... args) {

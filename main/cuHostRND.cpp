@@ -1,5 +1,8 @@
 #include "cuHostRND.h"
-#include "cuda_utils.h"
+
+#include <cuda_runtime.h>
+#include <curand.h>
+#include "cuError.h"
 
 
 void cuHostRND::_populate_buffer() {
@@ -17,14 +20,14 @@ void cuHostRND::_delete() {
 	curandDestroyGenerator(gen);
 }
 
-cuHostRND::cuHostRND(cuHostRND&& other) :
+cuHostRND::cuHostRND(cuHostRND&& other) noexcept :
 	rnd_uniforms(std::move(other.rnd_uniforms)),
 	head(other.head),
 	gen(other.gen) {
 	other.gen = nullptr;
 }
 
-cuHostRND& cuHostRND::operator=(cuHostRND&& other) {
+cuHostRND& cuHostRND::operator=(cuHostRND&& other) noexcept {
 	_delete();
 
 	rnd_uniforms = std::move(other.rnd_uniforms);

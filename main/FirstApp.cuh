@@ -1,19 +1,19 @@
 #ifndef FIRST_APP_CLASS_H
 #define FIRST_APP_CLASS_H
 
-#include <string>
-using namespace std::string_literals;
-#include <iostream>
-
-#include "cu_rtCommon.cuh"
-#include "cu_Geometry.cuh"
-#include "cu_Cameras.cuh"
-#include "cu_Materials.cuh"
+#include <inttypes.h>
+#include <vector>
 
 #include "dobj.cuh"
 #include "darray.cuh"
 #include "dAbstracts.cuh"
+
+#include "hittable.cuh"
+#include "HittableList.cuh"
+#include "material.cuh"
+#include "cu_Cameras.cuh"
 #include "Renderer.cuh"
+
 
 struct _SceneDescription {
 	//dAbstractArray<Material> sphere_materials;

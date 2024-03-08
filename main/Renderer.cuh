@@ -1,14 +1,18 @@
 #ifndef RENDERER_CLASS_H
 #define RENDERER_CLASS_H
 
-#include "cu_rtCommon.cuh"
-#include "cu_Cameras.cuh"
-#include "cu_Geometry.cuh"
-#include "cu_Materials.cuh"
+#include <inttypes.h>
+#include <glm/glm.hpp>
+#include <curand_kernel.h>
 
-#include "dAbstracts.cuh"
 #include "darray.cuh"
 #include "dobj.cuh"
+
+#include "cu_Cameras.cuh"
+#include "material.cuh"
+#include "hittable.cuh"
+#include "HittableList.cuh"
+
 
 class Renderer {
 

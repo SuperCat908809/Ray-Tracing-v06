@@ -1,12 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Geometry">
-      <UniqueIdentifier>{11f60267-4914-4c54-9903-5e7290379da4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Graphics">
-      <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
@@ -20,6 +14,15 @@
     </Filter>
     <Filter Include="Utilities\CUDA utilities">
       <UniqueIdentifier>{be2271b7-91e8-4de5-b786-fdedce516d54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RT Engine">
+      <UniqueIdentifier>{172f45ce-42c6-4e9c-b41b-4949fc14a669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RT Engine\Graphics">
+      <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RT Engine\Geometry">
+      <UniqueIdentifier>{11f60267-4914-4c54-9903-5e7290379da4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,23 +40,17 @@
     <ClInclude Include="glm_utils.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="cu_Geometry.cuh">
-      <Filter>Geometry</Filter>
+    <ClInclude Include="SphereHittable.cuh">
+      <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="cu_Cameras.cuh">
-      <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="cu_rtCommon.cuh">
-      <Filter>Main</Filter>
+      <Filter>RT Engine\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="cu_Materials.cuh">
-      <Filter>Graphics</Filter>
+      <Filter>RT Engine\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.cuh">
       <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="ray_data.cuh">
-      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="FirstApp.cuh">
       <Filter>Main</Filter>
@@ -61,7 +58,7 @@
     <ClInclude Include="dobj.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
-    <ClInclude Include="cuda_utils.h">
+    <ClInclude Include="cuError.h">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
     <ClInclude Include="cuHostRND.h">
@@ -75,6 +72,24 @@
     </ClInclude>
     <ClInclude Include="dmemory.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="hittable.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="ray_data.cuh">
+      <Filter>RT Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="cu_rtCommon.cuh">
+      <Filter>RT Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="HittableList.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="material.cuh">
+      <Filter>RT Engine\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ceilDiv.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

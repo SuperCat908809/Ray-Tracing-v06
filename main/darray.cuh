@@ -1,9 +1,14 @@
 #ifndef DEVICE_ARRAY_CLASS_H
 #define DEVICE_ARRAY_CLASS_H
 
-#include "cuda_utils.h"
+#include <inttypes.h>
+#include <cuda_runtime.h>
+#include "cuError.h"
 #include "dmemory.cuh"
 #include <vector>
+
+#include "ceilDiv.h"
+
 
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {

@@ -1,7 +1,10 @@
 #ifndef DEVICE_MEMORY_CLASS_H
 #define DEVICE_MEMORY_CLASS_H
 
-#include "cuda_utils.h"
+#include <inttypes.h>
+#include <cuda_runtime.h>
+#include "cuError.h"
+
 
 class dmemory {
 	void* device_memory;

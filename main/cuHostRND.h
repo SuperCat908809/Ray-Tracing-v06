@@ -1,9 +1,10 @@
 #ifndef CU_HOST_RND_CLASSES_H
 #define CU_HOST_RND_CLASSES_H
 
-#include <cuda_runtime.h>
+#include <inttypes.h>
 #include <curand.h>
 #include <vector>
+
 
 class cuHostRND {
 
@@ -21,8 +22,8 @@ public:
 	cuHostRND(const cuHostRND&) = delete;
 	cuHostRND& operator=(const cuHostRND&) = delete;
 
-	cuHostRND(cuHostRND&& other);
-	cuHostRND& operator=(cuHostRND&& other);
+	cuHostRND(cuHostRND&& other) noexcept;
+	cuHostRND& operator=(cuHostRND&& other) noexcept;
 
 	cuHostRND(size_t capacity, size_t seed);
 	~cuHostRND();

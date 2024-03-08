@@ -185,10 +185,14 @@
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cuda_utils.h" />
+    <ClInclude Include="ceilDiv.h" />
+    <ClInclude Include="cuError.h" />
+    <ClInclude Include="hittable.cuh" />
     <ClInclude Include="cuHostRND.h" />
+    <ClInclude Include="material.cuh" />
     <ClInclude Include="cu_Cameras.cuh" />
-    <ClInclude Include="cu_Geometry.cuh" />
+    <ClInclude Include="HittableList.cuh" />
+    <ClInclude Include="SphereHittable.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
     <ClInclude Include="dmemory.cuh" />
     <ClInclude Include="dobj.cuh" />

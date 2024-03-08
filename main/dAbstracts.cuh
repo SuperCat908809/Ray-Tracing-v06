@@ -1,9 +1,10 @@
 #ifndef D_ABSTRACT_CLASSES_H
 #define D_ABSTRACT_CLASSES_H
 
-#include "cuda_utils.h"
+#include <inttypes.h>
 #include "darray.cuh"
 #include <concepts>
+#include <vector>
 
 
 template <typename T, bool destruct = false>

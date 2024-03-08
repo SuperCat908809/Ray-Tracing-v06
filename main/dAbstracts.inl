@@ -3,6 +3,14 @@
 
 #include "dAbstracts.cuh"
 
+#include <inttypes.h>
+#include <cuda_runtime.h>
+#include <concepts>
+#include <vector>
+#include "cuError.h"
+
+#include "ceilDiv.h"
+
 
 template <typename T, typename U, typename... Args> requires std::derived_from<U, T>
 __global__ inline void _makeArrayOnDevice(T** ptrs, size_t count, Args*... args) {

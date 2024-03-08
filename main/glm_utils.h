@@ -70,8 +70,8 @@ namespace glm {
 #endif // GLM_UTILS_H //
 
 
-#if defined(__CUDA_RUNTIME_H__) & !defined(GLM_CUDA_UTILS_H)
-#define GLM_CUDA_UTILS_H
+#if defined(CURAND_KERNEL_H_) & !defined(GLM_CURAND_UTILS_H)
+#define GLM_CURAND_UTILS_H
 
 #include <curand_kernel.h>
 #include <glm/glm.hpp>
@@ -106,4 +106,11 @@ namespace glm {
 
 };
 
-#endif // GLM_CUDA_UTILS_H //
+#define RND (curand_uniform(random_state))
+#define RNDR(min, max) (curand_uniform(random_state) * (max - min) + min)
+#define RND3 (glm::cu_random_uniform<3>(random_state))
+#define RNDR3(min, max) (glm::map(RND3, min, max))
+#define RND_IN_SPHERE (glm::cu_random_in_unit_vec<3>(random_state))
+#define RND_ON_SPHERE (glm::cu_random_unit_vec<3>(random_state))
+
+#endif // GLM_CURAND_UTILS_H //

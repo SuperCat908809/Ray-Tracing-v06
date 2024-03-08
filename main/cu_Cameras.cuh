@@ -1,7 +1,11 @@
 #ifndef CU_CAMERA_CLASSES_H
 #define CU_CAMERA_CLASSES_H
 
-#include "cu_rtCommon.cuh"
+#include <math.h>
+#include <glm/glm.hpp>
+#include <cuda_runtime.h>
+#include "ray_data.cuh"
+
 
 struct PinholeCamera {
 	glm::vec3 o{}, u{}, v{}, w{};
@@ -9,8 +13,6 @@ struct PinholeCamera {
 	__host__ __device__ PinholeCamera() {};
 	__host__ __device__ PinholeCamera(glm::vec3 lookfrom, glm::vec3 lookat, glm::vec3 up, float vfov, float aspect_ratio) {
 		float theta = glm::radians(vfov);
-		//float viewport_width = tanf(theta * 0.5f);
-		//float viewport_height = viewport_width / aspect_ratio;
 		float viewport_height = tanf(theta * 0.5f);
 		float viewport_width = viewport_height * aspect_ratio;
 

@@ -1,18 +1,13 @@
 #ifndef CU_MATERIAL_CLASSES_H
 #define CU_MATERIAL_CLASSES_H
 
-#include "cu_rtCommon.cuh"
+#include <glm/glm.hpp>
+#include <cuda_runtime.h>
+#include <curand_kernel.h>
+#include "glm_utils.h"
+#include "ray_data.cuh"
+#include "material.cuh"
 
-// abstract class that all material classes should inherit from
-class Material {
-public:
-	__device__ virtual ~Material() {};
-	__device__ virtual bool Scatter(
-		const Ray& in_ray, const TraceRecord& rec,
-		curandState_t* random_state,
-		Ray& scatter_ray, glm::vec3& attenuation
-	) const = 0;
-};
 
 class LambertianAbstract : public Material {
 	glm::vec3 albedo{ 1.0f };

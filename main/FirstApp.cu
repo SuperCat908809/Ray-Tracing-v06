@@ -1,10 +1,31 @@
 #include "FirstApp.cuh"
 
-#include <curand.h>
+#include <inttypes.h>
+#include <string>
+using namespace std::string_literals;
+#include <iostream>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <cuda_runtime.h>
 #include <stb/stb_image_write.h>
+
+#include "cuError.h"
 
 #include "dobj.cuh"
 #include "darray.cuh"
+#include "dAbstracts.cuh"
+
+#include "hittable.cuh"
+#include "SphereHittable.cuh"
+#include "HittableList.cuh"
+
+#include "material.cuh"
+#include "cu_Materials.cuh"
+
+#include "cu_Cameras.cuh"
+#include "Renderer.cuh"
+
 #include "cuHostRND.h"
 
 
@@ -31,11 +52,11 @@ public:
 		__device__ d_SphereFactory(Material** ptr2) : mat_ptrs(ptr2) {}
 		__device__ Hittable* operator()(size_t input) const {
 			switch (input) {
-			case 0: return new Sphere(glm::vec3( 0.0f, -100.5f, -1.0f), 100.0f, mat_ptrs[0]);
-			case 1: return new Sphere(glm::vec3( 0.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[1]);
-			case 2: return new Sphere(glm::vec3(-1.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[2]);
-			case 3: return new Sphere(glm::vec3(-1.0f,    0.0f, -1.0f),  -0.4f, mat_ptrs[2]);
-			case 4: return new Sphere(glm::vec3( 1.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[3]);
+			case 0: return new SphereHittable(glm::vec3( 0.0f, -100.5f, -1.0f), 100.0f, mat_ptrs[0]);
+			case 1: return new SphereHittable(glm::vec3( 0.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[1]);
+			case 2: return new SphereHittable(glm::vec3(-1.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[2]);
+			case 3: return new SphereHittable(glm::vec3(-1.0f,    0.0f, -1.0f),  -0.4f, mat_ptrs[2]);
+			case 4: return new SphereHittable(glm::vec3( 1.0f,    0.0f, -1.0f),   0.5f, mat_ptrs[3]);
 			default: return nullptr;
 			}
 		}
@@ -201,7 +222,7 @@ public:
 		__device__ Hittable* operator()(size_t index) const {
 			SphereParams& p2 = p[index];
 			int mat_offset = p2.mat_index + _getMatOffset(p2.mat_type);
-			return new Sphere(p2.origin, p2.radius, mats[mat_offset]);
+			return new SphereHittable(p2.origin, p2.radius, mats[mat_offset]);
 		}
 	};
 
@@ -381,7 +402,7 @@ public:
 		glm::vec3 origin;
 		float radius;
 		Material* mat_ptr;
-		__device__ Hittable* MakeSphere() const { return new Sphere(origin, radius, mat_ptr); }
+		__device__ Hittable* MakeSphere() const { return new SphereHittable(origin, radius, mat_ptr); }
 	};
 
 	class d_SphereFactory {
