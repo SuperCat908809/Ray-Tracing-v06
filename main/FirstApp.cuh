@@ -18,7 +18,7 @@ using namespace std::string_literals;
 struct _SceneDescription {
 	//dAbstractArray<Material> sphere_materials;
 	std::vector<dobj<Material>> materials;
-	dAbstractArray<Hittable> world_sphere_list;
+	dAbstractArray<Hittable, true> world_sphere_list;
 	dobj<HittableList> world_list;
 };
 

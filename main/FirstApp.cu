@@ -484,7 +484,7 @@ public:
 		d_SphereFactory sphere_factory(d_sphere_params.getPtr());
 		auto d_sphere_factory = dobj<d_SphereFactory>::Make(sphere_factory);
 
-		dAbstractArray<Hittable> sphere_list(factory.sphere_params.size());
+		dAbstractArray<Hittable, true> sphere_list(factory.sphere_params.size());
 		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, d_sphere_factory.getPtr());
 
 		
