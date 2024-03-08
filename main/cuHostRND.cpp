@@ -3,22 +3,19 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include "cuError.h"
+#include "darray.cuh"
 
 
 void cuHostRND::_populate_buffer() {
-	float* d_rnd_uniforms{ nullptr };
-	CUDA_ASSERT(cudaMalloc((void**)&d_rnd_uniforms, sizeof(float) * rnd_uniforms.size()));
+	darray<float> d_rnd_uniforms(rnd_uniforms.size());
 
-	curandGenerateUniform(gen, d_rnd_uniforms, rnd_uniforms.size());
-
-	CUDA_ASSERT(cudaMemcpy(rnd_uniforms.data(), d_rnd_uniforms, sizeof(float) * rnd_uniforms.size(), cudaMemcpyDeviceToHost));
-
-	CUDA_ASSERT(cudaFree(d_rnd_uniforms));
+	curandGenerateUniform(gen, d_rnd_uniforms.getPtr(), rnd_uniforms.size());
+	CUDA_ASSERT(cudaMemcpy(rnd_uniforms.data(), d_rnd_uniforms.getPtr(), sizeof(float) * rnd_uniforms.size(), cudaMemcpyDeviceToHost));
 }
 
 void cuHostRND::_delete() {
 	if (gen) {
-	curandDestroyGenerator(gen);
+		curandDestroyGenerator(gen);
 		gen = nullptr;
 	}
 }
