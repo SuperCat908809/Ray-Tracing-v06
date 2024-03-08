@@ -5,7 +5,7 @@
 
 
 template <typename T, typename U, typename... Args> requires std::derived_from<U, T>
-__global__ inline void _makeArrayOnDevice(size_t count, T** ptrs, Args*... args) {
+__global__ inline void _makeArrayOnDevice(T** ptrs, size_t count, Args*... args) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
 	if (gid >= count) return;
 
@@ -13,7 +13,7 @@ __global__ inline void _makeArrayOnDevice(size_t count, T** ptrs, Args*... args)
 }
 
 template <typename T, typename FactoryType>
-__global__ inline void _makeArrayOnDeviceFactory(size_t count, size_t input_offset, T** ptrs, FactoryType* f) {
+__global__ inline void _makeArrayOnDeviceFactory(T** ptrs, size_t count, size_t input_offset, FactoryType* f) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
 	if (gid >= count) return;
 
@@ -21,7 +21,7 @@ __global__ inline void _makeArrayOnDeviceFactory(size_t count, size_t input_offs
 }
 
 template <typename T>
-__global__ inline void _deleteArrayOnDevice(size_t count, T** ptrs) {
+__global__ inline void _deleteArrayOnDevice(T** ptrs, size_t count) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
 	if (gid >= count) return;
 
@@ -32,93 +32,77 @@ __global__ inline void _deleteArrayOnDevice(size_t count, T** ptrs) {
 }
 
 
-template <typename T>
-void dAbstractArray<T>::_delete() {
-	DeleteOnDevice(length, 0);
-	//CUDA_ASSERT(cudaFree(ptr2));
-	//length = 0;
-	//ptr2 = nullptr;
+template <typename T, bool d>
+void dAbstractArray<T, d>::_delete() {
+	if (d)
+		DeleteOnDevice(getLength(), 0);
 }
 
-template <typename T>
-dAbstractArray<T>::dAbstractArray(size_t size) : ptrs(size) {
-	length = size;
-	//CUDA_ASSERT(cudaMalloc((void**)&ptr2, sizeof(T*) * length));
-}
+template <typename T, bool d>
+dAbstractArray<T, d>::dAbstractArray(size_t size) : ptrs(size) {}
 
-template <typename T>
-dAbstractArray<T>::~dAbstractArray() {
+template <typename T, bool d>
+dAbstractArray<T, d>::~dAbstractArray() {
 	_delete();
 }
 
-template <typename T>
+template <typename T, bool d>
 template <typename U> requires std::derived_from<U, T>
-dAbstractArray<T>::dAbstractArray(dAbstractArray<U>&& other) : 
-	ptrs(std::move(other.ptrs)) {
-	length = other.length;
-	//ptr2 = other.ptr2;
+dAbstractArray<T, d>::dAbstractArray(dAbstractArray<U, d>&& other) : ptrs(std::move(other.ptrs)) {}
 
-	other.length = 0ull;
-	//other.ptr2 = nullptr;
-}
-
-template <typename T>
+template <typename T, bool d>
 template <typename U> requires std::derived_from<U, T>
-dAbstractArray<T>& dAbstractArray<T>::operator=(dAbstractArray<U>&& other) {
+dAbstractArray<T, d>& dAbstractArray<T, d>::operator=(dAbstractArray<U, d>&& other) {
 	_delete();
 
 	ptrs = std::move(other.ptrs);
-
-	length = other.length;
-	//ptr2 = other.ptr2;
-
-	other.length = 0ull;
-	//other.ptr2 = nullptr;
 
 	return *this;
 }
 
 
 
-template <typename T>
-std::vector<T*> dAbstractArray<T>::getPtrVector() {
-	std::vector<T*> vec(length);
-	CUDA_ASSERT(cudaMemcpy(vec.data(), ptrs.getPtr(), sizeof(T*) * length, cudaMemcpyDeviceToHost));
+template <typename T, bool d>
+std::vector<T*> dAbstractArray<T, d>::getPtrVector() {
+	std::vector<T*> vec;
+	vec.resize(getLength());
+	CUDA_ASSERT(cudaMemcpy(vec.data(), ptrs.getPtr(), sizeof(T*) * getLength(), cudaMemcpyDeviceToHost));
 	return vec;
 }
 
-template <typename T>
-std::vector<const T*> dAbstractArray<T>::getPtrVector() const {
-	std::vector<const T*> vec(length);
-	CUDA_ASSERT(cudaMemcpy(vec.data(), ptrs.getPtr(), sizeof(T*) * length, cudaMemcpyDeviceToHost));
+template <typename T, bool d>
+std::vector<const T*> dAbstractArray<T, d>::getPtrVector() const {
+	std::vector<const T*> vec;
+	vec.resize(getLength());
+	CUDA_ASSERT(cudaMemcpy(vec.data(), ptrs.getPtr(), sizeof(T*) * getLength(), cudaMemcpyDeviceToHost));
 	return vec;
 }
 
 
-template <typename T>
+template <typename T, bool d>
 template <typename U, typename... Args> requires std::derived_from<U, T>
-void dAbstractArray<T>::MakeOnDevice(size_t count, size_t offset, size_t input_offset, const Args*... args) {
+void dAbstractArray<T, d>::MakeOnDevice(size_t count, size_t offset, size_t input_offset, const Args*... args) {
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
-	_makeArrayOnDevice<T, U><<<blocks, threads>>>(count, ptrs.getPtr() + offset, (args + input_offset)...);
+	_makeArrayOnDevice<T, U><<<blocks, threads>>>(ptrs.getPtr() + offset, count, (args + input_offset)...);
 	CUDA_ASSERT(cudaDeviceSynchronize());
 }
 
-template <typename T>
+template <typename T, bool d>
 template <typename DeviceFactoryType>
-void dAbstractArray<T>::MakeOnDeviceFactory(size_t count, size_t offset, size_t input_offset, DeviceFactoryType* factory) {
+void dAbstractArray<T, d>::MakeOnDeviceFactory(size_t count, size_t offset, size_t input_offset, DeviceFactoryType* factory) {
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
-	_makeArrayOnDeviceFactory<T, DeviceFactoryType><<<blocks, threads>>>(count, input_offset, ptrs.getPtr() + offset, factory);
+	_makeArrayOnDeviceFactory<T, DeviceFactoryType><<<blocks, threads>>>(ptrs.getPtr() + offset, count, input_offset, factory);
 	CUDA_ASSERT(cudaDeviceSynchronize());
 }
 
 
-template <typename T>
-void dAbstractArray<T>::DeleteOnDevice(size_t count, size_t offset) {
+template <typename T, bool d>
+void dAbstractArray<T, d>::DeleteOnDevice(size_t count, size_t offset) {
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
-	_deleteArrayOnDevice<T><<<blocks, threads>>>(count, ptrs.getPtr() + offset);
+	_deleteArrayOnDevice<T><<<blocks, threads>>>(ptrs.getPtr() + offset, count);
 	CUDA_ASSERT(cudaDeviceSynchronize());
 }
 
