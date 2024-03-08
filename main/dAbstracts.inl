@@ -43,8 +43,10 @@ __global__ inline void _deleteArrayOnDevice(T** ptrs, size_t count) {
 
 template <typename T, bool d>
 void dAbstractArray<T, d>::_delete() {
-	if (ptrs.getPtr() && d) {
-		DeleteOnDevice(getLength(), 0);
+	if constexpr (d) {
+		if (ptrs.getPtr()) {
+			DeleteOnDevice(getLength(), 0);
+		}
 	}
 }
 

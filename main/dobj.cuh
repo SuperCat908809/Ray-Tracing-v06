@@ -30,9 +30,11 @@ class dobj {
 	dmemory dmem;
 
 	void _destruct() {
-		if (getPtr() && destruct) {
-			_destruct_dobj<T><<<1, 1>>>(getPtr());
-			CUDA_ASSERT(cudaDeviceSynchronize());
+		if constexpr (destruct) {
+			if (getPtr()) {
+				_destruct_dobj<T><<<1, 1>>>(getPtr());
+				CUDA_ASSERT(cudaDeviceSynchronize());
+			}
 		}
 	}
 
