@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 #include "cuError.h"
 #include "dmemory.cuh"
 #include <vector>
@@ -23,6 +24,15 @@ class darray {
 	dmemory dmem;
 	size_t length;
 
+	void _destruct() {
+		if (getPtr() && destruct) {
+			int threads = 32;
+			int blocks = ceilDiv(length, threads);
+			_destruct_objs<T><<<blocks, threads>>>(getPtr(), length);
+			CUDA_ASSERT(cudaDeviceSynchronize());
+		}
+	}
+
 public:
 
 	darray() = delete;
@@ -30,7 +40,7 @@ public:
 	darray& operator=(const darray&) = delete;
 
 	darray(darray&& other) noexcept : length(other.length), dmem(std::move(other.dmem)) {}
-	darray& operator=(darray&& other) noexcept { length = other.length; dmem = std::move(other.dmem); return *this; }
+	darray& operator=(darray&& other) noexcept { _destruct(); length = other.length; dmem = std::move(other.dmem); return *this; }
 
 	darray(size_t length) : length(length), dmem(length * sizeof(T)) {}
 	darray(const T* arr, size_t length) : length(length), dmem(length * sizeof(T)) {
@@ -39,12 +49,7 @@ public:
 	darray(const std::vector<T>& v) : darray(v.data(), v.size()) {}
 
 	~darray() {
-		if (destruct) {
-			int threads = 32;
-			int blocks = ceilDiv(length, threads);
-			_destruct_objs<T><<<blocks, threads>>>(getPtr(), length);
-			CUDA_ASSERT(cudaDeviceSynchronize());
-		}
+		_destruct();
 	}
 
 	size_t getLength() const { return length; }
