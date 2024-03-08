@@ -5,6 +5,7 @@
 
 #include <inttypes.h>
 #include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 #include <concepts>
 #include <vector>
 #include "cuError.h"
@@ -42,9 +43,9 @@ __global__ inline void _deleteArrayOnDevice(T** ptrs, size_t count) {
 
 template <typename T, bool d>
 void dAbstractArray<T, d>::_delete() {
-	if (d)
+	if (ptrs.getPtr() && d) {
 		DeleteOnDevice(getLength(), 0);
-}
+	}
 }
 
 template <typename T, bool d>
@@ -53,13 +54,7 @@ dAbstractArray<T, d>::dAbstractArray(dAbstractArray<U, d>&& other) : ptrs(std::m
 
 template <typename T, bool d>
 template <typename U> requires std::derived_from<U, T>
-dAbstractArray<T, d>& dAbstractArray<T, d>::operator=(dAbstractArray<U, d>&& other) {
-	_delete();
-
-	ptrs = std::move(other.ptrs);
-
-	return *this;
-}
+dAbstractArray<T, d>& dAbstractArray<T, d>::operator=(dAbstractArray<U, d>&& other) { _delete(); ptrs = std::move(other.ptrs); return *this; }
 
 
 
