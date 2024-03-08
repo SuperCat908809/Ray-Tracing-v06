@@ -42,9 +42,10 @@ public:
 	darray(darray&& other) noexcept : length(other.length), dmem(std::move(other.dmem)) {}
 	darray& operator=(darray&& other) noexcept { _destruct(); length = other.length; dmem = std::move(other.dmem); return *this; }
 
+	enum MemorySource { FROM_HOST = cudaMemcpyHostToDevice, FROM_DEVICE = cudaMemcpyDeviceToDevice };
 	darray(size_t length) : length(length), dmem(length * sizeof(T)) {}
-	darray(const T* arr, size_t length) : length(length), dmem(length * sizeof(T)) {
-		CUDA_ASSERT(cudaMemcpy(dmem.getPtr(), arr, length * sizeof(T), cudaMemcpyHostToDevice));
+	darray(const T* arr, size_t length, MemorySource source = FROM_HOST) : length(length), dmem(length * sizeof(T)) {
+		CUDA_ASSERT(cudaMemcpy(dmem.getPtr(), arr, length * sizeof(T), (cudaMemcpyKind)source));
 	}
 	darray(const std::vector<T>& v) : darray(v.data(), v.size()) {}
 
