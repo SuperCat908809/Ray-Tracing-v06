@@ -10,8 +10,10 @@ class dmemory {
 	void* device_memory;
 
 	void _free() {
-		if (device_memory)
+		if (device_memory) {
 			CUDA_ASSERT(cudaFree(device_memory));
+			device_memory = nullptr;
+		}
 	}
 
 public:
