@@ -2,6 +2,7 @@
 #define DEVICE_OBJECT_CLASS_H
 
 #include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 #include "cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
@@ -28,6 +29,13 @@ class dobj {
 
 	dmemory dmem;
 
+	void _destruct() {
+		if (getPtr() && destruct) {
+			_destruct_dobj<T><<<1, 1>>>(getPtr());
+			CUDA_ASSERT(cudaDeviceSynchronize());
+		}
+	}
+
 	dobj() : dmem(sizeof(T)) {}
 
 public:
@@ -39,13 +47,10 @@ public:
 	dobj(dobj<U, destruct>&& other) noexcept : dmem(std::move(other.dmem)) {}
 
 	template <typename U> requires std::derived_from<U, T>
-	dobj<T>& operator=(dobj<U, destruct>&& other) noexcept { dmem = std::move(other.dmem); return *this; }
+	dobj& operator=(dobj<U, destruct>&& other) noexcept { _destruct(); dmem = std::move(other.dmem); return *this; }
 
 	~dobj() {
-		if (destruct) {
-			_destruct_dobj<T><<<1, 1>>>(getPtr());
-			CUDA_ASSERT(cudaDeviceSynchronize());
-		}
+		_destruct();
 	}
 
 	template <typename... Args>
