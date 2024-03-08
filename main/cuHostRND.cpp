@@ -17,7 +17,10 @@ void cuHostRND::_populate_buffer() {
 }
 
 void cuHostRND::_delete() {
+	if (gen) {
 	curandDestroyGenerator(gen);
+		gen = nullptr;
+	}
 }
 
 cuHostRND::cuHostRND(cuHostRND&& other) noexcept :
