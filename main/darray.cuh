@@ -25,14 +25,14 @@ class darray {
 	size_t length;
 
 	void _destruct() {
-		#if destruct
-		if (getPtr()) {
-			int threads = 32;
-			int blocks = ceilDiv(length, threads);
-			_destruct_objs<T><<<blocks, threads>>>(getPtr(), length);
-			CUDA_ASSERT(cudaDeviceSynchronize());
+		if constexpr (destruct) {
+			if (getPtr()) {
+				int threads = 32;
+				int blocks = ceilDiv(length, threads);
+				_destruct_objs<T><<<blocks, threads>>>(getPtr(), length);
+				CUDA_ASSERT(cudaDeviceSynchronize());
+			}
 		}
-		#endif
 	}
 
 public:
