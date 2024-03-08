@@ -13,7 +13,7 @@ struct Ray {
 	__host__ __device__ glm::vec3 at(float t) const { return o + d * t; }
 };
 
-#define _MISS_DIST FLT_MAX
+#define _MISS_DIST 3.402823466e+38F // FLT_MAX
 class Material;
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };
