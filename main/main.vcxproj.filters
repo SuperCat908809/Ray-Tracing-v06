@@ -24,6 +24,9 @@
     <Filter Include="RT Engine\Geometry">
       <UniqueIdentifier>{11f60267-4914-4c54-9903-5e7290379da4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities\CUDA utilities\CUDA Objects">
+      <UniqueIdentifier>{ad024fae-0382-4fb1-892c-24ed5cd592a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -58,22 +61,10 @@
     <ClInclude Include="FirstApp.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="dobj.cuh">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
     <ClInclude Include="cuError.h">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
     <ClInclude Include="cuHostRND.h">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="dAbstracts.cuh">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="darray.cuh">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="dmemory.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
     <ClInclude Include="hittable.cuh">
@@ -94,6 +85,18 @@
     <ClInclude Include="ceilDiv.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="dAbstracts.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="darray.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="dmemory.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="dobj.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
@@ -102,7 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dAbstracts.inl">
-      <Filter>Utilities\CUDA utilities</Filter>
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </None>
   </ItemGroup>
 </Project>
