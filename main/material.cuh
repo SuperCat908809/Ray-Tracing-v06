@@ -9,6 +9,12 @@
 
 // abstract class that all material classes should inherit from
 class Material {
+
+	// delete all constructors, guaranteeing that no instance of Material will ever exist directly
+	Material() = delete;
+	Material(const Material&) = delete;
+	Material& operator=(const Material&) = delete;
+
 public:
 	__device__ virtual ~Material() {};
 	__device__ virtual bool Scatter(
