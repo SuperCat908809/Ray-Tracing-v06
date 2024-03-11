@@ -7,11 +7,11 @@
 
 // abstract class that all hittable classes should inherit from
 class Hittable {
-
+protected:
 	// delete all constructors, guaranteeing that no instance of Hittable will ever exist directly
-	Hittable() = delete;
-	Hittable(const Hittable&) = delete;
-	Hittable& operator=(const Hittable&) = delete;
+	Hittable() = default;
+	Hittable(const Hittable&) = default;
+	Hittable& operator=(const Hittable&) = default;
 
 public:
 	__device__ virtual ~Hittable() {};
