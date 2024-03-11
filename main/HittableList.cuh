@@ -17,7 +17,7 @@ public:
 
 	__device__ HittableList(Hittable** objects, int object_count) : objects(objects), object_count(object_count) {}
 
-	__device__ virtual bool ClosestIntersection(Ray& ray, TraceRecord& rec) const override {
+	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
 		bool hit_any{ false };
 
 		for (int i = 0; i < object_count; i++) {

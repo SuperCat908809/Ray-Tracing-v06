@@ -15,7 +15,7 @@ class Hittable {
 
 public:
 	__device__ virtual ~Hittable() {};
-	__device__ virtual bool ClosestIntersection(Ray& ray, TraceRecord& rec) const = 0;
+	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const = 0;
 };
 
 #endif // HITTABLE_ABSTRACT_CLASS_H //

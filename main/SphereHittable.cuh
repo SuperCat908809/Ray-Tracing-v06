@@ -16,7 +16,7 @@ public:
 
 	__host__ __device__ Sphere(glm::vec3 origin, float radius, Material* mat_ptr) : origin(origin), radius(radius), mat_ptr(mat_ptr) {}
 
-	__device__ bool ClosestIntersection(Ray& ray, TraceRecord& rec) const {
+	__device__ bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const {
 		glm::vec3 oc = ray.o - origin;
 
 		float a = glm::dot(ray.d, ray.d);
@@ -48,7 +48,7 @@ public:
 
 	__device__ SphereHittable(const Sphere& sphere) : sphere(sphere) {}
 	__device__ SphereHittable(glm::vec3 origin, float radius, Material* mat_ptr) : sphere(origin, radius, mat_ptr) {}
-	__device__ virtual bool ClosestIntersection(Ray& ray, TraceRecord& rec) const override {
+	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
 		return sphere.ClosestIntersection(ray, rec);
 	}
 };
