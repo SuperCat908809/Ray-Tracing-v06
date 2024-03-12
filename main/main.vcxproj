@@ -187,6 +187,7 @@
   <ItemGroup>
     <ClInclude Include="ceilDiv.h" />
     <ClInclude Include="cuError.h" />
+    <ClInclude Include="cuRandom.cuh" />
     <ClInclude Include="hittable.cuh" />
     <ClInclude Include="cuHostRND.h" />
     <ClInclude Include="material.cuh" />

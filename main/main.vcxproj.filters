@@ -97,6 +97,9 @@
     <ClInclude Include="dobj.cuh">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
+    <ClInclude Include="cuRandom.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
