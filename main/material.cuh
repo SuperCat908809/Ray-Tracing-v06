@@ -10,7 +10,8 @@
 // abstract class that all material classes should inherit from
 class Material {
 protected:
-	// delete all constructors, guaranteeing that no instance of Material will ever exist directly
+	// protected default constructor, copy constructor and copy assignment,
+	//   guaranteeing that no instance of Material will ever exist outside of this class
 	Material() = default;
 	Material(const Material&) = default;
 	Material& operator=(const Material&) = default;

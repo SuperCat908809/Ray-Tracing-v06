@@ -8,7 +8,8 @@
 // abstract class that all hittable classes should inherit from
 class Hittable {
 protected:
-	// delete all constructors, guaranteeing that no instance of Hittable will ever exist directly
+	// protected default constructor, copy constructor and copy assignment,
+	//   guaranteeing that no instance of Hittable will ever exist outside of this class
 	Hittable() = default;
 	Hittable(const Hittable&) = default;
 	Hittable& operator=(const Hittable&) = default;
