@@ -3,21 +3,23 @@
 
 #include <inttypes.h>
 #include <cuda_runtime.h>
-#include <device_launch_parameters.h>
 #include "cuError.h"
 #include "dmemory.cuh"
+#include <concepts>
 #include <vector>
 
 #include "ceilDiv.h"
 
-
+#ifdef __CUDACC__
+#include <device_launch_parameters.h>
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {
-	int gid = threadIdx.x * blockIdx.x * blockDim.x;
+	int gid = threadIdx.x + blockIdx.x * blockDim.x;
 	if (gid >= length) return;
 
 	objs_ptr[gid].~T();
 }
+#endif
 
 template <typename T, bool destruct = false>
 class darray {
@@ -25,6 +27,9 @@ class darray {
 	size_t length;
 
 	void _destruct() {
+	#if !defined(__CUDACC__)
+		static_assert(!(destruct), "Cannot launch destructor kernel without NVCC compilation. Compile with NVCC or defined destruct template parameter as false");
+	#else
 		if constexpr (destruct) {
 			if (getPtr()) {
 				int threads = 32;
@@ -33,6 +38,7 @@ class darray {
 				CUDA_ASSERT(cudaDeviceSynchronize());
 			}
 		}
+	#endif
 	}
 
 public:

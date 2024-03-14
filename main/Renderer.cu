@@ -23,12 +23,13 @@
 #include "ceilDiv.h"
 
 
-__global__ void init_random_states(uint32_t width, uint32_t height, int seed, curandState_t* random_states) {
+__global__ void init_random_states(uint32_t width, uint32_t height, int seed, cuRandom* rngs) {
 	int x = blockDim.x * blockIdx.x + threadIdx.x;
 	int y = blockDim.y * blockIdx.y + threadIdx.y;
 	if (x >= width || y >= height) return;
 	int gid = y * width + x;
-	curand_init(seed, gid, 0, &random_states[gid]);
+	//curand_init(seed, gid, 0, &random_states[gid]);
+	new (rngs + gid) cuRandom(seed, 0, gid);
 }
 
 void Renderer::_delete() {
@@ -50,13 +51,14 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	//CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
 	darray<glm::vec4> d_output_buffer(render_width * render_height);
-	darray<curandState_t> d_random_states(render_width * render_height);
+	//darray<curandState_t> d_random_states(render_width * render_height);
+	darray<cuRandom> rngs(render_width * render_height);
 
 	dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
-	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, d_random_states.getPtr());
+	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, rngs.getPtr());
 	CUDA_ASSERT(cudaDeviceSynchronize());
 
 
@@ -68,7 +70,7 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 		cam,
 		d_world_ptr,
 		std::move(d_output_buffer),
-		std::move(d_random_states),
+		std::move(rngs),
 		std::move(default_mat)
 	});
 }
@@ -104,7 +106,7 @@ struct LaunchParams {
 	HittableList* world{};
 	Material* default_mat{};
 	glm::vec4* output_buffer{};
-	curandState_t* random_states{};
+	cuRandom* rngs{};
 };
 __global__ void render_kernel(LaunchParams p);
 
@@ -118,7 +120,7 @@ void Renderer::Render() {
 	params.world = m.d_world_ptr;
 	params.default_mat = m.default_mat.getPtr();
 	params.output_buffer = m.d_output_buffer.getPtr();
-	params.random_states = m.d_random_states.getPtr();
+	params.rngs = m.rngs.getPtr();
 
 	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
 	// therefore you must manually set a size that should encompass the entire program.
@@ -130,7 +132,7 @@ void Renderer::Render() {
 	CUDA_ASSERT(cudaDeviceSynchronize());
 }
 
-__device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, curandState* random_state) {
+__device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRandom& random_state) {
 	Ray cur_ray = ray;
 	glm::vec3 accum_attenuation(1.0f);
 	//glm::vec3 accum_radiance(0.0f);
@@ -179,7 +181,7 @@ __global__ void render_kernel(LaunchParams p) {
 	glm::vec2 pixel_size = 1.0f / glm::vec2(p.render_width, p.render_height);
 
 	int gid = y * p.render_width + x;
-	curandState_t* random_state = &p.random_states[gid];
+	cuRandom& random_state = p.rngs[gid];
 	glm::vec2 ndc = (glm::vec2(x, y) + glm::vec2(0.5f)) * pixel_size * 2.0f - 1.0f;
 	glm::vec3 accumulated_radiance(0.0f);
 
@@ -187,7 +189,7 @@ __global__ void render_kernel(LaunchParams p) {
 	glm::vec3 radiance{};
 
 	for (int s = 0; s < p.samples_per_pixel; s++) {
-		glm::vec2 rnd_ndc_sample = ndc + glm::cu_random_in_unit_vec<2>(random_state) * pixel_size;
+		glm::vec2 rnd_ndc_sample = ndc + glm::cuRandomInUnit<2>(random_state) * pixel_size;
 
 		Ray ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y);
 

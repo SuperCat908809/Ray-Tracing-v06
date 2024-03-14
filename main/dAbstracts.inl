@@ -13,6 +13,7 @@
 #include "ceilDiv.h"
 
 
+#ifdef __CUDACC__
 template <typename T, typename U, typename... Args> requires std::derived_from<U, T>
 __global__ inline void _makeArrayOnDevice(T** ptrs, size_t count, Args*... args) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -39,6 +40,7 @@ __global__ inline void _deleteArrayOnDevice(T** ptrs, size_t count) {
 		ptrs[gid] = nullptr;
 	}
 }
+#endif
 
 
 template <typename T, bool d>
@@ -80,28 +82,40 @@ std::vector<const T*> dAbstractArray<T, d>::getPtrVector() const {
 template <typename T, bool d>
 template <typename U, typename... Args> requires std::derived_from<U, T>
 void dAbstractArray<T, d>::MakeOnDevice(size_t count, size_t offset, size_t input_offset, const Args*... args) {
+#ifdef __CUDACC__
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
 	_makeArrayOnDevice<T, U><<<blocks, threads>>>(ptrs.getPtr() + offset, count, (args + input_offset)...);
 	CUDA_ASSERT(cudaDeviceSynchronize());
+#else
+	static_assert(false, "Cannot construct on the device without NVCC compilation.");
+#endif
 }
 
 template <typename T, bool d>
 template <typename DeviceFactoryType>
 void dAbstractArray<T, d>::MakeOnDeviceFactory(size_t count, size_t offset, size_t input_offset, DeviceFactoryType* factory) {
+#ifdef __CUDACC__
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
 	_makeArrayOnDeviceFactory<T, DeviceFactoryType><<<blocks, threads>>>(ptrs.getPtr() + offset, count, input_offset, factory);
 	CUDA_ASSERT(cudaDeviceSynchronize());
+#else
+	static_assert(false, "Cannot construct on the device without NVCC compilation.");
+#endif
 }
 
 
 template <typename T, bool d>
 void dAbstractArray<T, d>::DeleteOnDevice(size_t count, size_t offset) {
+#ifdef __CUDACC__
 	int threads = 32;
 	int blocks = ceilDiv(count, threads);
 	_deleteArrayOnDevice<T><<<blocks, threads>>>(ptrs.getPtr() + offset, count);
 	CUDA_ASSERT(cudaDeviceSynchronize());
+#else
+	static_assert(false, "Cannot delete on the device without NVCC compilation.");
+#endif
 }
 
 #endif // D_ABSTRACT_CLASSES_INL //

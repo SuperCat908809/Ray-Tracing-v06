@@ -7,6 +7,7 @@
 
 #include "darray.cuh"
 #include "dobj.cuh"
+#include "cuRandom.cuh"
 
 #include "cu_Cameras.cuh"
 #include "material.cuh"
@@ -23,10 +24,9 @@ class Renderer {
 
 		// cuda memory
 		HittableList* d_world_ptr{};
-		//glm::vec4* d_output_buffer{};
-		//curandState_t* d_random_states{};
 		darray<glm::vec4> d_output_buffer;
-		darray<curandState_t> d_random_states;
+		//darray<curandState_t> d_random_states;
+		darray<cuRandom> rngs;
 
 		dobj<Material> default_mat;
 	} m;

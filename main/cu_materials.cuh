@@ -1,11 +1,11 @@
 #ifndef CU_MATERIAL_CLASSES_H
 #define CU_MATERIAL_CLASSES_H
 
-#include <glm/glm.hpp>
 #include <cuda_runtime.h>
-#include <curand_kernel.h>
+#include <glm/glm.hpp>
 #include "glm_utils.h"
 #include "ray_data.cuh"
+#include "cuRandom.cuh"
 #include "material.cuh"
 
 
@@ -18,10 +18,10 @@ public:
 
 	__device__ virtual bool Scatter(
 		const Ray& in_ray, const TraceRecord& rec,
-		curandState_t* random_state,
+		cuRandom& rng,
 		Ray& scatter_ray, glm::vec3& attenuation
 	) const override {
-		glm::vec3 ray_dir = rec.n + RND_ON_SPHERE;
+		glm::vec3 ray_dir = rec.n + glm::cuRandomOnUnit<3>(rng);
 		if (glm::near_zero(ray_dir)) return false;
 
 		scatter_ray = Ray(in_ray.at(rec.t), ray_dir);
@@ -40,10 +40,10 @@ public:
 
 	__device__ virtual bool Scatter(
 		const Ray& in_ray, const TraceRecord& rec,
-		curandState_t* random_state,
+		cuRandom& rng,
 		Ray& scatter_ray, glm::vec3& attenuation
 	) const override {
-		glm::vec3 scatter_dir = glm::reflect(in_ray.d, rec.n) + fuzz * RND_IN_SPHERE;
+		glm::vec3 scatter_dir = glm::reflect(in_ray.d, rec.n) + fuzz * glm::cuRandomOnUnit<3>(rng);
 
 		if (glm::dot(scatter_dir, rec.n) < 0 || glm::near_zero(scatter_dir)) {
 			// reflection points into surface
@@ -76,7 +76,7 @@ public:
 
 	__device__ virtual bool Scatter(
 		const Ray& in_ray, const TraceRecord& rec,
-		curandState_t* random_state,
+		cuRandom& rng,
 		Ray& scatter_ray, glm::vec3& attenuation
 	) const override {
 		float ior_ratio = rec.hit_backface ? ior : 1 / ior;
@@ -88,7 +88,7 @@ public:
 
 		glm::vec3 scatter_dir{};
 
-		if (ior_ratio * sin_theta > 1.0f || reflect_prob > RND) {
+		if (ior_ratio * sin_theta > 1.0f || reflect_prob > rng.next()) {
 			scatter_dir = glm::reflect(unit_dir, rec.n);
 		}
 		else {

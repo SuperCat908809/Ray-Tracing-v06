@@ -10,7 +10,7 @@
 template <typename T, bool destruct = false>
 class dAbstractArray {
 	
-	darray<T*> ptrs;
+	darray<T*, destruct> ptrs;
 
 	void _delete();
 

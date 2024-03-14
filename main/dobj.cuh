@@ -7,7 +7,7 @@
 #include "dmemory.cuh"
 #include <concepts>
 
-
+#ifdef __CUDACC__
 template <typename T, typename... Args>
 __global__ void _make_dobj(T* obj_ptr, Args... args) {
 	if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -21,6 +21,7 @@ __global__ void _destruct_dobj(T* obj_ptr) {
 		obj_ptr->~T();
 	}
 }
+#endif
 
 template <typename T, bool destruct = false>
 class dobj {
@@ -30,12 +31,16 @@ class dobj {
 	dmemory dmem;
 
 	void _destruct() {
+	#if !defined(__CUDACC__)
+		static_assert(!destruct, "Cannot launch destructor kernel without NVCC compilation. Compile with NVCC or defined destruct template parameter as false");
+	#else
 		if constexpr (destruct) {
 			if (getPtr()) {
 				_destruct_dobj<T><<<1, 1>>>(getPtr());
 				CUDA_ASSERT(cudaDeviceSynchronize());
 			}
 		}
+	#endif
 	}
 
 	dobj() : dmem(sizeof(T)) {}
@@ -57,10 +62,14 @@ public:
 
 	template <typename... Args>
 	static dobj Make(const Args&... args) {
+	#ifdef __CUDACC__
 		dobj device_obj;
 		_make_dobj<T><<<1, 1>>>(device_obj.getPtr(), args...);
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		return device_obj;
+	#else
+		static_assert(false, "Cannot construct dobj on device without NVCC compilation.");
+	#endif
 	}
 	template <typename U> requires std::derived_from<U, T>
 	static dobj<T> Copy(const U& obj) {

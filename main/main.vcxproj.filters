@@ -38,9 +38,6 @@
     <CudaCompile Include="FirstApp.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuHostRND.cpp">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
@@ -100,10 +97,16 @@
     <ClInclude Include="cuRandom.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
+    <ClInclude Include="cuAllocators.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
+    </ClCompile>
+    <ClCompile Include="cuHostRND.cpp">
+      <Filter>Utilities\CUDA utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

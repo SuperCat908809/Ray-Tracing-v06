@@ -1,10 +1,10 @@
 #ifndef MATERIAL_ABSTRACT_CLASS_H
 #define MATERIAL_ABSTRACT_CLASS_H
 
-#include <glm/glm.hpp>
 #include <cuda_runtime.h>
-#include <curand_kernel.h>
+#include <glm/glm.hpp>
 #include "ray_data.cuh"
+#include "cuRandom.cuh"
 
 
 // abstract class that all material classes should inherit from
@@ -20,7 +20,7 @@ public:
 	__device__ virtual ~Material() {};
 	__device__ virtual bool Scatter(
 		const Ray& in_ray, const TraceRecord& rec,
-		curandState_t* random_state,
+		cuRandom& rng,
 		Ray& scatter_ray, glm::vec3& attenuation
 	) const = 0;
 };

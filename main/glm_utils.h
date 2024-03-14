@@ -70,14 +70,18 @@ namespace glm {
 #endif // GLM_UTILS_H //
 
 
-#if defined(CURAND_KERNEL_H_) & !defined(GLM_CURAND_UTILS_H)
+#if defined(CUDA_RANDOM_GENERATOR_CLASS_H)
+#ifndef GLM_CURAND_UTILS_H
 #define GLM_CURAND_UTILS_H
 
 #include <curand_kernel.h>
 #include <glm/glm.hpp>
+#include "cuRandom.cuh"
+
 
 namespace glm {
 
+#if 0
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
 	__device__ inline glm::vec<L, float, Q> cu_random_uniform(curandState_t* random_state) {
 		glm::vec<L, float, Q> v{};
@@ -87,30 +91,34 @@ namespace glm {
 		}
 		return v;
 	}
+#endif
 
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
-	__device__ inline glm::vec<L, float, Q> cu_random_in_unit_vec(curandState_t* random_state) {
+	__device__ inline glm::vec<L, float, Q> cuRandomInUnit(cuRandom& rnd) {
 		do {
-			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state) * 2.0f - 1.0f;
+			glm::vec<L, float, Q> rnd_v = rnd.next<L>() * 2.0f - 1.0f;
 			if (glm::length2(rnd_v) < 1.0f) return rnd_v;
 		} while (true);
 	}
 
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
-	__device__ inline glm::vec<L, float, Q> cu_random_unit_vec(curandState_t* random_state) {
+	__device__ inline glm::vec<L, float, Q> cuRandomOnUnit(cuRandom& rnd) {
 		do {
-			glm::vec<L, float, Q> rnd_v = cu_random_uniform<L, Q>(random_state) * 2.0f - 1.0f;
+			glm::vec<L, float, Q> rnd_v = rnd.next<L>() * 2.0f - 1.0f;
 			if (!glm::near_zero(rnd_v) && glm::length2(rnd_v) < 1.0f) return glm::normalize(rnd_v);
 		} while (true);
 	}
 
 };
 
+#if 0
 #define RND (curand_uniform(random_state))
 #define RNDR(min, max) (curand_uniform(random_state) * (max - min) + min)
 #define RND3 (glm::cu_random_uniform<3>(random_state))
 #define RNDR3(min, max) (glm::map(RND3, min, max))
 #define RND_IN_SPHERE (glm::cu_random_in_unit_vec<3>(random_state))
 #define RND_ON_SPHERE (glm::cu_random_unit_vec<3>(random_state))
+#endif
 
 #endif // GLM_CURAND_UTILS_H //
+#endif // CUDA_RANDOM_GENERATOR_CLASS_H // 
