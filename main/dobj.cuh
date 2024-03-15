@@ -8,6 +8,7 @@
 #include <concepts>
 
 #ifdef __CUDACC__
+#if 0
 template <typename T, typename... Args>
 __global__ void _make_dobj(T* obj_ptr, Args... args) {
 	if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -21,6 +22,39 @@ __global__ void _destruct_dobj(T* obj_ptr) {
 		obj_ptr->~T();
 	}
 }
+#else
+template <class T, typename... Args> requires (!std::is_pointer_v<T>)
+__global__ void _make_obj(T* obj_ptr, Args... args) {
+	if (threadIdx.x == 0 && blockIdx.x == 0) {
+		new (obj_ptr) T(args...);
+	}
+}
+
+template <class T, typename... Args> requires std::is_pointer_v<T>
+__global__ void _make_obj(T* obj_ptr, Args... args) {
+	if (threadIdx.x == 0 && blockIdx.x == 0) {
+		*obj_ptr = new T(args...);
+	}
+}
+
+
+template <class T> requires (!std::is_pointer_v<T>)
+__global__ void _destruct_obj(T* obj_ptr) {
+	if (threadIdx.x == 0 && blockIdx.x == 0) {
+		obj_ptr->~T();
+	}
+}
+
+template <class T> requires std::is_pointer_v<T>
+__global__ void _destruct_obj(T* obj_ptr) {
+	if (threadIdx.x == 0 && blockIdx.x == 0) {
+		if (obj_ptr) {
+			delete* obj_ptr;
+			obj_ptr = nullptr;
+		}
+	}
+}
+#endif
 #endif
 
 template <typename T, bool destruct = false>

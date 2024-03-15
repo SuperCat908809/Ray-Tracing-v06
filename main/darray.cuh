@@ -10,8 +10,9 @@
 
 #include "ceilDiv.h"
 
-#ifdef __CUDACC__
+#ifndef __CUDACC__
 #include <device_launch_parameters.h>
+#if 0
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -19,6 +20,27 @@ __global__ void _destruct_objs(T* objs_ptr, size_t length) {
 
 	objs_ptr[gid].~T();
 }
+#else
+template <class T> requires (!std::is_pointer_v<T>)
+__global__ void _destruct_arr(T* obj_ptr) {
+	int gid = threadIdx.x + blockIdx.x * blockDim.x;
+	if (gid >= length) return;
+
+	(obj_ptr + gid)->~T();
+}
+
+template <class T> requires std::is_pointer_v<T>
+__global__ void _destruct_arr(T* obj_ptr) {
+	int gid = threadIdx.x + blockIdx.x * blockDim.x;
+	if (gid >= length) return;
+
+	T& ptr = *(obj_ptr + gid);
+	if (ptr) {
+		delete* ptr;
+		ptr = nullptr;
+	}
+}
+#endif
 #endif
 
 template <typename T, bool destruct = false>

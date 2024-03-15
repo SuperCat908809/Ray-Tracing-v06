@@ -7,7 +7,7 @@
 
 
 template <class _cuAlloc_t, typename T>
-concept cuAllocator = requires (_cuAlloc_t&& a, size_t count, T* to_be_deallocated) {
+concept cuAllocator = requires (_cuAlloc_t&& a, _cuAlloc_t && b, size_t count, T* to_be_deallocated) {
 	{ a.allocate(count) } -> std::same_as<T>;
 	{ a.deallocate(to_be_deallocated) };
 };
