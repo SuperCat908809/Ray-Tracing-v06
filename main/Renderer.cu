@@ -20,12 +20,12 @@
 #include "cu_Materials.cuh"
 #include "HittableList.cuh"
 
-#include "ceilDiv.h"
+#include "cuThreadManagement.cuh"
 
 
 __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cuRandom* rngs) {
-	int x = blockDim.x * blockIdx.x + threadIdx.x;
-	int y = blockDim.y * blockIdx.y + threadIdx.y;
+	int x = THREAD_GLOBAL_X_ID;
+	int y = THREAD_GLOBAL_Y_ID;
 	if (x >= width || y >= height) return;
 	int gid = y * width + x;
 	//curand_init(seed, gid, 0, &random_states[gid]);
@@ -174,8 +174,8 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 }
 
 __global__ void render_kernel(LaunchParams p) {
-	int x = blockDim.x * blockIdx.x + threadIdx.x;
-	int y = blockDim.y * blockIdx.y + threadIdx.y;
+	int x = THREAD_GLOBAL_X_ID;
+	int y = THREAD_GLOBAL_Y_ID;
 	if (x >= p.render_width || y >= p.render_height) return;
 
 	glm::vec2 pixel_size = 1.0f / glm::vec2(p.render_width, p.render_height);
