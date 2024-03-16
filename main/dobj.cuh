@@ -115,6 +115,8 @@ public:
 
 	T* getPtr() { return dmem.getPtr<T>(); }
 	const T* getPtr() const { return dmem.getPtr<T>(); }
+
+	T* transfer_ownership() { return dmem.transfer_ownership<T>(); }
 };
 
 #endif // DEVICE_OBJECT_CLASS_H //
