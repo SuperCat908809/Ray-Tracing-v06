@@ -6,6 +6,7 @@
 #include "cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
+#include "cuAllocators.cuh"
 
 #ifdef __CUDACC__
 #if 0
