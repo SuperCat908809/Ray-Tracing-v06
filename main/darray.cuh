@@ -73,6 +73,7 @@ public:
 	darray& operator=(darray&& other) noexcept { _destruct(); length = other.length; dmem = std::move(other.dmem); return *this; }
 
 	enum MemorySource { FROM_HOST = cudaMemcpyHostToDevice, FROM_DEVICE = cudaMemcpyDeviceToDevice };
+
 	darray(size_t length) : length(length), dmem(length * sizeof(T)) {}
 	darray(const T* arr, size_t length, MemorySource source = FROM_HOST) : length(length), dmem(length * sizeof(T)) {
 		CUDA_ASSERT(cudaMemcpy(dmem.getPtr(), arr, length * sizeof(T), (cudaMemcpyKind)source));
@@ -90,6 +91,8 @@ public:
 
 	T* operator[](size_t i) noexcept { return getPtr() + i; }
 	const T* operator[](size_t i) const noexcept { return getPtr() + i; }
+
+	T* transfer_ownership() { return dmem.transfer_ownership<T>(); }
 };
 
 #endif // DEVICE_ARRAY_CLASS_H //

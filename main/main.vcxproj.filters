@@ -103,6 +103,9 @@
     <ClInclude Include="cuThreadManagement.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
+    <ClInclude Include="dptrarray.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">

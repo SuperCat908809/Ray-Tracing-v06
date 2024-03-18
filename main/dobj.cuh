@@ -6,6 +6,7 @@
 #include "cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
+#include "cuAllocators.cuh"
 
 #ifdef __CUDACC__
 #if 0
@@ -114,6 +115,8 @@ public:
 
 	T* getPtr() { return dmem.getPtr<T>(); }
 	const T* getPtr() const { return dmem.getPtr<T>(); }
+
+	T* transfer_ownership() { return dmem.transfer_ownership<T>(); }
 };
 
 #endif // DEVICE_OBJECT_CLASS_H //
