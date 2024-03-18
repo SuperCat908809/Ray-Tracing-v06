@@ -97,7 +97,7 @@
     <ClInclude Include="cuRandom.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
-    <ClInclude Include="cuAllocators.cuh">
+    <ClInclude Include="cuIterators.cuh">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
     <ClInclude Include="cuThreadManagement.cuh">
