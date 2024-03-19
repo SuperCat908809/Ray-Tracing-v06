@@ -7,12 +7,12 @@
 #include "dmemory.cuh"
 #include <concepts>
 #include <vector>
+#include "dobj.cuh"
 
 #include "ceilDiv.h"
 
-#ifndef __CUDACC__
+#ifdef __CUDACC__
 #include <device_launch_parameters.h>
-#if 0
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -20,27 +20,6 @@ __global__ void _destruct_objs(T* objs_ptr, size_t length) {
 
 	objs_ptr[gid].~T();
 }
-#else
-template <class T> requires (!std::is_pointer_v<T>)
-__global__ void _destruct_arr(T* obj_ptr) {
-	int gid = threadIdx.x + blockIdx.x * blockDim.x;
-	if (gid >= length) return;
-
-	(obj_ptr + gid)->~T();
-}
-
-template <class T> requires std::is_pointer_v<T>
-__global__ void _destruct_arr(T* obj_ptr) {
-	int gid = threadIdx.x + blockIdx.x * blockDim.x;
-	if (gid >= length) return;
-
-	T& ptr = *(obj_ptr + gid);
-	if (ptr) {
-		delete* ptr;
-		ptr = nullptr;
-	}
-}
-#endif
 #endif
 
 template <typename T, bool destruct = false>
@@ -91,8 +70,25 @@ public:
 
 	T* operator[](size_t i) noexcept { return getPtr() + i; }
 	const T* operator[](size_t i) const noexcept { return getPtr() + i; }
-
-	T* transfer_ownership() { return dmem.transfer_ownership<T>(); }
 };
+
+
+template <class T, bool d>
+static darray<const T*, false> makePtrArray(const std::vector<dobj<T, d>>& v) {
+	std::vector<T*> arr(v.size());
+	for (int i = 0; i < v.size(); i++) {
+		arr.push_back(v[i].getPtr());
+	}
+	return darray<const T*, false>(arr);
+}
+
+template <class T, bool d>
+static darray<T*, false> makePtrArray(std::vector<dobj<T, d>>& v) {
+	std::vector<T*> arr(v.size());
+	for (int i = 0; i < v.size(); i++) {
+		arr.push_back(v[i].getPtr());
+	}
+	return darray<T*, false>(arr);
+}
 
 #endif // DEVICE_ARRAY_CLASS_H //
