@@ -6,10 +6,9 @@
 #include "cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
-#include "cuAllocators.cuh"
+//#include "cuAllocators.cuh"
 
 #ifdef __CUDACC__
-#if 0
 template <typename T, typename... Args>
 __global__ void _make_dobj(T* obj_ptr, Args... args) {
 	if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -23,39 +22,6 @@ __global__ void _destruct_dobj(T* obj_ptr) {
 		obj_ptr->~T();
 	}
 }
-#else
-template <class T, typename... Args> requires (!std::is_pointer_v<T>)
-__global__ void _make_obj(T* obj_ptr, Args... args) {
-	if (threadIdx.x == 0 && blockIdx.x == 0) {
-		new (obj_ptr) T(args...);
-	}
-}
-
-template <class T, typename... Args> requires std::is_pointer_v<T>
-__global__ void _make_obj(T* obj_ptr, Args... args) {
-	if (threadIdx.x == 0 && blockIdx.x == 0) {
-		*obj_ptr = new T(args...);
-	}
-}
-
-
-template <class T> requires (!std::is_pointer_v<T>)
-__global__ void _destruct_obj(T* obj_ptr) {
-	if (threadIdx.x == 0 && blockIdx.x == 0) {
-		obj_ptr->~T();
-	}
-}
-
-template <class T> requires std::is_pointer_v<T>
-__global__ void _destruct_obj(T* obj_ptr) {
-	if (threadIdx.x == 0 && blockIdx.x == 0) {
-		if (obj_ptr) {
-			delete* obj_ptr;
-			obj_ptr = nullptr;
-		}
-	}
-}
-#endif
 #endif
 
 template <typename T, bool destruct = false>
@@ -95,17 +61,20 @@ public:
 		_destruct();
 	}
 
-	template <typename... Args>
+#ifdef __CUDACC__
+	template <class U = T, typename... Args> requires std::derived_from<U, T> && std::constructible_from<U, Args...>
 	static dobj Make(const Args&... args) {
-	#ifdef __CUDACC__
-		dobj device_obj;
-		_make_dobj<T><<<1, 1>>>(device_obj.getPtr(), args...);
+		dobj<U> device_obj;
+		_make_dobj<U><<<1, 1>>>(device_obj.getPtr(), args...);
 		CUDA_ASSERT(cudaDeviceSynchronize());
 		return device_obj;
-	#else
-		static_assert(false, "Cannot construct dobj on device without NVCC compilation.");
-	#endif
 	}
+#else
+	template <class U = T, typename... Args> requires std::derived_from<U, T>&& std::constructible_from<U, Args...>
+	static dobj Make(const Args&... args) {
+		static_assert(!std::is_same_v<T, T>, "Cannot launch make kernel without NVCC compilation");
+	}
+#endif
 	template <typename U> requires std::derived_from<U, T>
 	static dobj<T> Copy(const U& obj) {
 		dobj<U> device_obj;
@@ -115,8 +84,6 @@ public:
 
 	T* getPtr() { return dmem.getPtr<T>(); }
 	const T* getPtr() const { return dmem.getPtr<T>(); }
-
-	T* transfer_ownership() { return dmem.transfer_ownership<T>(); }
 };
 
 #endif // DEVICE_OBJECT_CLASS_H //
