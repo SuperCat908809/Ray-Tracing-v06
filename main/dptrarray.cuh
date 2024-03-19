@@ -10,7 +10,7 @@
 #include <vector>
 
 
-#ifndef __CUDACC__
+#ifdef __CUDACC__
 #include "ceilDiv.h"
 #include <device_launch_parameters.h>
 
@@ -35,7 +35,7 @@ class dptrarray {
 	size_t length;
 
 	void _destruct() {
-	#ifdef __CUDACC__
+	#ifndef __CUDACC__
 		static_assert(!(responsible), "Cannot launch destructor kernel without NVCC compilation.");
 	#else
 		if constexpr (responsible) {
@@ -71,6 +71,7 @@ public:
 		CUDA_ASSERT(cudaMemcpy(dmem.getPtr(), arr, length * sizeof(T*), (cudaMemcpyKind)source));
 	}
 	dptrarray(const std::vector<T*>& v) : darray(v.data(), v.size()) {}
+#if 0
 	template <bool d>
 	dptrarray(std::vector<dobj<T, d>>&& v) : length(v.size()), dmem(v.size() * sizeof(T*)) {
 		std::vector<T*> v2(v.size());
@@ -79,6 +80,7 @@ public:
 		}
 		CUDA_ASSERT(cudaMemcpy(dmem.getPtr(), v2.data(), v2.size() * sizeof(T*), cudaMemcpyHostToDevice));
 	}
+#endif
 
 	size_t getLength() const { return length; }
 
@@ -87,7 +89,6 @@ public:
 
 	T** operator[](size_t i) noexcept { return getPtr() + i; }
 	const T** operator[](size_t i) const noexcept { return getPtr() + i; }
-
 };
 
 #endif // DEVICE_POINTER_ARRAY_CLASS_CUH //
