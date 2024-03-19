@@ -80,7 +80,7 @@ public:
 		(*world_list) = new dAbstract<HittableList>((*spheres)->getDeviceArrayPtr(), 5);
 	}
 };
-#else
+#elif 0
 class Scene1Factory {
 public:
 	struct SphereParams {
@@ -429,6 +429,7 @@ public:
 class SceneBook1FinaleFactory {
 public:
 
+#if 0
 	struct SphereParams {
 		glm::vec3 origin;
 		float radius;
@@ -442,6 +443,7 @@ public:
 		__host__ __device__ d_SphereFactory(SphereParams* p) : p(p) {}
 		__device__ Hittable* operator()(size_t index) const { return p[index].MakeSphere(); }
 	};
+#endif
 
 private:
 	void _make_sphere(int a, int b) {
@@ -456,8 +458,10 @@ private:
 				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
 				
 				auto material = dobj<LambertianAbstract>::Make(albedo);
-				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				auto sphere = dobj<SphereHittable>::Make(pos, 0.2f, material.getPtr());
+				//sphere_params.push_back({ pos, 0.2f, material.getPtr()});
 				materials.push_back(std::move(material));
+				sphere_list.push_back(std::move(sphere));
 			}
 			else if (choose_mat < 0.95f) {
 				// metal
@@ -465,14 +469,18 @@ private:
 				float fuzz = rnd * 0.5f;
 
 				auto material = dobj<MetalAbstract>::Make(albedo, fuzz);
-				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				auto sphere = dobj<SphereHittable>::Make(pos, 0.2f, material.getPtr());
+				//sphere_params.push_back({ pos, 0.2f, material.getPtr()});
 				materials.push_back(std::move(material));
+				sphere_list.push_back(std::move(sphere));
 			}
 			else {
 				// glass
 				auto material = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
-				sphere_params.push_back({ pos, 0.2f, material.getPtr()});
+				auto sphere = dobj<SphereHittable>::Make(pos, 0.2f, material.getPtr());
+				//sphere_params.push_back({ pos, 0.2f, material.getPtr()});
 				materials.push_back(std::move(material));
+				sphere_list.push_back(std::move(sphere));
 			}
 		}
 	}
@@ -480,8 +488,10 @@ private:
 	void _populate_world() {
 		// ground sphere
 		auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.5f));
-		sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, ground_mat.getPtr() });
+		//sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, ground_mat.getPtr() });
+		auto ground_sphere = dobj<SphereHittable>::Make(glm::vec3(0, -1000, 0), 1000, ground_mat.getPtr());
 		materials.push_back(std::move(ground_mat));
+		sphere_list.push_back(std::move(ground_sphere));
 
 		for (int a = -11; a < 11; a++) {
 			for (int b = -11; b < 11; b++) {
@@ -490,22 +500,28 @@ private:
 		}
 
 		auto center_mat = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
-		sphere_params.push_back({ glm::vec3(0,1,0),1, center_mat.getPtr()});
+		//sphere_params.push_back({ glm::vec3(0,1,0),1, center_mat.getPtr()});
+		auto center_sphere = dobj<SphereHittable>::Make(glm::vec3(0, 1, 0), 1, center_mat.getPtr());
 		materials.push_back(std::move(center_mat));
+		sphere_list.push_back(std::move(center_sphere));
 
 		auto left_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.4f, 0.2f, 0.1f));
-		sphere_params.push_back({ glm::vec3(-4,1,0),1,left_mat.getPtr()});
+		//sphere_params.push_back({ glm::vec3(-4,1,0),1,left_mat.getPtr()});
+		auto left_sphere = dobj<SphereHittable>::Make(glm::vec3(-4, 1, 0), 1, left_mat.getPtr());
 		materials.push_back(std::move(left_mat));
+		sphere_list.push_back(std::move(left_sphere));
 
 		auto right_mat = dobj<MetalAbstract>::Make(glm::vec3(0.7f, 0.6f, 0.5f), 0);
-		sphere_params.push_back({ glm::vec3(4,1,0),1,right_mat.getPtr()});
+		//sphere_params.push_back({ glm::vec3(4,1,0),1,right_mat.getPtr()});
+		auto right_sphere = dobj<SphereHittable>::Make(glm::vec3(4, 1, 0), 1, right_mat.getPtr());
 		materials.push_back(std::move(right_mat));
+		sphere_list.push_back(std::move(right_sphere));
 	}
 
 	
 
 	std::vector<dobj<Material>> materials;
-	std::vector<  SphereParams> sphere_params;
+	std::vector<dobj<Hittable>> sphere_list;
 	cuHostRND host_rnd{ 512, 1984 };
 
 public:
@@ -516,18 +532,23 @@ public:
 		factory._populate_world();
 
 
+	#if 0
 		darray<SphereParams> d_sphere_params(factory.sphere_params);
 		d_SphereFactory sphere_factory(d_sphere_params.getPtr());
 		auto d_sphere_factory = dobj<d_SphereFactory>::Make(sphere_factory);
 
 		dAbstractArray<Hittable, true> sphere_list(factory.sphere_params.size());
 		sphere_list.MakeOnDeviceFactory<d_SphereFactory>(factory.sphere_params.size(), 0, 0, d_sphere_factory.getPtr());
+	#endif
+
+		darray<Hittable*> sphere_list = makePtrArray(factory.sphere_list);
 
 		
-		auto world_list = dobj<HittableList>::Make(sphere_list.getDeviceArrayPtr(), sphere_list.getLength());
+		auto world_list = dobj<HittableList>::Make(sphere_list.getPtr(), sphere_list.getLength());
 
 		return _SceneDescription {
 			std::move(factory.materials),
+			std::move(factory.sphere_list),
 			std::move(sphere_list),
 			std::move(world_list)
 		};
