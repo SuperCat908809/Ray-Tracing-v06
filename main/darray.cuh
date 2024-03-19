@@ -9,10 +9,11 @@
 #include <vector>
 #include "dobj.cuh"
 
-#include "ceilDiv.h"
 
 #ifdef __CUDACC__
 #include <device_launch_parameters.h>
+#include "ceilDiv.h"
+
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {
 	int gid = threadIdx.x + blockIdx.x * blockDim.x;
