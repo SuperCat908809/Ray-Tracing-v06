@@ -47,18 +47,6 @@ public:
 
 	template <typename T> const T* getPtr() const noexcept { return static_cast<const T*>(getPtr()); }
 	template <typename T> T* getPtr() noexcept { return static_cast<T*>(getPtr()); }
-
-	void* transfer_ownership() { 
-		void* ptr = device_memory;
-		device_memory = nullptr;
-		return ptr;
-	}
-	template <typename T>
-	T* transfer_ownership() {
-		T* ptr = getPtr<T>();
-		device_memory = nullptr;
-		return ptr;
-	}
 };
 
 #endif // DEVICE_MEMORY_CLASS_H //
