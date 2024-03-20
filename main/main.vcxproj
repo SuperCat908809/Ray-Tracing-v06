@@ -181,7 +181,7 @@
     <CudaCompile Include="Renderer.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cuHostRND.cpp" />
+    <CudaCompile Include="cuHostRND.cpp" />
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -38,6 +38,9 @@
     <CudaCompile Include="FirstApp.cu">
       <Filter>Main</Filter>
     </CudaCompile>
+    <CudaCompile Include="cuHostRND.cpp">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
@@ -110,9 +113,6 @@
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
-    </ClCompile>
-    <ClCompile Include="cuHostRND.cpp">
-      <Filter>Utilities\CUDA utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
