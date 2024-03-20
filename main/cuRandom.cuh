@@ -20,7 +20,7 @@ public:
 
 	__device__ float next() { return curand_uniform(&gen); }
 
-	template <glm::length_t L>
+	template <glm::length_t L> requires (L > 0)
 	__device__ glm::vec<L, float, glm::qualifier::packed_highp> next() {
 		glm::vec<L, float, glm::qualifier::packed_highp> v;
 		if constexpr (L <= 4) {
