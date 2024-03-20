@@ -70,7 +70,6 @@ namespace glm {
 #endif // GLM_UTILS_H //
 
 
-#if defined(CUDA_RANDOM_GENERATOR_CLASS_H)
 #ifndef GLM_CURAND_UTILS_H
 #define GLM_CURAND_UTILS_H
 
@@ -121,4 +120,3 @@ namespace glm {
 #endif
 
 #endif // GLM_CURAND_UTILS_H //
-#endif // CUDA_RANDOM_GENERATOR_CLASS_H // 
