@@ -426,6 +426,45 @@ public:
 };
 #endif
 
+#if 0
+class TestScene {
+	std::vector<dobj<Material>> material_list;
+	std::vector<dobj<Hittable>> sphere_list;
+	cuHostRND rnd{ 512, 1984 };
+
+	TestScene() = default;
+
+	void _populate_world() {
+		auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.4f, 0.5f, 0.6f));
+		auto ground_sphere = dobj<SphereHittable>::Make(glm::vec3(0, -1000, 0), 1000, ground_mat.getPtr());
+		material_list.push_back(std::move(ground_mat));
+		sphere_list.push_back(std::move(ground_sphere));
+
+		auto center_mat = dobj<MetalAbstract>::Make(glm::vec3(0.99f), 0.01f);
+		auto center_sphere = dobj<SphereHittable>::Make(glm::vec3(0, 0.5f, 0), 0.5f, center_mat.getPtr());
+		material_list.push_back(std::move(center_mat));
+		sphere_list.push_back(std::move(center_sphere));
+	}
+
+public:
+
+	static _SceneDescription MakeScene() {
+		TestScene factory;
+
+		factory._populate_world();
+		darray<Hittable*> sphere_ptr_arr = makePtrArray(factory.sphere_list);
+		auto world_list = dobj<HittableList>::Make(sphere_ptr_arr.getPtr(), sphere_ptr_arr.getLength());
+
+		return _SceneDescription{
+			std::move(factory.material_list),
+			std::move(factory.sphere_list),
+			std::move(sphere_ptr_arr),
+			std::move(world_list)
+		};
+	}
+};
+#endif
+
 class SceneBook1FinaleFactory {
 public:
 
