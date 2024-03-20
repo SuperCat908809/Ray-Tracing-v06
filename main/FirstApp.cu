@@ -636,7 +636,8 @@ void FirstApp::Run() {
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
 	//uint8_t* output_image_data = new uint8_t[width * height * 4];
-	std::vector<uint8_t> output_image_data(width * height * 4);
+	std::vector<uint8_t> output_image_data;
+	output_image_data.reserve(width * height * 4);
 	for (uint32_t i = 0; i < width * height; i++) {
 		output_image_data.push_back(static_cast<uint8_t>(data[i][0] * 255.999f));
 		output_image_data.push_back(static_cast<uint8_t>(data[i][1] * 255.999f));
