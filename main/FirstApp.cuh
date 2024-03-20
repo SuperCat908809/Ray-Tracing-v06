@@ -16,11 +16,9 @@
 
 
 struct _SceneDescription {
-	//dAbstractArray<Material> sphere_materials;
 	std::vector<dobj<Material>> materials;
-	//dAbstractArray<Hittable, true> world_sphere_list;
 	std::vector<dobj<Hittable>> spheres;
-	darray<Hittable*, false> sphere_list;
+	darray<Hittable*> sphere_list;
 	dobj<HittableList> world_list;
 };
 
