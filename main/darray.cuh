@@ -76,7 +76,8 @@ public:
 
 template <class T, bool d>
 static darray<const T*, false> makePtrArray(const std::vector<dobj<T, d>>& v) {
-	std::vector<T*> arr(v.size());
+	std::vector<const T*> arr;
+	arr.reserve(v.size());
 	for (int i = 0; i < v.size(); i++) {
 		arr.push_back(v[i].getPtr());
 	}
@@ -85,7 +86,8 @@ static darray<const T*, false> makePtrArray(const std::vector<dobj<T, d>>& v) {
 
 template <class T, bool d>
 static darray<T*, false> makePtrArray(std::vector<dobj<T, d>>& v) {
-	std::vector<T*> arr(v.size());
+	std::vector<T*> arr;
+	arr.reserve(v.size());
 	for (int i = 0; i < v.size(); i++) {
 		arr.push_back(v[i].getPtr());
 	}
