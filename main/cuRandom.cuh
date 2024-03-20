@@ -24,10 +24,10 @@ public:
 	__device__ glm::vec<L, float, glm::qualifier::packed_highp> next() {
 		glm::vec<L, float, glm::qualifier::packed_highp> v;
 		if constexpr (L <= 4) {
-			if constexpr (1 <= L) v[1] = curand_uniform(&gen);
-			if constexpr (2 <= L) v[2] = curand_uniform(&gen);
-			if constexpr (3 <= L) v[3] = curand_uniform(&gen);
-			if constexpr (4 <= L) v[4] = curand_uniform(&gen);
+			if constexpr (1 <= L) v[0] = curand_uniform(&gen);
+			if constexpr (2 <= L) v[1] = curand_uniform(&gen);
+			if constexpr (3 <= L) v[2] = curand_uniform(&gen);
+			if constexpr (4 <= L) v[3] = curand_uniform(&gen);
 		}
 		else {
 			for (int i = 0; i < L; i++) {
