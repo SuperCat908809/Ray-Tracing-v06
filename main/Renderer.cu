@@ -29,7 +29,7 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 	if (x >= width || y >= height) return;
 	int gid = y * width + x;
 	//curand_init(seed, gid, 0, &random_states[gid]);
-	new (rngs + gid) cuRandom(seed, 0, gid);
+	new (rngs + gid) cuRandom(seed + gid, 0, 0);
 }
 
 void Renderer::_delete() {
