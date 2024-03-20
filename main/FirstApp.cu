@@ -488,13 +488,54 @@ private:
 	void _make_sphere(int a, int b) {
 	#define rnd (host_rnd.next())
 
-		float choose_mat = rnd;
-		glm::vec3 pos(a + 0.9f * rnd, 0.2f, b + 0.9f * rnd);
 
-		if (glm::length(pos - glm::vec3(4, 0.2f, 0)) > 0.9f) {
+		/*
+		float choose_mat = RND;
+		vec3 center(a+RND,0.2,b+RND);
+		if(choose_mat < 0.8f) {
+			d_list[i++] = new sphere(center, 0.2,
+										new lambertian(vec3(RND*RND, RND*RND, RND*RND)));
+		}
+		else if(choose_mat < 0.95f) {
+			d_list[i++] = new sphere(center, 0.2,
+										new metal(vec3(0.5f*(1.0f+RND), 0.5f*(1.0f+RND), 0.5f*(1.0f+RND)), 0.5f*RND));
+		}
+		else {
+			d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
+		}
+		*/
+
+#if 1
+		float choose_mat = rnd;
+		glm::vec3 center(a + rnd, 0.2f, b + rnd);
+		if (choose_mat < 0.8f) {
+			auto mat = dobj<LambertianAbstract>::Make(glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd));
+			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
+			materials.push_back(std::move(mat));
+			sphere_list.push_back(std::move(sp));
+		}
+		else if (choose_mat < 0.95f) {
+			auto mat = dobj<MetalAbstract>::Make(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f * rnd)), 0.5f * rnd);
+			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
+			materials.push_back(std::move(mat));
+			sphere_list.push_back(std::move(sp));
+		}
+		else {
+			auto mat = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
+			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
+			materials.push_back(std::move(mat));
+			sphere_list.push_back(std::move(sp));
+		}
+#else
+		float choose_mat = rnd;
+		//glm::vec3 pos(a + 0.9f * rnd, 0.2f, b + 0.9f * rnd);
+		glm::vec3 pos(a + rnd, 0.2f, b + rnd);
+
+		/*if (glm::length(pos - glm::vec3(4, 0.2f, 0)) > 0.9f)*/ {
 			if (choose_mat < 0.8f) {
 				// diffuse
-				glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
+				//glm::vec3 albedo = glm::vec3(rnd, rnd, rnd) * glm::vec3(rnd, rnd, rnd);
+				glm::vec3 albedo = glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd);
 				
 				auto material = dobj<LambertianAbstract>::Make(albedo);
 				auto sphere = dobj<SphereHittable>::Make(pos, 0.2f, material.getPtr());
@@ -522,13 +563,14 @@ private:
 				sphere_list.push_back(std::move(sphere));
 			}
 		}
+#endif
 	}
 
 	void _populate_world() {
 		// ground sphere
 		auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.5f));
 		//sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, ground_mat.getPtr() });
-		auto ground_sphere = dobj<SphereHittable>::Make(glm::vec3(0, -1000, 0), 1000, ground_mat.getPtr());
+		auto ground_sphere = dobj<SphereHittable>::Make(glm::vec3(0, -1000, -1), 1000, ground_mat.getPtr());
 		materials.push_back(std::move(ground_mat));
 		sphere_list.push_back(std::move(ground_sphere));
 
@@ -603,9 +645,9 @@ FirstApp FirstApp::MakeApp() {
 	glm::vec3 lookfrom(13, 2, 3);
 	glm::vec3 lookat(0, 0, 0);
 	glm::vec3 up(0, 1, 0);
-	float fov = 20.0f;
+	float fov = 30.0f;
 	float aspect = _width / (float)_height;
-	PinholeCamera cam = PinholeCamera(lookfrom, lookat, up, fov, aspect);
+	PinholeCamera cam(lookfrom, lookat, up, fov, aspect);
 
 	_SceneDescription scene_desc = SceneBook1FinaleFactory::MakeScene();
 
@@ -631,7 +673,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/test_043.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/test_046.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
