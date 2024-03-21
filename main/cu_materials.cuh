@@ -24,7 +24,7 @@ public:
 		glm::vec3 ray_dir = rec.n + glm::cuRandomOnUnit<3>(rng);
 		if (glm::near_zero(ray_dir)) return false;
 
-		scatter_ray = Ray(in_ray.at(rec.t), ray_dir);
+		scatter_ray = Ray(in_ray.at(rec.t), ray_dir, in_ray.time);
 		attenuation = albedo;
 		return true;
 	}
@@ -52,7 +52,7 @@ public:
 			return false;
 		}
 
-		scatter_ray = Ray(in_ray.at(rec.t), scatter_dir);
+		scatter_ray = Ray(in_ray.at(rec.t), scatter_dir, in_ray.time);
 		attenuation = albedo;
 		return true;
 	}
@@ -95,7 +95,7 @@ public:
 			scatter_dir = glm::refract(unit_dir, rec.n, ior_ratio);
 		}
 
-		scatter_ray = Ray(in_ray.at(rec.t), scatter_dir);
+		scatter_ray = Ray(in_ray.at(rec.t), scatter_dir, in_ray.time);
 		attenuation = albedo;
 		return true;
 	}
