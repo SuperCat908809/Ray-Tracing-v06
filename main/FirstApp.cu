@@ -510,7 +510,8 @@ private:
 		glm::vec3 center(a + rnd, 0.2f, b + rnd);
 		if (choose_mat < 0.8f) {
 			auto mat = dobj<LambertianAbstract>::Make(glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd));
-			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
+			glm::vec3 center1 = center + glm::vec3(0, rnd * 0.5f, 0);
+			auto sp = dobj<MovingSphereHittable>::Make(center, center1, 0.2f, mat.getPtr());
 			materials.push_back(std::move(mat));
 			sphere_list.push_back(std::move(sp));
 		}
@@ -647,11 +648,11 @@ FirstApp FirstApp::MakeApp() {
 	glm::vec3 up(0, 1, 0);
 	float fov = 30.0f;
 	float aspect = _width / (float)_height;
-	DefocusBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 10.0f);
+	MotionBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 1.0f);
 
 	_SceneDescription scene_desc = SceneBook1FinaleFactory::MakeScene();
 
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 8, cam, scene_desc.world_list.getPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 512, 12, cam, scene_desc.world_list.getPtr());
 
 	glm::vec4* host_output_framebuffer{};
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
@@ -673,7 +674,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 1/test_047.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_001.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

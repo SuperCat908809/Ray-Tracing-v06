@@ -41,7 +41,7 @@ void Renderer::_delete() {
 
 Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
-	const DefocusBlurCamera& cam,
+	const MotionBlurCamera& cam,
 	HittableList* d_world_ptr) {
 
 	//glm::vec4* d_output_buffer{};
@@ -102,7 +102,7 @@ struct LaunchParams {
 	uint32_t render_height{};
 	uint32_t samples_per_pixel{};
 	uint32_t max_depth{};
-	DefocusBlurCamera cam{};
+	MotionBlurCamera cam{};
 	HittableList* world{};
 	Material* default_mat{};
 	glm::vec4* output_buffer{};

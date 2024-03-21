@@ -26,7 +26,7 @@ class FirstApp {
 
 	struct M {
 		uint32_t render_width{}, render_height{};
-		DefocusBlurCamera cam{};
+		MotionBlurCamera cam{};
 		glm::vec4* host_output_framebuffer{};
 		Renderer renderer;
 
