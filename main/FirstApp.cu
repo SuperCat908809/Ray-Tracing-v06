@@ -647,7 +647,7 @@ FirstApp FirstApp::MakeApp() {
 	glm::vec3 up(0, 1, 0);
 	float fov = 30.0f;
 	float aspect = _width / (float)_height;
-	PinholeCamera cam(lookfrom, lookat, up, fov, aspect);
+	DefocusBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 10.0f);
 
 	_SceneDescription scene_desc = SceneBook1FinaleFactory::MakeScene();
 

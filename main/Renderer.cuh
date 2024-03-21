@@ -20,7 +20,7 @@ class Renderer {
 	struct M {
 		uint32_t render_width{}, render_height{};
 		uint32_t samples_per_pixel{}, max_depth{};
-		PinholeCamera cam{};
+		DefocusBlurCamera cam{};
 
 		// cuda memory
 		HittableList* d_world_ptr{};
@@ -43,7 +43,7 @@ public:
 	static Renderer MakeRenderer(
 		uint32_t render_width, uint32_t render_height,
 		uint32_t samples_per_pixel, uint32_t max_depth,
-		const PinholeCamera& cam,
+		const DefocusBlurCamera& cam,
 		HittableList* d_world_ptr
 	);
 	Renderer(Renderer&& other);

@@ -41,7 +41,7 @@ void Renderer::_delete() {
 
 Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
-	const PinholeCamera& cam,
+	const DefocusBlurCamera& cam,
 	HittableList* d_world_ptr) {
 
 	//glm::vec4* d_output_buffer{};
@@ -102,7 +102,7 @@ struct LaunchParams {
 	uint32_t render_height{};
 	uint32_t samples_per_pixel{};
 	uint32_t max_depth{};
-	PinholeCamera cam{};
+	DefocusBlurCamera cam{};
 	HittableList* world{};
 	Material* default_mat{};
 	glm::vec4* output_buffer{};
@@ -191,7 +191,7 @@ __global__ void render_kernel(LaunchParams p) {
 	for (int s = 0; s < p.samples_per_pixel; s++) {
 		glm::vec2 rnd_ndc_sample = ndc + glm::cuRandomInUnit<2>(random_state) * pixel_size;
 
-		Ray ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y);
+		Ray ray = p.cam.sample_ray(rnd_ndc_sample.x, rnd_ndc_sample.y, random_state);
 
 		radiance += sample_world(ray, p, random_state);
 	}
