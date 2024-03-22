@@ -185,6 +185,7 @@
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="aabb.cuh" />
     <ClInclude Include="ceilDiv.h" />
     <ClInclude Include="cuIterators.cuh" />
     <ClInclude Include="cuError.h" />

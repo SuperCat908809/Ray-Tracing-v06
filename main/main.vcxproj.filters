@@ -109,6 +109,9 @@
     <ClInclude Include="dptrarray.cuh">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
+    <ClInclude Include="aabb.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
