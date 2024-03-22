@@ -102,7 +102,7 @@ It should be up to the host to provide the AABB and any other data not related d
 Generating an AABB should be in the scene construction step so the host should store whatever it needs, either a full copy of the Hittable or a pointer to fetch it if required, 
 which will be used to provide the requested data (AABB and such).
 
-Perhaps I can make a second abstract class that provides these accessors.
+Perhaps I can make a second abstract class that provides these accessors, specifically for host side code.
 
 */
 
