@@ -82,10 +82,6 @@ public:
 		}
 		return false;
 	}
-	__device__ virtual aabb bounding_box() const override {
-		glm::vec3 r(radius);
-		return aabb(center - r, center + r);
-	}
 };
 
 
@@ -123,12 +119,6 @@ public:
 			return true;
 		}
 		return false;
-	}
-	__device__ virtual aabb bounding_box() const override {
-		glm::vec3 r(radius);
-		aabb a(center0 - r, center0 + r);
-		aabb b(center1 - r, center1 + r);
-		return aabb(a, b);
 	}
 };
 
