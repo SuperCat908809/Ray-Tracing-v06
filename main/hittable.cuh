@@ -3,7 +3,6 @@
 
 #include <cuda_runtime.h>
 #include "ray_data.cuh"
-#include "aabb.cuh"
 
 
 // abstract class that all hittable classes should inherit from
@@ -18,7 +17,6 @@ protected:
 public:
 	__device__ virtual ~Hittable() {};
 	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const = 0;
-	__device__ virtual aabb bounding_box() const = 0;
 };
 
 #endif // HITTABLE_ABSTRACT_CLASS_H //
