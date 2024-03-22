@@ -88,6 +88,17 @@ public:
 	}
 };
 
+
+/*
+
+I realise that constructing a bvh hierarchy must be done on the device, thus making the bounding_box function only accessible on the device is a problem.
+Perhaps I can re-work everything such that during construction, like through a factory object, all the data pertaining to be device side object is available on the host, 
+then whenever I need something like its bounding box then I can easily access it and once everything is done host-side, every device side object will be constructed and 
+all the necessary pointer passing will occur such that everything points to the correct data.
+
+*/
+
+
 class MovingSphereHittable : public Hittable {
 	glm::vec3 center0;
 	glm::vec3 center1;
