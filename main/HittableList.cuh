@@ -4,20 +4,24 @@
 #include <cuda_runtime.h>
 #include "ray_data.cuh"
 #include "hittable.cuh"
+#include "aabb.cuh"
 
 
 class HittableList : public Hittable {
 	Hittable** objects{};
 	int object_count{};
+	aabb bounds;
 
 public:
 	__device__ HittableList() = delete;
 	__device__ HittableList(const HittableList&) = delete;
 	__device__ HittableList& operator=(const HittableList&) = delete;
 
-	__device__ HittableList(Hittable** objects, int object_count) : objects(objects), object_count(object_count) {}
+	__device__ HittableList(Hittable** objects, int object_count, const aabb& bounds) : objects(objects), object_count(object_count), bounds(bounds) {}
 
 	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
+		if (!bounds.intersects(ray, rec.t)) return false;
+
 		bool hit_any{ false };
 
 		for (int i = 0; i < object_count; i++) {
