@@ -514,18 +514,27 @@ private:
 			auto sp = dobj<MovingSphereHittable>::Make(center, center1, 0.2f, mat.getPtr());
 			materials.push_back(std::move(mat));
 			sphere_list.push_back(std::move(sp));
+
+			glm::vec3 r(0.2f);
+			aabb sphere_bounds0(center - r, center + r);
+			aabb sphere_bounds1(center1 - r, center1 + r);
+			bounds += aabb(sphere_bounds0, sphere_bounds1);
 		}
 		else if (choose_mat < 0.95f) {
 			auto mat = dobj<MetalAbstract>::Make(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f * rnd)), 0.5f * rnd);
 			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
 			materials.push_back(std::move(mat));
 			sphere_list.push_back(std::move(sp));
+
+			bounds += aabb(center - 2.0f, center + 2.0f);
 		}
 		else {
 			auto mat = dobj<DielectricAbstract>::Make(glm::vec3(1.0f), 1.5f);
 			auto sp = dobj<SphereHittable>::Make(center, 0.2f, mat.getPtr());
 			materials.push_back(std::move(mat));
 			sphere_list.push_back(std::move(sp));
+
+			bounds += aabb(center - 2.0f, center + 2.0f);
 		}
 #else
 		float choose_mat = rnd;
@@ -575,6 +584,9 @@ private:
 		materials.push_back(std::move(ground_mat));
 		sphere_list.push_back(std::move(ground_sphere));
 
+		bounds += aabb(glm::vec3(0, -1000, -1) - 1000.0f, glm::vec3(0, -1000, -1) + 1000.0f);
+
+
 		for (int a = -11; a < 11; a++) {
 			for (int b = -11; b < 11; b++) {
 				_make_sphere(a, b);
@@ -587,17 +599,26 @@ private:
 		materials.push_back(std::move(center_mat));
 		sphere_list.push_back(std::move(center_sphere));
 
+		bounds += aabb(glm::vec3(0, 1, 0) - 1.0f, glm::vec3(0, 1, 0) + 1.0f);
+
+
 		auto left_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.4f, 0.2f, 0.1f));
 		//sphere_params.push_back({ glm::vec3(-4,1,0),1,left_mat.getPtr()});
 		auto left_sphere = dobj<SphereHittable>::Make(glm::vec3(-4, 1, 0), 1, left_mat.getPtr());
 		materials.push_back(std::move(left_mat));
 		sphere_list.push_back(std::move(left_sphere));
 
+		bounds += aabb(glm::vec3(-4, 1, 0) - 1.0f, glm::vec3(-4, 1, 0) + 1.0f);
+
+
+
 		auto right_mat = dobj<MetalAbstract>::Make(glm::vec3(0.7f, 0.6f, 0.5f), 0);
 		//sphere_params.push_back({ glm::vec3(4,1,0),1,right_mat.getPtr()});
 		auto right_sphere = dobj<SphereHittable>::Make(glm::vec3(4, 1, 0), 1, right_mat.getPtr());
 		materials.push_back(std::move(right_mat));
 		sphere_list.push_back(std::move(right_sphere));
+
+		bounds += aabb(glm::vec3(4, 1, 0) - 1.0f, glm::vec3(4, 1, 0) + 1.0f);
 	}
 
 	
@@ -605,6 +626,7 @@ private:
 	std::vector<dobj<Material>> materials;
 	std::vector<dobj<Hittable>> sphere_list;
 	cuHostRND host_rnd{ 512, 1984 };
+	aabb bounds{};
 
 public:
 
@@ -626,7 +648,7 @@ public:
 		darray<Hittable*> sphere_list = makePtrArray(factory.sphere_list);
 
 		
-		auto world_list = dobj<HittableList>::Make(sphere_list.getPtr(), sphere_list.getLength());
+		auto world_list = dobj<HittableList>::Make(sphere_list.getPtr(), sphere_list.getLength(), factory.bounds);
 
 		return _SceneDescription {
 			std::move(factory.materials),
