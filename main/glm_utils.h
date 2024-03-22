@@ -2,6 +2,7 @@
 #define GLM_UTILS_H
 
 #include <glm/glm.hpp>
+#include <concepts>
 
 #ifdef __CUDA_RUNTIME_H__
 #define GLM_UTIL_CUDA_BOTH __host__ __device__
@@ -11,6 +12,43 @@
 
 namespace glm {
 	
+	//template <typename T>
+	//GLM_UTIL_CUDA_BOTH inline constexpr T min(const T& a, const T& b) { if (a <= b) return a; else return b; }
+
+	template <glm::length_t L, typename T, glm::qualifier Q> requires (L > 0) && std::totally_ordered<T>
+	GLM_UTIL_CUDA_BOTH inline constexpr T compwise_min(const glm::vec<L, T, Q>& v) {
+		if constexpr (L <= 4) {
+			if constexpr (L <= 1) return v[0];
+			if constexpr (L <= 2) return glm::min(v[0], v[1]);
+			if constexpr (L <= 3) return glm::min(glm::min(v[0], v[1]), v[2]);
+			if constexpr (L <= 4) return glm::min(glm::min(glm::min(v[0], v[1]), v[2]), v[3]);
+		}
+		else {
+			T m = v[0];
+			for (int i = 1; i < L; i++) {
+				m = glm::min(m, v[i]);
+			}
+			return m;
+		}
+	}
+
+	template <glm::length_t L, typename T, glm::qualifier Q> requires (L > 0) && std::totally_ordered<T>
+	GLM_UTIL_CUDA_BOTH inline constexpr T compwise_max(const glm::vec<L, T, Q>& v) {
+		if constexpr (L <= 4) {
+			if constexpr (L <= 1) return v[0];
+			if constexpr (L <= 2) return glm::max(v[0], v[1]);
+			if constexpr (L <= 3) return glm::max(glm::max(v[0], v[1]), v[2]);
+			if constexpr (L <= 4) return glm::max(glm::max(glm::max(v[0], v[1]), v[2]), v[3]);
+		}
+		else {
+			T m = v[0];
+			for (int i = 1; i < L; i++) {
+				m = glm::max(m, v[i]);
+			}
+			return m;
+		}
+	}
+
 	template <glm::length_t L, typename T, glm::qualifier Q>
 	GLM_UTIL_CUDA_BOTH inline constexpr bool near_zero(const glm::vec<L, T, Q>& v, T epsilon = 1e-9f) {
 		auto v2 = glm::abs(v);
