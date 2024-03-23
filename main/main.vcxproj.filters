@@ -112,6 +112,9 @@
     <ClInclude Include="aabb.cuh">
       <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
+    <ClInclude Include="bvh_node.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">

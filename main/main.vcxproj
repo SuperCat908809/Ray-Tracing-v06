@@ -186,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aabb.cuh" />
+    <ClInclude Include="bvh_node.cuh" />
     <ClInclude Include="ceilDiv.h" />
     <ClInclude Include="cuIterators.cuh" />
     <ClInclude Include="cuError.h" />
