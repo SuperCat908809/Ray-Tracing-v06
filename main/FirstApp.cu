@@ -312,7 +312,7 @@ class SceneBook2BVHNodeFactory {
 			Hittable* ret_ptr = node.getPtr();
 			sphere_list.push_back(std::move(node));
 			return std::make_tuple(ret_ptr, node_bounds);
-	}
+		}
 	}
 
 	std::vector<dobj<Material>> material_list;
@@ -378,7 +378,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_002.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_003.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
