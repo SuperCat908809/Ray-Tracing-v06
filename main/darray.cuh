@@ -94,4 +94,25 @@ static darray<T*, false> makePtrArray(std::vector<dobj<T, d>>& v) {
 	return darray<T*, false>(arr);
 }
 
+
+template <class T, bool d>
+static darray<const T*, false> makePtrArray(const dobj<T, d>* const dobj_arr, size_t n) {
+	std::vector<const T*> arr;
+	arr.reserve(n);
+	for (int i = 0; i < n; i++) {
+		arr.push_back(dobj_arr[i].getPtr());
+	}
+	return darray<const T*, false>(arr);
+}
+
+template <class T, bool d>
+static darray<T*, false> makePtrArray(dobj<T, d>* const dobj_arr, size_t n) {
+	std::vector<T*> arr;
+	arr.reserve(n);
+	for (int i = 0; i < n; i++) {
+		arr.push_back(dobj_arr[i].getPtr());
+	}
+	return darray<T*, false>(arr);
+}
+
 #endif // DEVICE_ARRAY_CLASS_H //
