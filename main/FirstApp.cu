@@ -5,6 +5,8 @@
 using namespace std::string_literals;
 #include <iostream>
 #include <vector>
+#include <algorithm>
+#include <tuple>
 
 #include <glm/glm.hpp>
 #include <cuda_runtime.h>
@@ -157,8 +159,8 @@ public:
 class SceneBook2BVHNodeFactory {
 
 	void push_sphere(dobj<Hittable>&& sp, const aabb& b) {
-		sphere_list.push_back(sp);
-		bounds_list.push_back(b);
+		bvh_node_data.push_back(std::make_tuple(sp.getPtr(), b));
+		sphere_list.push_back(std::forward<dobj<Hittable>>(sp));
 	}
 
 	void _make_sphere(int a, int b) {
@@ -258,13 +260,64 @@ class SceneBook2BVHNodeFactory {
 		push_sphere(std::move(right_sphere), aabb(glm::vec3(4, 1, 0) - 1.0f, glm::vec3(4, 1, 0) + 1.0f));
 	}
 
-	std::vector<dobj<bvh_node>> build_bvh(int start, int end) {
+	aabb build_bvh() { srand(0); return std::get<1>(_build_bvh(0, bvh_node_data.size())); }
+	std::tuple<Hittable*, aabb> _build_bvh(size_t start, size_t end) {
+		int axis = rand() % 3;
+		auto comparitor = (axis == 0) ? box_x_compare
+						: ((axis == 1) ? box_y_compare
+						:				box_z_compare);
 
+		size_t object_span = end - start;
+
+		if (object_span == 1) {
+			return bvh_node_data[start];
+		}
+		else if (object_span == 2) {
+		#if 0
+			Hittable* left;
+			Hittable* right;
+
+			if (comparitor(bounds_list[start], bounds_list[start + 1])) {
+				left = sphere_list[start].getPtr();
+				right = sphere_list[start + 1].getPtr();
+			}
+			else {
+				left = sphere_list[start + 1].getPtr();
+				right = sphere_list[start].getPtr();
+			}
+		#endif	
+
+			Hittable* left = std::get<0>(bvh_node_data[start]);
+			Hittable* right = std::get<0>(bvh_node_data[start + 1]);
+			aabb node_bounds = aabb(std::get<1>(bvh_node_data[start]), std::get<1>(bvh_node_data[start + 1]));
+
+			auto node = dobj<bvh_node>::Make(left, right, node_bounds);
+			Hittable* ret_ptr = node.getPtr();
+			sphere_list.push_back(std::move(node));
+			return std::make_tuple(ret_ptr, node_bounds);
+		}
+		else {
+			std::sort(bvh_node_data.begin() + start, bvh_node_data.begin() + end, [&, comparitor](const auto& a, const auto& b) -> bool {
+				return comparitor(std::get<1>(a), std::get<1>(b));
+				});
+
+			//std::sort()
+
+			auto mid = (start + end) / 2;
+			std::tuple<Hittable*, aabb> left = _build_bvh(start, mid);
+			std::tuple<Hittable*, aabb> right = _build_bvh(mid, end);
+
+			aabb node_bounds = aabb(std::get<1>(left), std::get<1>(right));
+			auto node = dobj<bvh_node>::Make(std::get<0>(left), std::get<0>(right), node_bounds);
+			Hittable* ret_ptr = node.getPtr();
+			sphere_list.push_back(std::move(node));
+			return std::make_tuple(ret_ptr, node_bounds);
+	}
 	}
 
 	std::vector<dobj<Material>> material_list;
 	std::vector<dobj<Hittable>> sphere_list;
-	std::vector<aabb> bounds_list;
+	std::vector<std::tuple<Hittable*, aabb>> bvh_node_data;
 	cuHostRND host_rnd{ 512, 1984 };
 
 public:
@@ -273,7 +326,11 @@ public:
 		SceneBook2BVHNodeFactory factory{};
 
 		factory._populate_world();
-		darray<Hittable*> sphere_list = makePtrArray(factory.sphere_list);
+		int n = factory.sphere_list.size();
+		aabb scene_bounds = factory.build_bvh();
+		darray<Hittable*> sphere_list = makePtrArray(factory.sphere_list.data(), n);
+		auto world_list = dobj<HittableList>::Make(sphere_list.getPtr(), n, scene_bounds);
+		//auto world_list = dobj<HittableList>::Make(sphere_list[factory.sphere_list.size() - 1], 1ull, factory.sphere_list[factory.sphere_list.size() - 1]);
 		//auto world_list = dobj<HittableList>::Make(sphere_list.getPtr(), sphere_list.getLength(), factory.bounds);
 
 		return _SceneDescription{
