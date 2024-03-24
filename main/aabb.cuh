@@ -38,4 +38,23 @@ public:
 	}
 };
 
+
+template <int axis> requires (axis > 0) && (axis <= 3)
+__host__ __device__ inline bool box_axis_compare(const aabb& a, const aabb& b) {
+	return a.getMin()[axis] < b.getMin()[axis];
+}
+
+
+__host__ __device__ inline bool box_x_compare(const aabb& a, const aabb& b) {
+	return a.getMin()[0] < b.getMin()[0];
+}
+
+__host__ __device__ inline bool box_y_compare(const aabb& a, const aabb& b) {
+	return a.getMin()[1] < b.getMin()[1];
+}
+
+__host__ __device__ inline bool box_z_compare(const aabb& a, const aabb& b) {
+	return a.getMin()[2] < b.getMin()[2];
+}
+
 #endif // CUDA_AABB_CLASS_H //
