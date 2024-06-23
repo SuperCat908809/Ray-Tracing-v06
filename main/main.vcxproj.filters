@@ -27,9 +27,6 @@
     <Filter Include="Utilities\CUDA utilities\CUDA Objects">
       <UniqueIdentifier>{ad024fae-0382-4fb1-892c-24ed5cd592a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RT Engine\Scenes">
-      <UniqueIdentifier>{a688da9c-534c-42b2-b221-c42b1f84e38b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu">
@@ -43,9 +40,6 @@
     </CudaCompile>
     <CudaCompile Include="cuHostRND.cpp">
       <Filter>Utilities\CUDA utilities</Filter>
-    </CudaCompile>
-    <CudaCompile Include="book2SceneFactory.cu">
-      <Filter>RT Engine\Scenes</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -126,12 +120,6 @@
     </ClInclude>
     <ClInclude Include="cu_Textures.cuh">
       <Filter>RT Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="scene.cuh">
-      <Filter>RT Engine\Scenes</Filter>
-    </ClInclude>
-    <ClInclude Include="book2SceneFactory.cuh">
-      <Filter>RT Engine\Scenes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

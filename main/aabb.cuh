@@ -18,6 +18,8 @@ public:
 	__host__ __device__ aabb(glm::vec3 min, glm::vec3 max) : min(glm::min(min, max)), max(glm::max(min, max)) {}
 	__host__ __device__ aabb(const aabb& a, const aabb& b) : min(glm::min(a.min, b.min)), max(glm::max(a.max, b.max)) {}
 
+	__host__ __device__ static aabb makeFromCenterAndSides(glm::vec3 center, glm::vec3 sideLength) { return aabb(center - sideLength / 2.0f, center + sideLength / 2.0f); }
+
 	__host__ __device__ glm::vec3 getMin() const { return min; }
 	__host__ __device__ glm::vec3 getMax() const { return max; }
 

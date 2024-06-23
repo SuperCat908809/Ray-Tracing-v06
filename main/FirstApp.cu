@@ -35,12 +35,141 @@ using namespace std::string_literals;
 #include "cuHostRND.h"
 
 template <typename T, typename... Args> requires std::constructible_from<T, Args...>
-__global__ void makeOnDevice(T* dst_T, Args... args) {
+__global__ void _makeOnDeviceKer(T* dst_T, Args... args) {
 	if (threadIdx.x != 0 || blockIdx.x != 0) return;
 
 	new (dst_T) T(args...);
 }
 
+template <typename T, typename... Args> requires std::constructible_from<T, Args...>
+T* newOnDevice(const Args&... args) {
+	T* ptr = nullptr;
+	CUDA_ASSERT(cudaMalloc((void**)&ptr, sizeof(T)));
+	_makeOnDeviceKer<T, Args...><<<1, 1>>>(ptr, args...);
+	CUDA_ASSERT(cudaDeviceSynchronize());
+	return ptr;
+}
+
+
+void SceneBook1::_delete() {
+	CUDA_ASSERT(cudaFree(world_list));
+	CUDA_ASSERT(cudaFree(sphere_list));
+
+	for (int i = 0; i < sphere_materials.size(); i++) {
+		CUDA_ASSERT(cudaFree(sphere_materials[i]));
+	}
+
+	for (int i = 0; i < sphere_hittables.size(); i++) {
+		CUDA_ASSERT(cudaFree(sphere_hittables[i]));
+	}
+}
+
+void SceneBook1::Factory::_populate_world() {
+	Material* ground_mat = newOnDevice<LambertianAbstract>(glm::vec3(0.5f));
+	Hittable* ground_sphere = newOnDevice<SphereHittable>(glm::vec3(0, -1000, 0), 1000, ground_mat);
+	sphere_materials.push_back(ground_mat);
+	sphere_hittables.push_back(ground_sphere);
+	bounds += aabb::makeFromCenterAndSides(glm::vec3(0, -1000, 0), glm::vec3(1000) * 2.0f);
+
+	for (int a = -11; a < 11; a++) {
+		for (int b = -11; b < 11; b++) {
+
+			#define rnd host_rnd.next()
+
+			float choose_mat = rnd;
+			glm::vec3 center(a + rnd, 0.2f, b + rnd);
+
+			if (choose_mat < 0.8f) {
+				auto material = newOnDevice<LambertianAbstract>(glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd));
+				glm::vec3 center1 = center + glm::vec3(0, rnd * 0.5f, 0);
+				auto moving_sphere = newOnDevice<MovingSphereHittable>(center, center1, 0.2f, material);
+
+				sphere_materials.push_back(material);
+				sphere_hittables.push_back(moving_sphere);
+
+				auto sphere_bounds0 = aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
+				auto sphere_bounds1 = aabb::makeFromCenterAndSides(center1, glm::vec3(0.2f) * 2.0f);
+				bounds += aabb(sphere_bounds0, sphere_bounds1);
+			}
+			else if (choose_mat < 0.95f) {
+				auto material = newOnDevice<MetalAbstract>(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd)), 0.5f * rnd);
+				auto sphere = newOnDevice<SphereHittable>(center, 0.2f, material);
+
+				sphere_materials.push_back(material);
+				sphere_hittables.push_back(sphere);
+
+				bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
+			}
+			else {
+				auto material = newOnDevice<DielectricAbstract>(glm::vec3(1.0f), 1.5f);
+				auto sphere = newOnDevice<SphereHittable>(center, 0.2f, material);
+
+				sphere_materials.push_back(material);
+				sphere_hittables.push_back(sphere);
+
+				bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
+			}
+		}
+	}
+
+	Material* center_mat = newOnDevice<DielectricAbstract>(glm::vec3(1.0f), 1.5f);
+	Hittable* center_sphere = newOnDevice<SphereHittable>(glm::vec3(0, 1, 0), 1, center_mat);
+	sphere_materials.push_back(center_mat);
+	sphere_hittables.push_back(center_sphere);
+	bounds += aabb::makeFromCenterAndSides(glm::vec3(0, 1, 0), glm::vec3(1) * 2.0f);
+
+	Material* left_mat = newOnDevice<LambertianAbstract>(glm::vec3(0.4f, 0.2f, 0.1f));
+	Hittable* left_sphere = newOnDevice<SphereHittable>(glm::vec3(-4, 1, 0), 1, left_mat);
+	sphere_materials.push_back(left_mat);
+	sphere_hittables.push_back(left_sphere);
+	bounds += aabb::makeFromCenterAndSides(glm::vec3(-4, 1, 0), glm::vec3(1) * 2.0f);
+
+	Material* right_mat = newOnDevice<MetalAbstract>(glm::vec3(0.7f, 0.6f, 0.5f), 0);
+	Hittable* right_sphere = newOnDevice<SphereHittable>(glm::vec3(4, 1, 0), 1, right_mat);
+	sphere_materials.push_back(right_mat);
+	sphere_hittables.push_back(right_sphere);
+	bounds += aabb::makeFromCenterAndSides(glm::vec3(4, 1, 0), glm::vec3(1) * 2.0f);
+}
+
+SceneBook1 SceneBook1::Factory::MakeScene() {
+
+	_populate_world();
+
+	Hittable** sphere_list{ nullptr };
+	CUDA_ASSERT(cudaMalloc((void**)&sphere_list, sizeof(Hittable*) * sphere_hittables.size()));
+	CUDA_ASSERT(cudaMemcpy(sphere_list, sphere_hittables.data(), sizeof(Hittable*) * sphere_hittables.size(), cudaMemcpyHostToDevice));
+	HittableList* world_list = newOnDevice<HittableList>(sphere_list, sphere_hittables.size(), bounds);
+
+	SceneBook1 scene{};
+	scene.sphere_materials = std::move(sphere_materials);
+	scene.sphere_hittables = std::move(sphere_hittables);
+	scene.sphere_list = sphere_list;
+	scene.world_list = world_list;
+	scene.bounds = bounds;
+
+	return scene;
+}
+
+SceneBook1::SceneBook1(SceneBook1&& scene) :
+	sphere_materials(std::move(scene.sphere_materials)),
+	sphere_hittables(std::move(scene.sphere_hittables)),
+	bounds(std::move(scene.bounds))
+{}
+SceneBook1& SceneBook1::operator=(SceneBook1&& scene) {
+	_delete();
+
+	sphere_materials = std::move(scene.sphere_materials);
+	sphere_hittables = std::move(scene.sphere_hittables);
+	bounds = scene.bounds;
+
+	return *this;
+}
+
+SceneBook1::~SceneBook1() {
+	_delete();
+}
+
+#if 0
 class SceneBook1FinaleFactory {
 
 	void _make_sphere(int a, int b) {
@@ -352,6 +481,7 @@ public:
 		};
 	}
 };
+#endif
 
 
 FirstApp FirstApp::MakeApp() {
@@ -365,9 +495,12 @@ FirstApp FirstApp::MakeApp() {
 	float aspect = _width / (float)_height;
 	MotionBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 1.0f);
 
-	_SceneDescription scene_desc = SceneBook2BVHNodeFactory::MakeScene();
+	//_SceneDescription scene_desc = SceneBook2BVHNodeFactory::MakeScene();
 
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 4, cam, scene_desc.world_list.getPtr());
+	SceneBook1::Factory scene_factory{};
+	SceneBook1 scene_desc = scene_factory.MakeScene();
+
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 256, 8, cam, scene_desc.getWorldPtr());
 
 	glm::vec4* host_output_framebuffer{};
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
@@ -389,7 +522,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_005.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_007.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
