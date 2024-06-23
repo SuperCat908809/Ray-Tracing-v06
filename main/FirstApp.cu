@@ -31,6 +31,13 @@ using namespace std::string_literals;
 
 #include "cuHostRND.h"
 
+template <typename T, typename... Args> requires std::constructible_from<T, Args...>
+__global__ void makeOnDevice(T* dst_T, Args... args) {
+	if (threadIdx.x != 0 || blockIdx.x != 0) return;
+
+	new (dst_T) T(args...);
+}
+
 class SceneBook1FinaleFactory {
 
 	void _make_sphere(int a, int b) {
@@ -132,8 +139,8 @@ class SceneBook1FinaleFactory {
 
 	
 
-	std::vector<dobj<Material>> materials;
-	std::vector<dobj<Hittable>> sphere_list;
+	std::vector<Material*> materials;
+	std::vector<Hittable*> sphere_list;
 	cuHostRND host_rnd{ 512, 1984 };
 	aabb bounds{};
 
