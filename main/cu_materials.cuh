@@ -7,7 +7,34 @@
 #include "ray_data.cuh"
 #include "cuRandom.cuh"
 #include "material.cuh"
+#include "texture.cuh"
+#include "cu_Textures.cuh"
 
+
+class LambertianTexture : public Material {
+	checker_texture tex;
+	solid_texture c1, c2;
+public:
+
+	__device__ LambertianTexture() = default;
+	__device__ LambertianTexture(glm::vec3 c1, glm::vec3 c2, float scale) {
+		this->c1 = solid_texture(c1);
+		this->c2 = solid_texture(c2);
+		this->tex = checker_texture(&this->c1, &this->c2, scale);
+	}
+	__device__ virtual bool Scatter(
+		const Ray& in_ray, const TraceRecord& rec,
+		cuRandom& rng,
+		Ray& scatter_ray, glm::vec3& attenuation
+	) const override {
+		glm::vec3 ray_dir = rec.n + glm::cuRandomOnUnit<3>(rng);
+		if (glm::near_zero(ray_dir)) return false;
+
+		scatter_ray = Ray(in_ray.at(rec.t), ray_dir, in_ray.time);
+		attenuation = tex.value(rec.tex_coord, in_ray.at(rec.t));
+		return true;
+	}
+};
 
 class LambertianAbstract : public Material {
 	glm::vec3 albedo{ 1.0f };

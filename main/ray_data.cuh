@@ -19,6 +19,7 @@ class Material;
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };
 	float t{ _MISS_DIST };
+	glm::vec2 tex_coord{ 0,0 };
 	Material* mat_ptr{ nullptr };
 	bool hit_backface{ false };
 

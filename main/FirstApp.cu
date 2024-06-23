@@ -26,6 +26,9 @@ using namespace std::string_literals;
 #include "material.cuh"
 #include "cu_Materials.cuh"
 
+#include "texture.cuh"
+#include "cu_Textures.cuh"
+
 #include "cu_Cameras.cuh"
 #include "Renderer.cuh"
 
@@ -217,7 +220,8 @@ class SceneBook2BVHNodeFactory {
 
 	void _populate_world() {
 		// ground sphere
-		auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.5f));
+		//auto ground_mat = dobj<LambertianAbstract>::Make(glm::vec3(0.1f));
+		auto ground_mat = dobj<LambertianTexture>::Make(glm::vec3(0.2f, 0.3f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), 0.32f);
 		//sphere_params.push_back({ glm::vec3(0,-1000,0), 1000, ground_mat.getPtr() });
 		auto ground_sphere = dobj<SphereHittable>::Make(glm::vec3(0, -1000, -1), 1000, ground_mat.getPtr());
 		material_list.push_back(std::move(ground_mat));
@@ -354,7 +358,7 @@ FirstApp FirstApp::MakeApp() {
 	float aspect = _width / (float)_height;
 	MotionBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 1.0f);
 
-	_SceneDescription scene_desc = SceneBook1FinaleFactory::MakeScene();
+	_SceneDescription scene_desc = SceneBook2BVHNodeFactory::MakeScene();
 
 	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 4, cam, scene_desc.world_list.getPtr());
 
@@ -378,7 +382,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_003.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_005.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
