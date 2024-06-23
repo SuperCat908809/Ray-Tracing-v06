@@ -33,7 +33,7 @@ class dobj {
 
 	void _destruct() {
 	#if !defined(__CUDACC__)
-		static_assert(!destruct, "Cannot launch destructor kernel without NVCC compilation. Compile with NVCC or defined destruct template parameter as false");
+		static_assert(!destruct, "Cannot launch destructor kernel without NVCC compilation");
 	#else
 		if constexpr (destruct) {
 			if (getPtr()) {
@@ -55,7 +55,7 @@ public:
 	dobj(dobj<U, destruct>&& other) noexcept : dmem(std::move(other.dmem)) {}
 
 	template <typename U> requires std::derived_from<U, T>
-	dobj& operator=(dobj<U, destruct>&& other) noexcept { _destruct(); dmem = std::move(other.dmem); return *this; }
+	dobj& operator=(dobj<U, destruct>&& other) { _destruct(); dmem = std::move(other.dmem); return *this; }
 
 	~dobj() {
 		_destruct();

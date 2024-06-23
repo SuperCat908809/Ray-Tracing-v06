@@ -71,7 +71,7 @@ namespace glm {
 #endif // GLM_UTILS_H //
 
 
-#ifndef GLM_CURAND_UTILS_H
+#if !defined(GLM_CURAND_UTILS_H) && defined(CURAND_KERNEL_H_)
 #define GLM_CURAND_UTILS_H
 
 #include <curand_kernel.h>
@@ -80,18 +80,6 @@ namespace glm {
 
 
 namespace glm {
-
-#if 0
-	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
-	__device__ inline glm::vec<L, float, Q> cu_random_uniform(curandState_t* random_state) {
-		glm::vec<L, float, Q> v{};
-	#pragma unroll
-		for (int i = 0; i < L; i++) {
-			v[i] = curand_uniform(random_state);
-		}
-		return v;
-	}
-#endif
 
 	template <glm::length_t L, glm::qualifier Q = glm::packed_highp>
 	__device__ inline glm::vec<L, float, Q> cuRandomInUnit(cuRandom& rnd) {
@@ -110,14 +98,5 @@ namespace glm {
 	}
 
 };
-
-#if 0
-#define RND (curand_uniform(random_state))
-#define RNDR(min, max) (curand_uniform(random_state) * (max - min) + min)
-#define RND3 (glm::cu_random_uniform<3>(random_state))
-#define RNDR3(min, max) (glm::map(RND3, min, max))
-#define RND_IN_SPHERE (glm::cu_random_in_unit_vec<3>(random_state))
-#define RND_ON_SPHERE (glm::cu_random_unit_vec<3>(random_state))
-#endif
 
 #endif // GLM_CURAND_UTILS_H //
