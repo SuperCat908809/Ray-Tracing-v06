@@ -7,27 +7,31 @@
 #include "hittable.cuh"
 
 
-__device__ inline bool _closest_sphere_intersection(const Ray& ray, TraceRecord& rec, glm::vec3 center, float radius) {
+__device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
 	glm::vec3 oc = ray.o - center;
 
 	float a = glm::dot(ray.d, ray.d);
 	float hb = glm::dot(ray.d, oc);
 	float c = glm::dot(oc, oc) - radius * radius;
 	float d = hb * hb - a * c;
-	if (d <= 0) return false;
+	if (d <= 0) return _MISS_DIST;
 
 	d = sqrtf(d);
 	float t = (-hb - d) / a;
-	if (t < 0.0f || t > rec.t) {
+	if (t < 0.0f) {
 		t = (-hb + d) / a;
-		if (t < 0.0f || t > rec.t)
-			return false;
+		if (t < 0.0f)
+			return _MISS_DIST;
 	}
 
+	return t;
+
+#if 0
 	rec.t = t;
-	glm::vec3 normal = (ray.at(rec.t) - center) / radius; // a negative radius will flip the normal as intended
+	glm::vec3 normal = (ray.at(rec.t) - sp.center) / sp.radius; // a negative radius will flip the normal as intended
 	rec.set_face_normal(ray, normal);
 	return true;
+#endif
 }
 
 #if 0
@@ -67,22 +71,55 @@ public:
 #endif
 
 
-class SphereHittable : public Hittable {
+class SphereHittable;
+class Sphere : public Geometry {
+
+	friend class SphereHittable;
+	struct TraceRecord {
+		const Sphere* sphere{};
+	};
+	static_assert(sizeof(Sphere::TraceRecord) <= sizeof(RayPayload::payload),
+		"Ray payload is too small to fit SphereHittable::TraceRecord");
+	static_assert(alignof(Sphere::TraceRecord) <= alignof(RayPayload::payload),
+		"Ray payload alignment is too small to fit SphereHittable::TraceRecord");
+
+public:
 	glm::vec3 center;
 	float radius;
-	Material* mat_ptr;
+
+
+	__host__ __device__ Sphere() = default;
+	__host__ __device__ Sphere(glm::vec3 center, float radius) : center(center), radius(radius) {};
+
+	__host__ __device__ static glm::vec3 getNormal(const Ray& ray, const RayPayload& rec) {
+		auto& sp_rec = *reinterpret_cast<const Sphere::TraceRecord*>(&rec.payload);
+		const Sphere& sp = *sp_rec.sphere;
+		glm::vec3 intersect_pos = ray.at(rec.distance);
+		glm::vec3 normal = (intersect_pos - sp.center) / sp.radius;
+		return normal;
+	}
+};
+
+class SphereHittable : public Hittable {
+	const Sphere* sphere;
+	const Material* mat_ptr;
 
 public:
 
-	__device__ SphereHittable(glm::vec3 origin, float radius, Material* mat_ptr) : center(origin), radius(radius), mat_ptr(mat_ptr) {}
-	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
-		if (_closest_sphere_intersection(ray, rec, center, radius)) {
-			rec.mat_ptr = mat_ptr;
-			return true;
-		}
-		return false;
+	template <typename MatType> requires GeoAcceptable<Sphere, MatType>
+	__device__ SphereHittable(const Sphere* sphere, const MatType* mat_ptr) : sphere(sphere), mat_ptr(mat_ptr) {}
+	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
+		float t = _sphere_closest_intersection(ray, sphere->center, sphere->radius);
+		if (t > rec.distance) return false;
+
+		rec.material_ptr = mat_ptr;
+		rec.distance = t;
+		auto& sp_rec = *reinterpret_cast<Sphere::TraceRecord*>(&rec.payload);
+		sp_rec.sphere = sphere;
+		return true;
 	}
 };
+
 
 
 /*
@@ -103,22 +140,55 @@ Perhaps I can make a second abstract class that provides these accessors, specif
 */
 
 
-class MovingSphereHittable : public Hittable {
+class MovingSphereHittable;
+class MovingSphere : public Geometry {
+
+	friend class MovingSphereHittable;
+	struct TraceRecord {
+		const MovingSphere* moving_sphere{};
+	};
+	static_assert(sizeof(MovingSphere::TraceRecord) <= sizeof(RayPayload::payload),
+		"Ray payload is too small to fit MovingSphereHittable::TraceRecord");
+	static_assert(alignof(MovingSphere::TraceRecord) <= alignof(RayPayload::payload),
+		"Ray payload alignment is too small to fit MovingSphereHittable::TraceRecord");
+
+public:
 	glm::vec3 center0;
 	glm::vec3 center1;
 	float radius;
-	Material* mat_ptr;
+
+	__host__ __device__ MovingSphere() = default;
+	__host__ __device__ MovingSphere(glm::vec3 center0, glm::vec3 center1, float radius) 
+		: center0(center0), center1(center1), radius(radius) {}
+
+	__host__ __device__ static glm::vec3 getNormal(const Ray& ray, const RayPayload& rec) {
+		auto& sp_rec = *reinterpret_cast<const MovingSphere::TraceRecord*>(&rec.payload);
+		const MovingSphere& sp = *sp_rec.moving_sphere;
+		glm::vec3 intersect_pos = ray.at(rec.distance);
+		glm::vec3 time_sliced_center = glm::mix(sp.center0, sp.center1, ray.time);
+		glm::vec3 normal = (intersect_pos - time_sliced_center) / sp.radius;
+		return normal;
+	}
+};
+
+class MovingSphereHittable : public Hittable {
+	const MovingSphere* moving_sphere;
+	const Material* mat_ptr;
 
 public:
 
-	__device__ MovingSphereHittable(glm::vec3 center0, glm::vec3 center1, float radius, Material* mat_ptr) : center0(center0), center1(center1), radius(radius), mat_ptr(mat_ptr) {}
-	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
-		glm::vec3 center = glm::mix(center0, center1, ray.time);
-		if (_closest_sphere_intersection(ray, rec, center, radius)) {
-			rec.mat_ptr = mat_ptr;
-			return true;
-		}
-		return false;
+	template <typename MatType> requires GeoAcceptable<MovingSphere, MatType>
+	__device__ MovingSphereHittable(const MovingSphere* moving_sphere, const MatType* mat_ptr) : moving_sphere(moving_sphere), mat_ptr(mat_ptr) {}
+	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
+		glm::vec3 center = glm::mix(moving_sphere->center0, moving_sphere->center1, ray.time);
+		float t = _sphere_closest_intersection(ray, center, moving_sphere->radius);
+		if (t > rec.distance) return false;
+
+		rec.material_ptr = mat_ptr;
+		rec.distance = t;
+		auto& sp_rec = *reinterpret_cast<MovingSphere::TraceRecord*>(&rec.payload);
+		sp_rec.moving_sphere = moving_sphere;
+		return true;
 	}
 };
 

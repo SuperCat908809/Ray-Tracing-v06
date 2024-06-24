@@ -15,6 +15,7 @@ struct Ray {
 };
 
 #define _MISS_DIST 3.402823466e+38F // FLT_MAX
+#if 0
 class Material;
 struct TraceRecord {
 	glm::vec3 n{ 0,1,0 };
@@ -28,5 +29,19 @@ struct TraceRecord {
 		n = hit_backface ? -outward_normal : outward_normal;
 	}
 };
+#else
+#define RECORD_PAYLOAD_SIZE 2
+#define RECORD_PAYLOAD_ALIGNMENT 8
+class Material;
+struct RayPayload {
+	const Material* material_ptr;
+	alignas(RECORD_PAYLOAD_ALIGNMENT) int payload[RECORD_PAYLOAD_SIZE];
+	float distance{ _MISS_DIST };
+};
+
+__host__ __device__ bool isBackfacing(const Ray& r, const glm::vec3& outward_normal) {
+	return glm::dot(r.d, outward_normal) > 0;
+}
+#endif
 
 #endif // RAY_STRUCT_H //

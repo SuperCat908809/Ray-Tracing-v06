@@ -8,7 +8,7 @@
 
 
 class HittableList : public Hittable {
-	Hittable** objects{};
+	const Hittable** objects{};
 	int object_count{};
 	aabb bounds;
 
@@ -16,10 +16,10 @@ class HittableList : public Hittable {
 	__device__ HittableList(const HittableList&) = default;
 public:
 
-	__device__ HittableList(Hittable** objects, int object_count, const aabb& bounds) : objects(objects), object_count(object_count), bounds(bounds) {}
+	__device__ HittableList(const Hittable** objects, int object_count, const aabb& bounds) : objects(objects), object_count(object_count), bounds(bounds) {}
 
-	__device__ virtual bool ClosestIntersection(const Ray& ray, TraceRecord& rec) const override {
-		if (!bounds.intersects(ray, rec.t)) return false;
+	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
+		if (!bounds.intersects(ray, rec.distance)) return false;
 
 		bool hit_any{ false };
 
