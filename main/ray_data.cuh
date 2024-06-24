@@ -34,12 +34,12 @@ struct TraceRecord {
 #define RECORD_PAYLOAD_ALIGNMENT 8
 class Material;
 struct RayPayload {
-	const Material* material_ptr;
 	alignas(RECORD_PAYLOAD_ALIGNMENT) int payload[RECORD_PAYLOAD_SIZE];
+	const Material* material_ptr;
 	float distance{ _MISS_DIST };
 };
 
-__host__ __device__ bool isBackfacing(const Ray& r, const glm::vec3& outward_normal) {
+__host__ __device__ inline bool isBackfacing(const Ray& r, const glm::vec3& outward_normal) {
 	return glm::dot(r.d, outward_normal) > 0;
 }
 #endif

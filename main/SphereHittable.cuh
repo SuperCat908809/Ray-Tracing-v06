@@ -71,7 +71,6 @@ public:
 #endif
 
 
-class SphereHittable;
 class Sphere : public Geometry {
 
 	friend class SphereHittable;
@@ -80,7 +79,7 @@ class Sphere : public Geometry {
 	};
 	static_assert(sizeof(Sphere::TraceRecord) <= sizeof(RayPayload::payload),
 		"Ray payload is too small to fit SphereHittable::TraceRecord");
-	static_assert(alignof(Sphere::TraceRecord) <= alignof(RayPayload::payload),
+	static_assert(alignof(Sphere::TraceRecord) <= alignof(RayPayload),
 		"Ray payload alignment is too small to fit SphereHittable::TraceRecord");
 
 public:
@@ -110,7 +109,7 @@ public:
 	__device__ SphereHittable(const Sphere* sphere, const MatType* mat_ptr) : sphere(sphere), mat_ptr(mat_ptr) {}
 	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
 		float t = _sphere_closest_intersection(ray, sphere->center, sphere->radius);
-		if (t > rec.distance) return false;
+		if (t >= rec.distance) return false;
 
 		rec.material_ptr = mat_ptr;
 		rec.distance = t;
@@ -140,7 +139,6 @@ Perhaps I can make a second abstract class that provides these accessors, specif
 */
 
 
-class MovingSphereHittable;
 class MovingSphere : public Geometry {
 
 	friend class MovingSphereHittable;
@@ -149,7 +147,7 @@ class MovingSphere : public Geometry {
 	};
 	static_assert(sizeof(MovingSphere::TraceRecord) <= sizeof(RayPayload::payload),
 		"Ray payload is too small to fit MovingSphereHittable::TraceRecord");
-	static_assert(alignof(MovingSphere::TraceRecord) <= alignof(RayPayload::payload),
+	static_assert(alignof(MovingSphere::TraceRecord) <= alignof(RayPayload),
 		"Ray payload alignment is too small to fit MovingSphereHittable::TraceRecord");
 
 public:
@@ -182,7 +180,7 @@ public:
 	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
 		glm::vec3 center = glm::mix(moving_sphere->center0, moving_sphere->center1, ray.time);
 		float t = _sphere_closest_intersection(ray, center, moving_sphere->radius);
-		if (t > rec.distance) return false;
+		if (t >= rec.distance) return false;
 
 		rec.material_ptr = mat_ptr;
 		rec.distance = t;

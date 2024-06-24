@@ -52,6 +52,7 @@ T* newOnDevice(const Args&... args) {
 
 
 void SceneBook1::_delete() {
+#if 0
 	CUDA_ASSERT(cudaFree(world_list));
 	CUDA_ASSERT(cudaFree(sphere_list));
 
@@ -62,14 +63,43 @@ void SceneBook1::_delete() {
 	for (int i = 0; i < sphere_hittables.size(); i++) {
 		CUDA_ASSERT(cudaFree(sphere_hittables[i]));
 	}
+#else
+	CUDA_ASSERT(cudaFree(world));
+	world = nullptr;
+	CUDA_ASSERT(cudaFree(hittable_list));
+	hittable_list = nullptr;
+
+	for (int i = 0; i < hittables.size(); i++) {
+		CUDA_ASSERT(cudaFree(hittables[i]));
+	}
+	hittables.resize(0);
+
+	for (int i = 0; i < spheres.size(); i++) {
+		CUDA_ASSERT(cudaFree(spheres[i]));
+	}
+	spheres.resize(0);
+
+	for (int i = 0; i < moving_spheres.size(); i++) {
+		CUDA_ASSERT(cudaFree(moving_spheres[i]));
+	}
+	moving_spheres.resize(0);
+
+	for (int i = 0; i < materials.size(); i++) {
+		CUDA_ASSERT(cudaFree(materials[i]));
+	}
+	materials.resize(0);
+#endif
 }
 
 void SceneBook1::Factory::_populate_world() {
-	Material* ground_mat = newOnDevice<LambertianAbstract>(glm::vec3(0.5f));
-	Hittable* ground_sphere = newOnDevice<SphereHittable>(glm::vec3(0, -1000, 0), 1000, ground_mat);
-	sphere_materials.push_back(ground_mat);
-	sphere_hittables.push_back(ground_sphere);
-	bounds += aabb::makeFromCenterAndSides(glm::vec3(0, -1000, 0), glm::vec3(1000) * 2.0f);
+	
+	Sphere* ground_sphere = newOnDevice<Sphere>(glm::vec3(0, -1000, 0), 1000.0f);
+	LambertianAbstract<Sphere>* ground_mat = newOnDevice<LambertianAbstract<Sphere>>(glm::vec3(0.5f));
+	SphereHittable* ground_hittable = newOnDevice<SphereHittable>(ground_sphere, ground_mat);
+	materials.push_back(ground_mat);
+	spheres.push_back(ground_sphere);
+	hittables.push_back(ground_hittable);
+	world_bounds += aabb::makeFromCenterAndSides(glm::vec3(0, -1000, 0), glm::vec3(1000) * 2.0f);
 
 	for (int a = -11; a < 11; a++) {
 		for (int b = -11; b < 11; b++) {
@@ -80,38 +110,45 @@ void SceneBook1::Factory::_populate_world() {
 			glm::vec3 center(a + rnd, 0.2f, b + rnd);
 
 			if (choose_mat < 0.8f) {
-				auto material = newOnDevice<LambertianAbstract>(glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd));
+				auto material = newOnDevice<LambertianAbstract<MovingSphere>>(glm::vec3(rnd * rnd, rnd * rnd, rnd * rnd));
 				glm::vec3 center1 = center + glm::vec3(0, rnd * 0.5f, 0);
-				auto moving_sphere = newOnDevice<MovingSphereHittable>(center, center1, 0.2f, material);
+				auto moving_sphere = newOnDevice<MovingSphere>(center, center1, 0.2f);
+				auto hittable = newOnDevice<MovingSphereHittable>(moving_sphere, material);
 
-				sphere_materials.push_back(material);
-				sphere_hittables.push_back(moving_sphere);
+				materials.push_back(material);
+				moving_spheres.push_back(moving_sphere);
+				hittables.push_back(hittable);
 
 				auto sphere_bounds0 = aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
 				auto sphere_bounds1 = aabb::makeFromCenterAndSides(center1, glm::vec3(0.2f) * 2.0f);
-				bounds += aabb(sphere_bounds0, sphere_bounds1);
+				world_bounds += aabb(sphere_bounds0, sphere_bounds1);
 			}
 			else if (choose_mat < 0.95f) {
-				auto material = newOnDevice<MetalAbstract>(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd)), 0.5f * rnd);
-				auto sphere = newOnDevice<SphereHittable>(center, 0.2f, material);
+				auto material = newOnDevice<MetalAbstract<Sphere>>(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd)), 0.5f * rnd);
+				auto sphere = newOnDevice<Sphere>(center, 0.2f);
+				auto hittable = newOnDevice<SphereHittable>(sphere, material);
 
-				sphere_materials.push_back(material);
-				sphere_hittables.push_back(sphere);
+				materials.push_back(material);
+				spheres.push_back(sphere);
+				hittables.push_back(hittable);
 
-				bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
+				world_bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
 			}
 			else {
-				auto material = newOnDevice<DielectricAbstract>(glm::vec3(1.0f), 1.5f);
-				auto sphere = newOnDevice<SphereHittable>(center, 0.2f, material);
+				auto material = newOnDevice<DielectricAbstract<Sphere>>(glm::vec3(1.0f), 1.5f);
+				auto sphere = newOnDevice<Sphere>(center, 0.2f);
+				auto hittable = newOnDevice<SphereHittable>(sphere, material);
 
-				sphere_materials.push_back(material);
-				sphere_hittables.push_back(sphere);
+				materials.push_back(material);
+				spheres.push_back(sphere);
+				hittables.push_back(hittable);
 
-				bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
+				world_bounds += aabb::makeFromCenterAndSides(center, glm::vec3(0.2f) * 2.0f);
 			}
 		}
 	}
 
+#if 0
 	Material* center_mat = newOnDevice<DielectricAbstract>(glm::vec3(1.0f), 1.5f);
 	Hittable* center_sphere = newOnDevice<SphereHittable>(glm::vec3(0, 1, 0), 1, center_mat);
 	sphere_materials.push_back(center_mat);
@@ -129,16 +166,43 @@ void SceneBook1::Factory::_populate_world() {
 	sphere_materials.push_back(right_mat);
 	sphere_hittables.push_back(right_sphere);
 	bounds += aabb::makeFromCenterAndSides(glm::vec3(4, 1, 0), glm::vec3(1) * 2.0f);
+#else
+	Sphere* center_sphere = newOnDevice<Sphere>(glm::vec3(0, 1, 0), 1);
+	DielectricAbstract<Sphere>* center_mat = newOnDevice<DielectricAbstract<Sphere>>(glm::vec3(1.0f), 1.5f);
+	SphereHittable* center_hittable = newOnDevice<SphereHittable>(center_sphere, center_mat);
+	materials.push_back(center_mat);
+	spheres.push_back(center_sphere);
+	hittables.push_back(center_hittable);
+	world_bounds += aabb::makeFromCenterAndSides(glm::vec3(0, 1, 0), glm::vec3(1) * 2.0f);
+
+	Sphere* left_sphere = newOnDevice<Sphere>(glm::vec3(-4, 1, 0), 1);
+	LambertianAbstract<Sphere>* left_mat = newOnDevice<LambertianAbstract<Sphere>>(glm::vec3(0.4f, 0.2f, 0.1f));
+	SphereHittable* left_hittable = newOnDevice<SphereHittable>(left_sphere, left_mat);
+	materials.push_back(left_mat);
+	spheres.push_back(left_sphere);
+	hittables.push_back(left_hittable);
+	world_bounds += aabb::makeFromCenterAndSides(glm::vec3(-4, 1, 0), glm::vec3(1) * 2.0f);
+
+	Sphere* right_sphere = newOnDevice<Sphere>(glm::vec3(4, 1, 0), 1);
+	MetalAbstract<Sphere>* right_mat = newOnDevice<MetalAbstract<Sphere>>(glm::vec3(0.7f, 0.6f, 0.5f), 0);
+	SphereHittable* right_hittable = newOnDevice<SphereHittable>(right_sphere, right_mat);
+	materials.push_back(right_mat);
+	spheres.push_back(right_sphere);
+	hittables.push_back(right_hittable);
+	world_bounds += aabb::makeFromCenterAndSides(glm::vec3(4, 1, 0), glm::vec3(1) * 2.0f);
+#endif
 }
 
 SceneBook1 SceneBook1::Factory::MakeScene() {
 
 	_populate_world();
 
+#if 0
 	Hittable** sphere_list{ nullptr };
 	CUDA_ASSERT(cudaMalloc((void**)&sphere_list, sizeof(Hittable*) * sphere_hittables.size()));
 	CUDA_ASSERT(cudaMemcpy(sphere_list, sphere_hittables.data(), sizeof(Hittable*) * sphere_hittables.size(), cudaMemcpyHostToDevice));
-	HittableList* world_list = newOnDevice<HittableList>(sphere_list, sphere_hittables.size(), bounds);
+	HittableList* world_list = newOnDevice<HittableList>(static_cast<const Hittable**>(sphere_list),
+		(int)sphere_hittables.size(), bounds);
 
 	SceneBook1 scene{};
 	scene.sphere_materials = std::move(sphere_materials);
@@ -146,21 +210,60 @@ SceneBook1 SceneBook1::Factory::MakeScene() {
 	scene.sphere_list = sphere_list;
 	scene.world_list = world_list;
 	scene.bounds = bounds;
+#else
+
+	CUDA_ASSERT(cudaMalloc((void**)&hittable_list, sizeof(Hittable*) * hittables.size()));
+	CUDA_ASSERT(cudaMemcpy(hittable_list, hittables.data(), sizeof(Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
+	world = newOnDevice<HittableList>(
+		const_cast<const Hittable**>(hittable_list),
+		(int)hittables.size(),
+		world_bounds
+	);
+
+	SceneBook1 scene;
+
+	scene.world_bounds = world_bounds;
+	scene.world = world;
+	scene.hittable_list = hittable_list;
+	scene.hittables = std::move(hittables);
+	scene.spheres = std::move(spheres);
+	scene.moving_spheres = std::move(moving_spheres);
+	scene.materials = std::move(materials);
+#endif
 
 	return scene;
 }
 
-SceneBook1::SceneBook1(SceneBook1&& scene) :
-	sphere_materials(std::move(scene.sphere_materials)),
-	sphere_hittables(std::move(scene.sphere_hittables)),
-	bounds(std::move(scene.bounds))
-{}
+SceneBook1::SceneBook1(SceneBook1&& scene) {
+	world_bounds = scene.world_bounds;
+	
+	world = scene.world;
+	scene.world = nullptr;
+
+	hittable_list = scene.hittable_list;
+	scene.hittable_list = nullptr;
+
+	hittables = std::move(scene.hittables);
+	spheres = std::move(scene.spheres);
+	moving_spheres = std::move(scene.moving_spheres);
+	materials = std::move(materials);
+}
+
 SceneBook1& SceneBook1::operator=(SceneBook1&& scene) {
 	_delete();
 
-	sphere_materials = std::move(scene.sphere_materials);
-	sphere_hittables = std::move(scene.sphere_hittables);
-	bounds = scene.bounds;
+	world_bounds = scene.world_bounds;
+
+	world = scene.world;
+	scene.world = nullptr;
+
+	hittable_list = scene.hittable_list;
+	scene.hittable_list = nullptr;
+
+	hittables = std::move(scene.hittables);
+	spheres = std::move(scene.spheres);
+	moving_spheres = std::move(scene.moving_spheres);
+	materials = std::move(materials);
 
 	return *this;
 }
@@ -499,8 +602,8 @@ FirstApp FirstApp::MakeApp() {
 
 	SceneBook1::Factory scene_factory{};
 	SceneBook1 scene_desc = scene_factory.MakeScene();
-
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 256, 8, cam, scene_desc.getWorldPtr());
+		
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 4, cam, scene_desc.getWorldPtr());
 
 	glm::vec4* host_output_framebuffer{};
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
@@ -522,7 +625,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_007.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_008.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

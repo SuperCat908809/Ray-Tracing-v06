@@ -13,6 +13,7 @@
 #include "material.cuh"
 #include "cu_Cameras.cuh"
 #include "Renderer.cuh"
+#include "SphereHittable.cuh"
 
 #include "cuHostRND.h"
 
@@ -26,11 +27,15 @@ struct _SceneDescription {
 #endif
 
 class SceneBook1 {
-	std::vector<Material*> sphere_materials{};
-	std::vector<Hittable*> sphere_hittables{};
-	Hittable** sphere_list{};
-	HittableList* world_list{};
-	aabb bounds{};
+
+	aabb world_bounds;
+	HittableList* world{ nullptr };
+	Hittable** hittable_list{ nullptr };
+	std::vector<Hittable*> hittables;
+	std::vector<Sphere*> spheres;
+	std::vector<MovingSphere*> moving_spheres;
+	std::vector<Material*> materials;
+
 
 	void _delete();
 
@@ -41,9 +46,13 @@ public:
 
 	class Factory {
 
-		std::vector<Material*> sphere_materials{};
-		std::vector<Hittable*> sphere_hittables{};
-		aabb bounds{};
+		aabb world_bounds;
+		HittableList* world;
+		Hittable** hittable_list;
+		std::vector<Hittable*> hittables;
+		std::vector<Sphere*> spheres;
+		std::vector<MovingSphere*> moving_spheres;
+		std::vector<Material*> materials;
 
 		cuHostRND host_rnd{ 512,1984 };
 
@@ -60,7 +69,7 @@ public:
 	SceneBook1& operator=(SceneBook1&& scene);
 	~SceneBook1();
 
-	HittableList* getWorldPtr() { return world_list; }
+	HittableList* getWorldPtr() { return world; }
 };
 
 class FirstApp {

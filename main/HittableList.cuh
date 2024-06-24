@@ -24,7 +24,9 @@ public:
 		bool hit_any{ false };
 
 		for (int i = 0; i < object_count; i++) {
-			hit_any |= objects[i]->ClosestIntersection(ray, rec);
+			if (objects[i]->ClosestIntersection(ray, rec)) {
+				hit_any = true;
+			}
 		}
 		// rec only gets updated when an intersection has been found.
 

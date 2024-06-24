@@ -54,7 +54,7 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	//darray<curandState_t> d_random_states(render_width * render_height);
 	darray<cuRandom> rngs(render_width * render_height);
 
-	dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
+	//dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
 
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
@@ -71,7 +71,7 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 		d_world_ptr,
 		std::move(d_output_buffer),
 		std::move(rngs),
-		std::move(default_mat)
+		//std::move(default_mat)
 	});
 }
 Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
@@ -104,7 +104,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	MotionBlurCamera cam{};
 	HittableList* world{};
-	Material* default_mat{};
+	//Material* default_mat{};
 	glm::vec4* output_buffer{};
 	cuRandom* rngs{};
 };
@@ -118,7 +118,7 @@ void Renderer::Render() {
 	params.max_depth = m.max_depth;
 	params.cam = m.cam;
 	params.world = m.d_world_ptr;
-	params.default_mat = m.default_mat.getPtr();
+	//params.default_mat = m.default_mat.getPtr();
 	params.output_buffer = m.d_output_buffer.getPtr();
 	params.rngs = m.rngs.getPtr();
 
@@ -140,7 +140,7 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 	// bounce loop
 
 	for (int i = 0; i < p.max_depth; i++) {
-		TraceRecord rec{};
+		RayPayload rec{};
 
 		if (!p.world->ClosestIntersection(cur_ray, rec)) {
 			float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
@@ -152,9 +152,11 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 		// evaluate surface material
 		// add emission multiplied by accum_attenuation to accum_radiance
 
+		return glm::vec3(rec.distance / 20.0f);
+
 		Ray scattered{};
 		glm::vec3 attenuation{};
-		if (!rec.mat_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
+		if (!rec.material_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
 			// ray absorbed
 			//return accum_radiance;
 			return glm::vec3(0.0f);
@@ -165,7 +167,10 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 		cur_ray = scattered;
 
 		// offset ray from surface to avoid shadow acne
-		cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
+		//cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
+		// the material shader should take responsibility for scatter ray offset 
+		// temp for now
+		cur_ray.o += cur_ray.d * 0.001f;
 	}
 
 	// max bounces exceeded

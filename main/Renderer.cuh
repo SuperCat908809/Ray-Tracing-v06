@@ -28,7 +28,7 @@ class Renderer {
 		//darray<curandState_t> d_random_states;
 		darray<cuRandom> rngs;
 
-		dobj<Material> default_mat;
+		//dobj<Material> default_mat;
 	} m;
 
 	void _delete();
