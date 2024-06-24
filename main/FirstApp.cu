@@ -625,7 +625,7 @@ void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t heigh
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_008.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer_png("../renders/Book 2/test_010.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
 void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {

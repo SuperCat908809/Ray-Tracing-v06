@@ -152,7 +152,7 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 		// evaluate surface material
 		// add emission multiplied by accum_attenuation to accum_radiance
 
-		return glm::vec3(rec.distance / 20.0f);
+		//return glm::vec3(rec.distance / 20.0f);
 
 		Ray scattered{};
 		glm::vec3 attenuation{};
