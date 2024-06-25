@@ -25,7 +25,6 @@ class Renderer {
 		// cuda memory
 		HittableList* d_world_ptr{};
 		darray<glm::vec4> d_output_buffer;
-		//darray<curandState_t> d_random_states;
 		darray<cuRandom> rngs;
 
 		//dobj<Material> default_mat;

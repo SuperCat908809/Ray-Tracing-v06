@@ -38,6 +38,9 @@ using namespace std::string_literals;
 void SceneBook1::_delete() {
 	CUDA_ASSERT(cudaFree(world));
 	CUDA_ASSERT(cudaFree(hittable_list));
+
+	world = nullptr;
+	hittable_list = nullptr;
 }
 
 void SceneBook1::Factory::_populate_world() {
@@ -134,28 +137,24 @@ SceneBook1 SceneBook1::Factory::MakeScene() {
 
 SceneBook1::SceneBook1(SceneBook1&& scene) {
 	world_bounds = scene.world_bounds;
-	
 	world = scene.world;
-	scene.world = nullptr;
-
 	hittable_list = scene.hittable_list;
-	scene.hittable_list = nullptr;
-
 	sphere_handles = std::move(scene.sphere_handles);
+
+	scene.world = nullptr;
+	scene.hittable_list = nullptr;
 }
 
 SceneBook1& SceneBook1::operator=(SceneBook1&& scene) {
 	_delete();
 
 	world_bounds = scene.world_bounds;
-
 	world = scene.world;
-	scene.world = nullptr;
-
 	hittable_list = scene.hittable_list;
-	scene.hittable_list = nullptr;
-
 	sphere_handles = std::move(scene.sphere_handles);
+
+	scene.world = nullptr;
+	scene.hittable_list = nullptr;
 
 	return *this;
 }
@@ -218,7 +217,7 @@ void FirstApp::Run() {
 	printf("done.\n");
 
 	printf("Writing render to disk... ");
-	write_renderbuffer("../renders/Book 2/test_011.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer("../renders/Book 2/test_012.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
 	printf("done.\n");
 }
 

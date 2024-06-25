@@ -33,10 +33,7 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 }
 
 void Renderer::_delete() {
-	//if (m.d_output_buffer != nullptr)
-	//	CUDA_ASSERT(cudaFree(m.d_output_buffer));
-	//if (m.d_random_states != nullptr)
-	//	CUDA_ASSERT(cudaFree(m.d_random_states));
+
 }
 
 Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
@@ -44,15 +41,8 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	const MotionBlurCamera& cam,
 	HittableList* d_world_ptr) {
 
-	//glm::vec4* d_output_buffer{};
-	//curandState_t* d_random_states{};
-
-	//CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
-	//CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
-
 	printf("Allocating Renderer framebuffer and random number generators... ");
 	darray<glm::vec4> d_output_buffer(render_width * render_height);
-	//darray<curandState_t> d_random_states(render_width * render_height);
 	darray<cuRandom> rngs(render_width * render_height);
 	printf("done.\n");
 
@@ -79,16 +69,12 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	});
 }
 Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
-	//other.m.d_output_buffer = nullptr;
-	//other.m.d_random_states = nullptr;
+
 }
 Renderer& Renderer::operator=(Renderer&& other) {
 	_delete();
 
 	m = std::move(other.m);
-
-	//other.m.d_output_buffer = nullptr;
-	//other.m.d_random_states = nullptr;
 
 	return *this;
 }
@@ -158,8 +144,6 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 		// evaluate surface material
 		// add emission multiplied by accum_attenuation to accum_radiance
 
-		//return glm::vec3(rec.distance / 20.0f);
-
 		Ray scattered{};
 		glm::vec3 attenuation{};
 		if (!rec.material_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
@@ -213,6 +197,8 @@ __global__ void render_kernel(LaunchParams p) {
 	glm::vec3 col = glm::clamp(radiance, 0.0f, 1.0f);
 	// gamma correction equivalent to gamma 2.0
 	col = glm::sqrt(col);
+	//float exposure = 2.0f;
+	//col = 1.0f - glm::exp(-col * exposure);
 	glm::vec4 output_color = glm::vec4(col, 1.0f);
 
 	p.output_buffer[gid] = output_color;
