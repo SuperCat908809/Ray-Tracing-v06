@@ -36,6 +36,15 @@ public:
 
 		return tmax >= tmin && tmin < t_max && tmax > 0;
 	}
+
+	__host__ __device__ int longest_axis() const {
+		glm::vec3 span = glm::abs(max - min);
+
+		if (span.x > span.y)
+			return span.x > span.z ? 0 : 2;
+		else
+			return span.y > span.z ? 1 : 2;
+	}
 };
 
 

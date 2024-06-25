@@ -115,7 +115,7 @@ void Renderer::Render() {
 
 	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
 	// therefore you must manually set a size that should encompass the entire program.
-	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
+	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048 * 4));
 
 	printf("Running render kernel...\n");
 	cudaTimer render_timer{};

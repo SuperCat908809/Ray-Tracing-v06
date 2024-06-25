@@ -145,6 +145,51 @@ public:
 	HittableList* getWorldPtr() { return world; }
 };
 
+
+class SceneBook2BVH {
+
+	aabb world_bounds;
+	HittableList* world{ nullptr };
+	Hittable** hittable_list{ nullptr };
+	std::vector<SphereHandle> sphere_handles;
+	std::vector<Hittable*> bvh_nodes;
+
+
+	void _delete();
+
+	SceneBook2BVH() = default;
+
+public:
+
+	class Factory {
+
+		aabb world_bounds;
+		HittableList* world;
+		Hittable** hittable_list;
+		std::vector<SphereHandle> sphere_handles;
+		std::vector<Hittable*> bvh_nodes;
+
+		cuHostRND host_rnd{ 512,1984 };
+
+		void _populate_world();
+		const Hittable* _build_bvh();
+		const Hittable* _build_bvh_rec(std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end);
+
+	public:
+
+		Factory() = default;
+
+		SceneBook2BVH MakeScene();
+	};
+
+	SceneBook2BVH(SceneBook2BVH&& scene);
+	SceneBook2BVH& operator=(SceneBook2BVH&& scene);
+	~SceneBook2BVH();
+
+	HittableList* getWorldPtr() { return world; }
+};
+
+
 class FirstApp {
 
 	struct M {
@@ -153,7 +198,7 @@ class FirstApp {
 		glm::vec4* host_output_framebuffer{};
 		Renderer renderer;
 
-		SceneBook1 _sceneDesc;
+		SceneBook2BVH _sceneDesc;
 	} m;
 
 	FirstApp(M m) : m(std::move(m)) {}

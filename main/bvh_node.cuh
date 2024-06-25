@@ -8,13 +8,13 @@
 
 class bvh_node : public Hittable {
 	aabb bounds;
-	Hittable* left;
-	Hittable* right;
+	const Hittable* left;
+	const Hittable* right;
 
 public:
 
 	__device__ bvh_node() : left(nullptr), right(nullptr), bounds() {}
-	__device__ bvh_node(Hittable* left, Hittable* right, const aabb& bounds) : left(left), right(right), bounds(bounds) {}
+	__device__ bvh_node(const Hittable* left, const Hittable* right, const aabb& bounds) : left(left), right(right), bounds(bounds) {}
 
 	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
 		if (!bounds.intersects(ray, rec.distance)) return false;
