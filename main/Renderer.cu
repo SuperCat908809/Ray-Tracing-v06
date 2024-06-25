@@ -50,16 +50,20 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	//CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
 	//CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
 
+	printf("Allocating Renderer framebuffer and random number generators... ");
 	darray<glm::vec4> d_output_buffer(render_width * render_height);
 	//darray<curandState_t> d_random_states(render_width * render_height);
 	darray<cuRandom> rngs(render_width * render_height);
+	printf("done.\n");
 
 	//dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
 
+	printf("Initialising random states... ");
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
 	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, rngs.getPtr());
 	CUDA_ASSERT(cudaDeviceSynchronize());
+	printf("done.\n");
 
 
 	return Renderer(M{
@@ -126,10 +130,12 @@ void Renderer::Render() {
 	// therefore you must manually set a size that should encompass the entire program.
 	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
 
+	printf("Running render kernel...\n");
 	dim3 threads{ 8, 8, 1 };
 	dim3 blocks = dim3(ceilDiv(m.render_width, threads.x), ceilDiv(m.render_height, threads.y), 1);
 	render_kernel<<<blocks, threads>>>(params);
 	CUDA_ASSERT(cudaDeviceSynchronize());
+	printf("Rendering finished.\n");
 }
 
 __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRandom& random_state) {

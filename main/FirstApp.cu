@@ -195,7 +195,9 @@ void SceneBook1::Factory::_populate_world() {
 
 SceneBook1 SceneBook1::Factory::MakeScene() {
 
+	printf("Populating world... ");
 	_populate_world();
+	printf("done.\n");
 
 #if 0
 	Hittable** sphere_list{ nullptr };
@@ -212,6 +214,7 @@ SceneBook1 SceneBook1::Factory::MakeScene() {
 	scene.bounds = bounds;
 #else
 
+	printf("Building world's HittableList... ");
 	CUDA_ASSERT(cudaMalloc((void**)&hittable_list, sizeof(Hittable*) * hittables.size()));
 	CUDA_ASSERT(cudaMemcpy(hittable_list, hittables.data(), sizeof(Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
 	world = newOnDevice<HittableList>(
@@ -219,6 +222,7 @@ SceneBook1 SceneBook1::Factory::MakeScene() {
 		(int)hittables.size(),
 		world_bounds
 	);
+	printf("done.\n");
 
 	SceneBook1 scene;
 
@@ -600,13 +604,19 @@ FirstApp FirstApp::MakeApp() {
 
 	//_SceneDescription scene_desc = SceneBook2BVHNodeFactory::MakeScene();
 
+	printf("Building SceneBook1 object...\n");
 	SceneBook1::Factory scene_factory{};
 	SceneBook1 scene_desc = scene_factory.MakeScene();
+	printf("SceneBook1 object built.\n");
 		
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 4, cam, scene_desc.getWorldPtr());
+	printf("Making Renderer object...\n");
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 12, cam, scene_desc.getWorldPtr());
+	printf("Renderer object built.\n");
 
 	glm::vec4* host_output_framebuffer{};
+	printf("Allocating host framebuffer... ");
 	CUDA_ASSERT(cudaMallocHost(&host_output_framebuffer, sizeof(glm::vec4) * _width * _height));
+	printf("done.\n");
 
 	return FirstApp(M{
 		_width,
@@ -618,15 +628,24 @@ FirstApp FirstApp::MakeApp() {
 	});
 }
 FirstApp::~FirstApp() {
+	printf("Freeing host framebuffer allocation... ");
 	CUDA_ASSERT(cudaFreeHost(m.host_output_framebuffer));
+	printf("done.\n");
 }
 
 void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data);
 void FirstApp::Run() {
+	printf("Rendering scene...\n");
 	m.renderer.Render();
+	printf("Scene rendered.\n");
+
+	printf("Downloading render to host framebuffer... ");
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
-	write_renderbuffer_png("../renders/Book 2/test_010.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	printf("done.\n");
+
+	printf("Writing render to disk... ");
 	write_renderbuffer("../renders/Book 2/test_011.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	printf("done.\n");
 }
 
 void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
