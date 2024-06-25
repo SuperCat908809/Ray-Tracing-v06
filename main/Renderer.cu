@@ -7,6 +7,7 @@
 #include <device_launch_parameters.h>
 
 #include "cuError.h"
+#include "timers.h"
 
 #include "darray.cuh"
 #include "dobj.cuh"
@@ -117,11 +118,16 @@ void Renderer::Render() {
 	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
 
 	printf("Running render kernel...\n");
+	cudaTimer render_timer{};
+	render_timer.start();
+
 	dim3 threads{ 8, 8, 1 };
 	dim3 blocks = dim3(ceilDiv(m.render_width, threads.x), ceilDiv(m.render_height, threads.y), 1);
 	render_kernel<<<blocks, threads>>>(params);
 	CUDA_ASSERT(cudaDeviceSynchronize());
-	printf("Rendering finished.\n");
+
+	render_timer.end();
+	printf("Rendering finished in %fms.\n", render_timer.elapsedms());
 }
 
 __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRandom& random_state) {
