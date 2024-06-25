@@ -213,6 +213,7 @@
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
     <ClInclude Include="texture.cuh" />
+    <ClInclude Include="timers.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dAbstracts.inl" />

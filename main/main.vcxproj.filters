@@ -121,6 +121,9 @@
     <ClInclude Include="cu_Textures.cuh">
       <Filter>RT Engine\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="timers.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
