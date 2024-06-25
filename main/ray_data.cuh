@@ -30,12 +30,12 @@ struct TraceRecord {
 	}
 };
 #else
-#define RECORD_PAYLOAD_SIZE 2
+#define RECORD_PAYLOAD_SIZE 2 + 3
 #define RECORD_PAYLOAD_ALIGNMENT 8
 class Material;
 struct RayPayload {
 	struct Payload {
-	alignas(RECORD_PAYLOAD_ALIGNMENT) int payload[RECORD_PAYLOAD_SIZE];
+		alignas(RECORD_PAYLOAD_ALIGNMENT) int payload[RECORD_PAYLOAD_SIZE];
 	} payload;
 	const Material* material_ptr;
 	float distance{ _MISS_DIST };

@@ -76,6 +76,7 @@ class Sphere : public Geometry {
 	friend class SphereHittable;
 	struct TraceRecord {
 		const Sphere* sphere{};
+		glm::vec3 normal{};
 	};
 	static_assert(sizeof(Sphere::TraceRecord) <= sizeof(RayPayload::Payload),
 		"Ray payload is too small to fit SphereHittable::TraceRecord");
@@ -92,10 +93,11 @@ public:
 
 	__host__ __device__ static glm::vec3 getNormal(const Ray& ray, const RayPayload& rec) {
 		auto& sp_rec = *reinterpret_cast<const Sphere::TraceRecord*>(&rec.payload);
-		const Sphere& sp = *sp_rec.sphere;
-		glm::vec3 intersect_pos = ray.at(rec.distance);
-		glm::vec3 normal = (intersect_pos - sp.center) / sp.radius;
-		return normal;
+		return sp_rec.normal;
+		//const Sphere& sp = *sp_rec.sphere;
+		//glm::vec3 intersect_pos = ray.at(rec.distance);
+		//glm::vec3 normal = (intersect_pos - sp.center) / sp.radius;
+		//return normal;
 	}
 };
 
@@ -119,6 +121,7 @@ public:
 		rec.distance = t;
 		auto& sp_rec = *reinterpret_cast<Sphere::TraceRecord*>(&rec.payload);
 		sp_rec.sphere = sphere;
+		sp_rec.normal = (ray.at(rec.distance) - sphere->center) / sphere->radius;
 		return true;
 	}
 };
@@ -148,6 +151,7 @@ class MovingSphere : public Geometry {
 	friend class MovingSphereHittable;
 	struct TraceRecord {
 		const MovingSphere* moving_sphere{};
+		glm::vec3 normal{};
 	};
 	static_assert(sizeof(MovingSphere::TraceRecord) <= sizeof(RayPayload::Payload),
 		"Ray payload is too small to fit MovingSphereHittable::TraceRecord");
@@ -165,11 +169,12 @@ public:
 
 	__host__ __device__ static glm::vec3 getNormal(const Ray& ray, const RayPayload& rec) {
 		auto& sp_rec = *reinterpret_cast<const MovingSphere::TraceRecord*>(&rec.payload);
-		const MovingSphere& sp = *sp_rec.moving_sphere;
-		glm::vec3 intersect_pos = ray.at(rec.distance);
-		glm::vec3 time_sliced_center = glm::mix(sp.center0, sp.center1, ray.time);
-		glm::vec3 normal = (intersect_pos - time_sliced_center) / sp.radius;
-		return normal;
+		return sp_rec.normal;
+		//const MovingSphere& sp = *sp_rec.moving_sphere;
+		//glm::vec3 intersect_pos = ray.at(rec.distance);
+		//glm::vec3 time_sliced_center = glm::mix(sp.center0, sp.center1, ray.time);
+		//glm::vec3 normal = (intersect_pos - time_sliced_center) / sp.radius;
+		//return normal;
 	}
 };
 
@@ -196,6 +201,7 @@ public:
 		rec.distance = t;
 		auto& sp_rec = *reinterpret_cast<MovingSphere::TraceRecord*>(&rec.payload);
 		sp_rec.moving_sphere = moving_sphere;
+		sp_rec.normal = (ray.at(rec.distance) - center) / moving_sphere->radius;
 		return true;
 	}
 };
