@@ -621,25 +621,26 @@ FirstApp::~FirstApp() {
 	CUDA_ASSERT(cudaFreeHost(m.host_output_framebuffer));
 }
 
-void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data);
+void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data);
 void FirstApp::Run() {
 	m.renderer.Render();
 	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
 	write_renderbuffer_png("../renders/Book 2/test_010.png"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer("../renders/Book 2/test_011.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
 }
 
-void write_renderbuffer_png(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
+void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data) {
 	//uint8_t* output_image_data = new uint8_t[width * height * 4];
 	std::vector<uint8_t> output_image_data;
-	output_image_data.reserve(width * height * 4);
+	output_image_data.reserve(width * height * 3);
 	for (uint32_t i = 0; i < width * height; i++) {
 		output_image_data.push_back(static_cast<uint8_t>(data[i][0] * 255.999f));
 		output_image_data.push_back(static_cast<uint8_t>(data[i][1] * 255.999f));
 		output_image_data.push_back(static_cast<uint8_t>(data[i][2] * 255.999f));
-		output_image_data.push_back(static_cast<uint8_t>(data[i][3] * 255.999f));
+		//output_image_data.push_back(static_cast<uint8_t>(data[i][3] * 255.999f));
 	}
 
 	stbi_flip_vertically_on_write(true);
-	stbi_write_png(filepath.c_str(), width, height, 4, output_image_data.data(), sizeof(uint8_t) * width * 4);
+	stbi_write_jpg(filepath.c_str(), width, height, 3, output_image_data.data(), 95);
 	//delete[] output_image_data;
 }
