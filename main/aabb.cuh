@@ -15,10 +15,8 @@ public:
 	// float maximum in min and float minimum in max guarantees that all rays will 'miss' this aabb and guarantees that 
 	// expanding this aabb by another will equal the other, effectively initialising it.
 	__host__ __device__ aabb() : min(3.402823466e+38F), max(-3.402823466e+38F) {}
-	__host__ __device__ aabb(glm::vec3 min, glm::vec3 max) : min(glm::min(min, max)), max(glm::max(min, max)) {}
+	__host__ __device__ aabb(glm::vec3 min, glm::vec3 max) : min(min), max(max) {}
 	__host__ __device__ aabb(const aabb& a, const aabb& b) : min(glm::min(a.min, b.min)), max(glm::max(a.max, b.max)) {}
-
-	__host__ __device__ static aabb makeFromCenterAndSides(glm::vec3 center, glm::vec3 sideLength) { return aabb(center - sideLength / 2.0f, center + sideLength / 2.0f); }
 
 	__host__ __device__ glm::vec3 getMin() const { return min; }
 	__host__ __device__ glm::vec3 getMax() const { return max; }
@@ -29,9 +27,9 @@ public:
 		glm::vec3 bmin = (min - ray.o) / ray.d;
 		glm::vec3 bmax = (max - ray.o) / ray.d;
 
-		glm::vec3 tmp = glm::min(bmin, bmax);
+		glm::vec3 tmp_min = glm::min(bmin, bmax);
 		bmax = glm::max(bmin, bmax);
-		bmin = tmp;
+		bmin = tmp_min;
 
 		float tmin = glm::compMax(bmin);
 		float tmax = glm::compMin(bmax);
@@ -41,7 +39,7 @@ public:
 };
 
 
-template <int axis> requires (axis > 0) && (axis <= 3)
+template <int axis> requires (axis >= 0) && (axis < 3)
 __host__ __device__ inline bool box_axis_compare(const aabb& a, const aabb& b) {
 	return a.getMin()[axis] < b.getMin()[axis];
 }
