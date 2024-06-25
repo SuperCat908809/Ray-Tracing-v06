@@ -17,24 +17,105 @@
 
 #include "cuHostRND.h"
 
-#if 0
-struct _SceneDescription {
-	std::vector<dobj<Material>> materials;
-	std::vector<dobj<Hittable>> spheres;
-	darray<Hittable*> sphere_list;
-	dobj<HittableList> world_list;
+
+template <typename T, typename... Args> requires std::constructible_from<T, Args...>
+__global__ inline void _makeOnDeviceKer(T* dst_T, Args... args) {
+	if (threadIdx.x != 0 || blockIdx.x != 0) return;
+
+	new (dst_T) T(args...);
+}
+
+template <typename T, typename... Args> requires std::constructible_from<T, Args...>
+inline
+T* newOnDevice(const Args&... args) {
+	T* ptr = nullptr;
+	CUDA_ASSERT(cudaMalloc((void**)&ptr, sizeof(T)));
+	_makeOnDeviceKer<T, Args...> << <1, 1 >> > (ptr, args...);
+	CUDA_ASSERT(cudaDeviceSynchronize());
+	return ptr;
+}
+
+class SphereHandle {
+
+	aabb bounds;
+	Material* material_ptr{};
+	Sphere* sphere_ptr{};
+	MovingSphere* moving_sphere_ptr{};
+	Hittable* hittable_ptr{};
+	// only one of the two spheres above will be instanciated
+
+	SphereHandle() = default;
+
+	void _delete() {
+		CUDA_ASSERT(cudaFree(material_ptr));
+		CUDA_ASSERT(cudaFree(sphere_ptr));
+		CUDA_ASSERT(cudaFree(moving_sphere_ptr));
+		CUDA_ASSERT(cudaFree(hittable_ptr));
+
+		material_ptr = nullptr;
+		sphere_ptr = nullptr;
+		moving_sphere_ptr = nullptr;
+		hittable_ptr = nullptr;
+	}
+
+	SphereHandle(const SphereHandle&) = delete;
+	SphereHandle& operator=(const SphereHandle&) = delete;
+
+public:
+
+	SphereHandle(SphereHandle&& sp) {
+		bounds = sp.bounds;
+		material_ptr = sp.material_ptr;
+		sphere_ptr = sp.sphere_ptr;
+		moving_sphere_ptr = sp.moving_sphere_ptr;
+		hittable_ptr = sp.hittable_ptr;
+
+		sp.material_ptr = nullptr;
+		sp.sphere_ptr = nullptr;
+		sp.moving_sphere_ptr = nullptr;
+		sp.hittable_ptr = nullptr;
+	}
+
+	~SphereHandle() {
+		_delete();
+	}
+
+	template <typename MatType> requires GeoAcceptable<Sphere, MatType>
+	static SphereHandle MakeSphere(const Sphere& sphere, MatType* mat_ptr) {
+		SphereHandle sp{};
+		sp.bounds = getSphereBounds(sphere);
+		sp.material_ptr = mat_ptr;
+		sp.sphere_ptr = newOnDevice<Sphere>(sphere);
+		sp.moving_sphere_ptr = nullptr;
+		sp.hittable_ptr = newOnDevice<SphereHittable>(sp.sphere_ptr, mat_ptr);
+		return sp;
+	}
+
+	template <typename MatType> requires GeoAcceptable<MovingSphere, MatType>
+	static SphereHandle MakeMovingSphere(const MovingSphere& sphere, MatType* mat_ptr) {
+		SphereHandle sp{};
+		sp.bounds = getMovingSphereBounds(sphere);
+		sp.material_ptr = mat_ptr;
+		sp.sphere_ptr = nullptr;
+		sp.moving_sphere_ptr = newOnDevice<MovingSphere>(sphere);
+		sp.hittable_ptr = newOnDevice<MovingSphereHittable>(sp.moving_sphere_ptr, mat_ptr);
+		return sp;
+	}
+
+	const Hittable* getHittablePtr() const { return hittable_ptr; }
+	aabb getBounds() const { return bounds; }
 };
-#endif
 
 class SceneBook1 {
 
 	aabb world_bounds;
 	HittableList* world{ nullptr };
 	Hittable** hittable_list{ nullptr };
-	std::vector<Hittable*> hittables;
-	std::vector<Sphere*> spheres;
-	std::vector<MovingSphere*> moving_spheres;
-	std::vector<Material*> materials;
+	//std::vector<Hittable*> hittables;
+	//std::vector<Sphere*> spheres;
+	//std::vector<MovingSphere*> moving_spheres;
+	//std::vector<Material*> materials;
+	std::vector<SphereHandle> sphere_handles;
 
 
 	void _delete();
@@ -49,10 +130,11 @@ public:
 		aabb world_bounds;
 		HittableList* world;
 		Hittable** hittable_list;
-		std::vector<Hittable*> hittables;
-		std::vector<Sphere*> spheres;
-		std::vector<MovingSphere*> moving_spheres;
-		std::vector<Material*> materials;
+		//std::vector<Hittable*> hittables;
+		//std::vector<Sphere*> spheres;
+		//std::vector<MovingSphere*> moving_spheres;
+		//std::vector<Material*> materials;
+		std::vector<SphereHandle> sphere_handles;
 
 		cuHostRND host_rnd{ 512,1984 };
 

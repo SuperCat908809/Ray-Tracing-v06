@@ -11,7 +11,7 @@ int main() {
 
 		printf("Running application\n");
 		app.Run();
-		printf("Application finished/n");
+		printf("Application finished\n");
 	}
 
 	CUDA_ASSERT(cudaDeviceReset());

@@ -99,6 +99,10 @@ public:
 	}
 };
 
+__host__ __device__ inline aabb getSphereBounds(const Sphere& sp) {
+	return aabb(sp.center - glm::vec3(sp.radius), sp.center + glm::vec3(sp.radius));
+}
+
 class SphereHittable : public Hittable {
 	const Sphere* sphere;
 	const Material* mat_ptr;
@@ -168,6 +172,12 @@ public:
 		return normal;
 	}
 };
+
+__host__ __device__ inline aabb getMovingSphereBounds(const MovingSphere& sp) {
+	aabb t0 = aabb(sp.center0 - glm::vec3(sp.radius), sp.center0 + glm::vec3(sp.radius));
+	aabb t1 = aabb(sp.center1 - glm::vec3(sp.radius), sp.center1 + glm::vec3(sp.radius));
+	return aabb(t0, t1);
+}
 
 class MovingSphereHittable : public Hittable {
 	const MovingSphere* moving_sphere;
