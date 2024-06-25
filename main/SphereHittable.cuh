@@ -77,9 +77,9 @@ class Sphere : public Geometry {
 	struct TraceRecord {
 		const Sphere* sphere{};
 	};
-	static_assert(sizeof(Sphere::TraceRecord) <= sizeof(RayPayload::payload),
+	static_assert(sizeof(Sphere::TraceRecord) <= sizeof(RayPayload::Payload),
 		"Ray payload is too small to fit SphereHittable::TraceRecord");
-	static_assert(alignof(Sphere::TraceRecord) <= alignof(RayPayload),
+	static_assert(alignof(Sphere::TraceRecord) <= alignof(RayPayload::Payload),
 		"Ray payload alignment is too small to fit SphereHittable::TraceRecord");
 
 public:
@@ -149,9 +149,9 @@ class MovingSphere : public Geometry {
 	struct TraceRecord {
 		const MovingSphere* moving_sphere{};
 	};
-	static_assert(sizeof(MovingSphere::TraceRecord) <= sizeof(RayPayload::payload),
+	static_assert(sizeof(MovingSphere::TraceRecord) <= sizeof(RayPayload::Payload),
 		"Ray payload is too small to fit MovingSphereHittable::TraceRecord");
-	static_assert(alignof(MovingSphere::TraceRecord) <= alignof(RayPayload),
+	static_assert(alignof(MovingSphere::TraceRecord) <= alignof(RayPayload::Payload),
 		"Ray payload alignment is too small to fit MovingSphereHittable::TraceRecord");
 
 public:
