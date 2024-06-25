@@ -42,7 +42,7 @@ class SphereHandle {
 	Sphere* sphere_ptr{};
 	MovingSphere* moving_sphere_ptr{};
 	Hittable* hittable_ptr{};
-	// only one of the two spheres above will be instanciated
+	// only one of the two spheres above will be instantiated
 
 	SphereHandle() = default;
 
@@ -111,10 +111,6 @@ class SceneBook1 {
 	aabb world_bounds;
 	HittableList* world{ nullptr };
 	Hittable** hittable_list{ nullptr };
-	//std::vector<Hittable*> hittables;
-	//std::vector<Sphere*> spheres;
-	//std::vector<MovingSphere*> moving_spheres;
-	//std::vector<Material*> materials;
 	std::vector<SphereHandle> sphere_handles;
 
 
@@ -130,10 +126,6 @@ public:
 		aabb world_bounds;
 		HittableList* world;
 		Hittable** hittable_list;
-		//std::vector<Hittable*> hittables;
-		//std::vector<Sphere*> spheres;
-		//std::vector<MovingSphere*> moving_spheres;
-		//std::vector<Material*> materials;
 		std::vector<SphereHandle> sphere_handles;
 
 		cuHostRND host_rnd{ 512,1984 };
