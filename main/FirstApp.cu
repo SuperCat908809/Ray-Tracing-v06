@@ -183,7 +183,7 @@ FirstApp FirstApp::MakeApp() {
 	printf("SceneBook1 object built.\n");
 		
 	printf("Making Renderer object...\n");
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 12, cam, scene_desc.getWorldPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 16, 12, cam, scene_desc.getWorldPtr());
 	printf("Renderer object built.\n");
 
 	glm::vec4* host_output_framebuffer{};

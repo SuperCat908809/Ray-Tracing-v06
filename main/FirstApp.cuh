@@ -116,7 +116,6 @@ class SceneBook1 {
 
 	void _delete();
 
-	friend class _Factory;
 	SceneBook1() = default;
 
 public:
