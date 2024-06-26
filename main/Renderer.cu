@@ -7,6 +7,7 @@
 #include <device_launch_parameters.h>
 
 #include "cuError.h"
+#include "timers.h"
 
 #include "darray.cuh"
 #include "dobj.cuh"
@@ -33,10 +34,7 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 }
 
 void Renderer::_delete() {
-	//if (m.d_output_buffer != nullptr)
-	//	CUDA_ASSERT(cudaFree(m.d_output_buffer));
-	//if (m.d_random_states != nullptr)
-	//	CUDA_ASSERT(cudaFree(m.d_random_states));
+
 }
 
 Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
@@ -44,22 +42,19 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 	const MotionBlurCamera& cam,
 	HittableList* d_world_ptr) {
 
-	//glm::vec4* d_output_buffer{};
-	//curandState_t* d_random_states{};
-
-	//CUDA_ASSERT(cudaMalloc(&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
-	//CUDA_ASSERT(cudaMalloc(&d_random_states, sizeof(curandState_t) * render_width * render_height));
-
+	printf("Allocating Renderer framebuffer and random number generators... ");
 	darray<glm::vec4> d_output_buffer(render_width * render_height);
-	//darray<curandState_t> d_random_states(render_width * render_height);
 	darray<cuRandom> rngs(render_width * render_height);
+	printf("done.\n");
 
-	dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
+	//dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
 
+	printf("Initialising random states... ");
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
 	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, rngs.getPtr());
 	CUDA_ASSERT(cudaDeviceSynchronize());
+	printf("done.\n");
 
 
 	return Renderer(M{
@@ -71,20 +66,16 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 		d_world_ptr,
 		std::move(d_output_buffer),
 		std::move(rngs),
-		std::move(default_mat)
+		//std::move(default_mat)
 	});
 }
 Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
-	//other.m.d_output_buffer = nullptr;
-	//other.m.d_random_states = nullptr;
+
 }
 Renderer& Renderer::operator=(Renderer&& other) {
 	_delete();
 
 	m = std::move(other.m);
-
-	//other.m.d_output_buffer = nullptr;
-	//other.m.d_random_states = nullptr;
 
 	return *this;
 }
@@ -104,7 +95,7 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	MotionBlurCamera cam{};
 	HittableList* world{};
-	Material* default_mat{};
+	//Material* default_mat{};
 	glm::vec4* output_buffer{};
 	cuRandom* rngs{};
 };
@@ -118,18 +109,25 @@ void Renderer::Render() {
 	params.max_depth = m.max_depth;
 	params.cam = m.cam;
 	params.world = m.d_world_ptr;
-	params.default_mat = m.default_mat.getPtr();
+	//params.default_mat = m.default_mat.getPtr();
 	params.output_buffer = m.d_output_buffer.getPtr();
 	params.rngs = m.rngs.getPtr();
 
 	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
 	// therefore you must manually set a size that should encompass the entire program.
-	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048));
+	CUDA_ASSERT(cudaDeviceSetLimit(cudaLimit::cudaLimitStackSize, 2048 * 4));
+
+	printf("Running render kernel...\n");
+	cudaTimer render_timer{};
+	render_timer.start();
 
 	dim3 threads{ 8, 8, 1 };
 	dim3 blocks = dim3(ceilDiv(m.render_width, threads.x), ceilDiv(m.render_height, threads.y), 1);
 	render_kernel<<<blocks, threads>>>(params);
 	CUDA_ASSERT(cudaDeviceSynchronize());
+
+	render_timer.end();
+	printf("Rendering finished in %fms.\n", render_timer.elapsedms());
 }
 
 __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRandom& random_state) {
@@ -140,7 +138,7 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 	// bounce loop
 
 	for (int i = 0; i < p.max_depth; i++) {
-		TraceRecord rec{};
+		RayPayload rec{};
 
 		if (!p.world->ClosestIntersection(cur_ray, rec)) {
 			float t = glm::normalize(cur_ray.d).y * 0.5f + 0.5f;
@@ -154,7 +152,7 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 
 		Ray scattered{};
 		glm::vec3 attenuation{};
-		if (!rec.mat_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
+		if (!rec.material_ptr->Scatter(cur_ray, rec, random_state, scattered, attenuation)) {
 			// ray absorbed
 			//return accum_radiance;
 			return glm::vec3(0.0f);
@@ -165,7 +163,10 @@ __device__ glm::vec3 sample_world(const Ray& ray, const LaunchParams& p, cuRando
 		cur_ray = scattered;
 
 		// offset ray from surface to avoid shadow acne
-		cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
+		//cur_ray.o += glm::sign(glm::dot(cur_ray.d, rec.n)) * rec.n * 0.0003f;
+		// the material shader should take responsibility for scatter ray offset 
+		// temp for now
+		cur_ray.o += cur_ray.d * 0.001f;
 	}
 
 	// max bounces exceeded
@@ -202,6 +203,8 @@ __global__ void render_kernel(LaunchParams p) {
 	glm::vec3 col = glm::clamp(radiance, 0.0f, 1.0f);
 	// gamma correction equivalent to gamma 2.0
 	col = glm::sqrt(col);
+	//float exposure = 2.0f;
+	//col = 1.0f - glm::exp(-col * exposure);
 	glm::vec4 output_color = glm::vec4(col, 1.0f);
 
 	p.output_buffer[gid] = output_color;

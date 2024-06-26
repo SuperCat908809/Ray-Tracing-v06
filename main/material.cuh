@@ -3,8 +3,9 @@
 
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
-#include "ray_data.cuh"
 #include "cuRandom.cuh"
+#include "ray_data.cuh"
+#include "hittable.cuh"
 
 
 // abstract class that all material classes should inherit from
@@ -17,12 +18,36 @@ protected:
 	Material& operator=(const Material&) = default;
 
 public:
-	__device__ virtual ~Material() {};
 	__device__ virtual bool Scatter(
-		const Ray& in_ray, const TraceRecord& rec,
+		const Ray& in_ray, const RayPayload& rec,
 		cuRandom& rng,
 		Ray& scatter_ray, glm::vec3& attenuation
 	) const = 0;
 };
+
+class GeoIndependantMaterial : public Material {
+protected:
+	GeoIndependantMaterial() = default;
+	GeoIndependantMaterial(const GeoIndependantMaterial&) = default;
+	GeoIndependantMaterial& operator=(const GeoIndependantMaterial&) = default;
+};
+
+template <Geometry_t G>
+class GeometryDependantMaterial : public Material {
+protected:
+	GeometryDependantMaterial() = default;
+	GeometryDependantMaterial(const GeometryDependantMaterial&) = default;
+	GeometryDependantMaterial& operator=(const GeometryDependantMaterial&) = default;
+};
+
+
+template <typename GeoType, typename MatType>
+concept GeoDependant = std::derived_from<MatType, GeometryDependantMaterial<GeoType>>;
+
+template <typename MatType>
+concept GeoIndependant = std::derived_from<MatType, GeoIndependantMaterial>;
+
+template <typename GeoType, typename MatType>
+concept GeoAcceptable = GeoIndependant<MatType> || GeoDependant<GeoType, MatType>;
 
 #endif // MATERIAL_ABSTRACT_CLASS_H //

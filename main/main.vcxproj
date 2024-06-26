@@ -176,7 +176,6 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="book2SceneFactory.cu" />
     <CudaCompile Include="FirstApp.cu">
       <FileType>Document</FileType>
     </CudaCompile>
@@ -185,13 +184,17 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuHostRND.cpp" />
+    <CudaCompile Include="BVH.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aabb.cuh" />
-    <ClInclude Include="book2SceneFactory.cuh" />
+    <ClInclude Include="BVH.cuh" />
     <ClInclude Include="bvh_node.cuh" />
     <ClInclude Include="ceilDiv.h" />
+    <ClInclude Include="cuda_utils.cuh" />
     <ClInclude Include="cuIterators.cuh" />
     <ClInclude Include="cuError.h" />
     <ClInclude Include="cuRandom.cuh" />
@@ -203,7 +206,6 @@
     <ClInclude Include="material.cuh" />
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="HittableList.cuh" />
-    <ClInclude Include="scene.cuh" />
     <ClInclude Include="SphereHittable.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
     <ClInclude Include="dmemory.cuh" />
@@ -216,6 +218,7 @@
     <ClInclude Include="ray_data.cuh" />
     <ClInclude Include="Renderer.cuh" />
     <ClInclude Include="texture.cuh" />
+    <ClInclude Include="timers.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dAbstracts.inl" />
