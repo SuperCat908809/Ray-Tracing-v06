@@ -14,6 +14,7 @@
 #include "cu_Cameras.cuh"
 #include "Renderer.cuh"
 #include "SphereHittable.cuh"
+#include "BVH.cuh"
 
 #include "cuHostRND.h"
 #include "cuda_utils.cuh"
@@ -65,28 +66,28 @@ class SceneBook2BVH {
 	HittableList* world{ nullptr };
 	Hittable** hittable_list{ nullptr };
 	std::vector<SphereHandle> sphere_handles;
-	std::vector<Hittable*> bvh_nodes;
-
+	//std::vector<Hittable*> bvh_nodes;
+	BVH_Handle bvh;
 
 	void _delete();
 
-	SceneBook2BVH() = default;
+	SceneBook2BVH(BVH_Handle&& bvh) : bvh(std::move(bvh)) {}
 
 public:
 
 	class Factory {
 
-		aabb world_bounds;
-		HittableList* world;
-		Hittable** hittable_list;
+		//aabb world_bounds;
+		//HittableList* world;
+		//Hittable** hittable_list;
 		std::vector<SphereHandle> sphere_handles;
-		std::vector<Hittable*> bvh_nodes;
+		//std::vector<Hittable*> bvh_nodes;
 
 		cuHostRND host_rnd{ 512,1984 };
 
 		void _populate_world();
-		const Hittable* _build_bvh();
-		const Hittable* _build_bvh_rec(std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end);
+		//const Hittable* _build_bvh();
+		//const Hittable* _build_bvh_rec(std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end);
 
 	public:
 
