@@ -124,6 +124,9 @@
     <ClInclude Include="timers.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="cuda_utils.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">

@@ -190,6 +190,7 @@
     <ClInclude Include="aabb.cuh" />
     <ClInclude Include="bvh_node.cuh" />
     <ClInclude Include="ceilDiv.h" />
+    <ClInclude Include="cuda_utils.cuh" />
     <ClInclude Include="cuIterators.cuh" />
     <ClInclude Include="cuError.h" />
     <ClInclude Include="cuRandom.cuh" />

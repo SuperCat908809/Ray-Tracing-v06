@@ -34,6 +34,7 @@ using namespace std::string_literals;
 #include "Renderer.cuh"
 
 #include "cuHostRND.h"
+#include "cuda_utils.cuh"
 
 
 void SceneBook1::_delete() {

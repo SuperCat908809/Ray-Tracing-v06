@@ -16,24 +16,8 @@
 #include "SphereHittable.cuh"
 
 #include "cuHostRND.h"
+#include "cuda_utils.cuh"
 
-
-template <typename T, typename... Args> requires std::constructible_from<T, Args...>
-__global__ inline void _makeOnDeviceKer(T* dst_T, Args... args) {
-	if (threadIdx.x != 0 || blockIdx.x != 0) return;
-
-	new (dst_T) T(args...);
-}
-
-template <typename T, typename... Args> requires std::constructible_from<T, Args...>
-inline
-T* newOnDevice(const Args&... args) {
-	T* ptr = nullptr;
-	CUDA_ASSERT(cudaMalloc((void**)&ptr, sizeof(T)));
-	_makeOnDeviceKer<T, Args...> << <1, 1 >> > (ptr, args...);
-	CUDA_ASSERT(cudaDeviceSynchronize());
-	return ptr;
-}
 
 class SphereHandle {
 
