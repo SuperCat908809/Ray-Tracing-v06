@@ -420,7 +420,7 @@ FirstApp FirstApp::MakeApp() {
 	printf("SceneBook2BVH object built.\n");
 		
 	printf("Making Renderer object...\n");
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 32, 12, cam, scene_desc.getWorldPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 8, 12, cam, scene_desc.getWorldPtr());
 	printf("Renderer object built.\n");
 
 	glm::vec4* host_output_framebuffer{};
@@ -454,7 +454,7 @@ void FirstApp::Run() {
 	printf("done.\n");
 
 	printf("Writing render to disk... ");
-	write_renderbuffer("../renders/Book 2/test_012.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer("../renders/Book 2/test_015.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
 	printf("done.\n");
 }
 
