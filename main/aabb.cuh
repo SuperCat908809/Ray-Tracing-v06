@@ -23,7 +23,11 @@ public:
 
 	__host__ __device__ aabb& operator+=(const aabb& bounds) { min = glm::min(min, bounds.min); max = glm::max(max, bounds.max); return *this; }
 
-	__host__ __device__ bool intersects(const Ray& ray, float t_max) const {
+	__host__ __device__ bool intersects(const Ray& ray, float ray_max_dist) const {
+		float dist{};
+		return intersects(ray, ray_max_dist, dist);
+	}
+	__host__ __device__ bool intersects(const Ray& ray, float ray_max_dist, float& dist) const {
 		glm::vec3 bmin = (min - ray.o) / ray.d;
 		glm::vec3 bmax = (max - ray.o) / ray.d;
 
@@ -34,7 +38,9 @@ public:
 		float tmin = glm::compMax(bmin);
 		float tmax = glm::compMin(bmax);
 
-		return tmax >= tmin && tmin < t_max && tmax > 0;
+		bool hit = tmin <= tmax && tmin < ray_max_dist && tmax > 0;
+		if (hit) dist = tmin;
+		return hit;
 	}
 
 	__host__ __device__ int longest_axis() const {
