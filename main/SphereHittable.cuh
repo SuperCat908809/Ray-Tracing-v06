@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include "ray_data.cuh"
 #include "hittable.cuh"
+#include "cuda_utils.cuh"
 
 
 __device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
@@ -144,6 +145,78 @@ public:
 		sp_rec.normal = (ray.at(rec.distance) - center) / moving_sphere->radius;
 		return true;
 	}
+};
+
+
+class SphereHandle {
+
+	aabb bounds;
+	Material* material_ptr{};
+	Sphere* sphere_ptr{};
+	MovingSphere* moving_sphere_ptr{};
+	Hittable* hittable_ptr{};
+	// only one of the two spheres above will be instantiated
+
+	SphereHandle() = default;
+
+	void _delete() {
+		CUDA_ASSERT(cudaFree(material_ptr));
+		CUDA_ASSERT(cudaFree(sphere_ptr));
+		CUDA_ASSERT(cudaFree(moving_sphere_ptr));
+		CUDA_ASSERT(cudaFree(hittable_ptr));
+
+		material_ptr = nullptr;
+		sphere_ptr = nullptr;
+		moving_sphere_ptr = nullptr;
+		hittable_ptr = nullptr;
+	}
+
+	SphereHandle(const SphereHandle&) = delete;
+	SphereHandle& operator=(const SphereHandle&) = delete;
+
+public:
+
+	SphereHandle(SphereHandle&& sp) {
+		bounds = sp.bounds;
+		material_ptr = sp.material_ptr;
+		sphere_ptr = sp.sphere_ptr;
+		moving_sphere_ptr = sp.moving_sphere_ptr;
+		hittable_ptr = sp.hittable_ptr;
+
+		sp.material_ptr = nullptr;
+		sp.sphere_ptr = nullptr;
+		sp.moving_sphere_ptr = nullptr;
+		sp.hittable_ptr = nullptr;
+	}
+
+	~SphereHandle() {
+		_delete();
+	}
+
+	template <typename MatType> requires GeoAcceptable<Sphere, MatType>
+	static SphereHandle MakeSphere(const Sphere& sphere, MatType* mat_ptr) {
+		SphereHandle sp{};
+		sp.bounds = getSphereBounds(sphere);
+		sp.material_ptr = mat_ptr;
+		sp.sphere_ptr = newOnDevice<Sphere>(sphere);
+		sp.moving_sphere_ptr = nullptr;
+		sp.hittable_ptr = newOnDevice<SphereHittable>(sp.sphere_ptr, mat_ptr);
+		return sp;
+	}
+
+	template <typename MatType> requires GeoAcceptable<MovingSphere, MatType>
+	static SphereHandle MakeMovingSphere(const MovingSphere& sphere, MatType* mat_ptr) {
+		SphereHandle sp{};
+		sp.bounds = getMovingSphereBounds(sphere);
+		sp.material_ptr = mat_ptr;
+		sp.sphere_ptr = nullptr;
+		sp.moving_sphere_ptr = newOnDevice<MovingSphere>(sphere);
+		sp.hittable_ptr = newOnDevice<MovingSphereHittable>(sp.moving_sphere_ptr, mat_ptr);
+		return sp;
+	}
+
+	const Hittable* getHittablePtr() const { return hittable_ptr; }
+	aabb getBounds() const { return bounds; }
 };
 
 #endif // CU_GEOMETRY_CLASSES_H //
