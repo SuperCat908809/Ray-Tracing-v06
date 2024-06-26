@@ -184,10 +184,14 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuHostRND.cpp" />
+    <CudaCompile Include="BVH.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aabb.cuh" />
+    <ClInclude Include="BVH.cuh" />
     <ClInclude Include="bvh_node.cuh" />
     <ClInclude Include="ceilDiv.h" />
     <ClInclude Include="cuda_utils.cuh" />

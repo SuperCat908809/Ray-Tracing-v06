@@ -41,6 +41,9 @@
     <CudaCompile Include="cuHostRND.cpp">
       <Filter>Utilities\CUDA utilities</Filter>
     </CudaCompile>
+    <CudaCompile Include="BVH.cu">
+      <Filter>RT Engine\Geometry</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
@@ -123,6 +126,9 @@
     </ClInclude>
     <ClInclude Include="timers.h">
       <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BVH.cuh">
+      <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="cuda_utils.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
