@@ -329,7 +329,13 @@ SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 
 	//const Hittable* root_node = _build_bvh();
 	BVH_Handle::Factory bvh_factory(objects);
-	BVH_Handle bvh_handle = bvh_factory.MakeBVH();
+#if 1
+	bvh_factory.BuildBVH_TopDown();
+#else
+	bvh_factory.BuildBVH_BottomUp();
+#endif
+	BVH_Handle bvh_handle = bvh_factory.MakeHandle();
+
 	const Hittable* bvh_ptr = bvh_handle.getBVHPtr();
 	aabb world_bounds = bvh_handle.getBounds();
 
@@ -454,7 +460,7 @@ void FirstApp::Run() {
 	printf("done.\n");
 
 	printf("Writing render to disk... ");
-	write_renderbuffer("../renders/Book 2/test_015.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer("../renders/Book 2/test_017.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
 	printf("done.\n");
 }
 

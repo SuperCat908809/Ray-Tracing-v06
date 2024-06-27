@@ -85,15 +85,15 @@ public:
 
 class BVH_Handle {
 
-	BVH_Handle() = default;
+	BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables);
 
 	BVH_Handle(const BVH_Handle&) = delete;
 	BVH_Handle& operator=(const BVH_Handle&) = delete;
 
-	BVH* bvh;
+	BVH* d_bvh;
 	aabb bounds;
-	BVH::Node* bvh_nodes;
-	const Hittable** hittables;
+	BVH::Node* d_bvh_nodes;
+	const Hittable** d_hittables;
 
 	void _delete();
 
@@ -102,15 +102,28 @@ public:
 	class Factory {
 
 		std::vector<BVH::Node> bvh_nodes;
-		std::vector<std::tuple<aabb, const Hittable*>>& arr;
+		std::vector<const Hittable*> hittables;
+		int root_idx;
 
+		
+		std::vector<std::tuple<aabb, const Hittable*>>& arr;
+		
 		aabb _get_partition_bounds(int start, int end);
 		int _build_bvh_rec(int start, int end);
+
+
+		// BHV::Node node, int hittable_count, int bvh_list_index
+		std::vector<std::tuple<BVH::Node, int, int>> building_nodes;
+
+		void _find_optimal_merge(int& a_idx, int& b_idx);
+		void _merge_nodes(int a, int b);
 
 	public:
 
 		Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr);
-		BVH_Handle MakeBVH();
+		void BuildBVH_TopDown();
+		void BuildBVH_BottomUp();
+		BVH_Handle MakeHandle();
 
 	};
 
@@ -119,7 +132,7 @@ public:
 	BVH_Handle(BVH_Handle&& bvhh);
 	BVH_Handle& operator=(BVH_Handle&& bvhh);
 
-	const BVH* getBVHPtr() const { return bvh; }
+	const BVH* getBVHPtr() const { return d_bvh; }
 	aabb getBounds() const { return bounds; }
 
 };
