@@ -51,6 +51,16 @@ public:
 		else
 			return span.y > span.z ? 1 : 2;
 	}
+
+	__host__ __device__ float surface_area() const {
+		glm::vec3 span = glm::abs(max - min);
+
+		float cost = 0.0f;
+		cost += span.x * span.y;
+		cost += span.x * span.z;
+		cost += span.y * span.z;
+		return 2.0f * cost;
+	}
 };
 
 
