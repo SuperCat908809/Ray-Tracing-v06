@@ -59,7 +59,7 @@ int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
 	if (object_span == 1) {
 		BVH::Node node;
 		node.bounds = bounds;
-		node.left_child_idx = -1;
+		node.left_child_idx = _IS_LEAF_CODE;
 		node.right_chlid_hittable_idx = start;
 		bvh_nodes.push_back(node);
 		return bvh_nodes.size() - 1;
@@ -160,7 +160,7 @@ void BVH_Handle::Factory::BuildBVH_BottomUp() {
 
 		BVH::Node node;
 		node.bounds = std::get<0>(arr[i]);
-		node.left_child_idx = -1;
+		node.left_child_idx = _IS_LEAF_CODE;
 		node.right_chlid_hittable_idx = hittables.size();
 		hittables.push_back(std::get<1>(arr[i]));
 

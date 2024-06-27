@@ -11,6 +11,7 @@
 #include "cuda_utils.cuh"
 
 
+#define _IS_LEAF_CODE (-1)
 class BVH : public Hittable {
 
 	friend class BVH_Handle;
@@ -23,7 +24,7 @@ public:
 		// otherwise left_child_idx and right_child_hittable_idx hold the indices
 		// for the left and right child nodes respectively.
 
-		__host__ __device__ bool isLeaf() const { return left_child_idx == -1; }
+		__host__ __device__ bool isLeaf() const { return left_child_idx == _IS_LEAF_CODE; }
 	};
 
 private:
