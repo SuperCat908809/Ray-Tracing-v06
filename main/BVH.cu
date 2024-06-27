@@ -8,14 +8,24 @@
 #include "cuda_utils.cuh"
 
 
-void BVH_Handle::_delete() {
-	CUDA_ASSERT(cudaFree(d_bvh));
-	CUDA_ASSERT(cudaFree(d_bvh_nodes));
-	CUDA_ASSERT(cudaFree(d_hittables));
+BVH_Handle::BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables) {
+	CUDA_ASSERT(cudaMalloc((void**)&d_hittables, sizeof(const Hittable*) * hittables.size()));
+	CUDA_ASSERT(cudaMemcpy(d_hittables, hittables.data(), sizeof(const Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
+
+	CUDA_ASSERT(cudaMalloc((void**)&d_bvh_nodes, sizeof(BVH::Node) * nodes.size()));
+	CUDA_ASSERT(cudaMemcpy(d_bvh_nodes, nodes.data(), sizeof(BVH::Node) * nodes.size(), cudaMemcpyHostToDevice));
+
+	d_bvh = newOnDevice<BVH>(d_bvh_nodes, d_hittables, root_idx);
 }
 
 BVH_Handle::~BVH_Handle() {
 	_delete();
+}
+
+void BVH_Handle::_delete() {
+	CUDA_ASSERT(cudaFree(d_bvh));
+	CUDA_ASSERT(cudaFree(d_bvh_nodes));
+	CUDA_ASSERT(cudaFree(d_hittables));
 }
 
 BVH_Handle::BVH_Handle(BVH_Handle&& bvhh) {
@@ -42,12 +52,24 @@ BVH_Handle& BVH_Handle::operator=(BVH_Handle&& bvhh) {
 }
 
 
-aabb BVH_Handle::Factory::_get_partition_bounds(int start, int end) {
-	aabb partition_bounds{};
-	for (int i = start; i < end; i++) {
-		partition_bounds += std::get<0>(arr[i]);
+
+BVH_Handle::Factory::Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr)
+	: arr(arr) {}
+
+BVH_Handle BVH_Handle::Factory::MakeHandle() {
+	aabb bounds = bvh_nodes[root_idx].bounds;
+	return BVH_Handle(bounds, root_idx, bvh_nodes, hittables);
+}
+
+
+void BVH_Handle::Factory::BuildBVH_TopDown() {
+
+	root_idx = _build_bvh_rec(0, arr.size());
+
+	hittables.reserve(arr.size());
+	for (int i = 0; i < arr.size(); i++) {
+		hittables.push_back(std::get<1>(arr[i]));
 	}
-	return partition_bounds;
 }
 
 int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
@@ -82,28 +104,36 @@ int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
 	}
 }
 
-
-BVH_Handle::BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables) {
-	CUDA_ASSERT(cudaMalloc((void**)&d_hittables, sizeof(const Hittable*) * hittables.size()));
-	CUDA_ASSERT(cudaMemcpy(d_hittables, hittables.data(), sizeof(const Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
-
-	CUDA_ASSERT(cudaMalloc((void**)&d_bvh_nodes, sizeof(BVH::Node) * nodes.size()));
-	CUDA_ASSERT(cudaMemcpy(d_bvh_nodes, nodes.data(), sizeof(BVH::Node) * nodes.size(), cudaMemcpyHostToDevice));
-
-	d_bvh = newOnDevice<BVH>(d_bvh_nodes, d_hittables, root_idx);
+aabb BVH_Handle::Factory::_get_partition_bounds(int start, int end) {
+	aabb partition_bounds{};
+	for (int i = start; i < end; i++) {
+		partition_bounds += std::get<0>(arr[i]);
+	}
+	return partition_bounds;
 }
 
-BVH_Handle::Factory::Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr) 
-	: arr(arr) {}
 
-void BVH_Handle::Factory::BuildBVH_TopDown() {
+void BVH_Handle::Factory::BuildBVH_BottomUp() {
 
-	root_idx = _build_bvh_rec(0, arr.size());
-
-	hittables.reserve(arr.size());
 	for (int i = 0; i < arr.size(); i++) {
+
+		BVH::Node node;
+		node.bounds = std::get<0>(arr[i]);
+		node.left_child_idx = _IS_LEAF_CODE;
+		node.right_chlid_hittable_idx = hittables.size();
 		hittables.push_back(std::get<1>(arr[i]));
+
+		building_nodes.push_back(std::make_tuple(node, 1, bvh_nodes.size()));
+		bvh_nodes.push_back(node);
 	}
+
+	while (building_nodes.size() > 1) {
+		int a, b;
+		_find_optimal_merge(a, b);
+		_merge_nodes(a, b);
+	}
+
+	root_idx = std::get<2>(building_nodes[0]);
 }
 
 void BVH_Handle::Factory::_find_optimal_merge(int& a_idx, int& b_idx) {
@@ -152,34 +182,4 @@ void BVH_Handle::Factory::_merge_nodes(int a_idx, int b_idx) {
 
 	building_nodes.push_back(std::make_tuple(node, hittable_count, bvh_nodes.size()));
 	bvh_nodes.push_back(node);
-}
-
-void BVH_Handle::Factory::BuildBVH_BottomUp() {
-	
-	for (int i = 0; i < arr.size(); i++) {
-
-		BVH::Node node;
-		node.bounds = std::get<0>(arr[i]);
-		node.left_child_idx = _IS_LEAF_CODE;
-		node.right_chlid_hittable_idx = hittables.size();
-		hittables.push_back(std::get<1>(arr[i]));
-
-		building_nodes.push_back(std::make_tuple(node, 1, bvh_nodes.size()));
-		bvh_nodes.push_back(node);
-	}
-
-	while (building_nodes.size() > 1) {
-		int a, b;
-		_find_optimal_merge(a, b);
-		_merge_nodes(a, b);
-	}
-
-	root_idx = std::get<2>(building_nodes[0]);
-}
-
-BVH_Handle BVH_Handle::Factory::MakeHandle() {
-
-	aabb bounds = bvh_nodes[root_idx].bounds;
-
-	return BVH_Handle(bounds, root_idx, bvh_nodes, hittables);
 }

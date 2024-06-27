@@ -66,6 +66,7 @@ public:
 				bvh_nodes[left_idx].bounds.intersects(ray, rec.distance, left_dist);
 				bvh_nodes[right_idx].bounds.intersects(ray, rec.distance, right_dist);
 
+				// assert that left is closer for next step
 				if (left_dist > right_dist) {
 					cuda_swap(left_idx, right_idx);
 					cuda_swap(left_dist, right_dist);
@@ -106,13 +107,14 @@ public:
 		std::vector<const Hittable*> hittables;
 		int root_idx;
 
-		
+		// top down
 		std::vector<std::tuple<aabb, const Hittable*>>& arr;
 		
 		aabb _get_partition_bounds(int start, int end);
 		int _build_bvh_rec(int start, int end);
 
 
+		// bottom up
 		// BHV::Node node, int hittable_count, int bvh_list_index
 		std::vector<std::tuple<BVH::Node, int, int>> building_nodes;
 
