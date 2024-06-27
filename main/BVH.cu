@@ -9,6 +9,8 @@
 
 
 BVH_Handle::BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables) {
+	BVH_Handle::bounds = bounds;
+
 	CUDA_ASSERT(cudaMalloc((void**)&d_hittables, sizeof(const Hittable*) * hittables.size()));
 	CUDA_ASSERT(cudaMemcpy(d_hittables, hittables.data(), sizeof(const Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
 
