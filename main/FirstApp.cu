@@ -171,13 +171,6 @@ void SceneBook2BVH::_delete() {
 	CUDA_ASSERT(cudaFree(world));
 	CUDA_ASSERT(cudaFree(hittable_list));
 
-#if 0
-	for (int i = 0; i < bvh_nodes.size(); i++) {
-		CUDA_ASSERT(cudaFree(bvh_nodes[i]));
-	}
-	bvh_nodes.resize(0);
-#endif
-
 	world = nullptr;
 	hittable_list = nullptr;
 }
@@ -187,7 +180,6 @@ void SceneBook2BVH::Factory::_populate_world() {
 	Sphere ground_sphere = Sphere(glm::vec3(0, -1000, 0), 1000.0f);
 	LambertianAbstract<Sphere>* ground_mat = newOnDevice<LambertianAbstract<Sphere>>(glm::vec3(0.5f));
 	SphereHandle ground_handle = SphereHandle::MakeSphere(ground_sphere, ground_mat);
-	//world_bounds += ground_handle.getBounds();
 	sphere_handles.push_back(std::move(ground_handle));
 
 	for (int a = -11; a < 11; a++) {
@@ -203,21 +195,18 @@ void SceneBook2BVH::Factory::_populate_world() {
 				glm::vec3 center1 = center + glm::vec3(0, rnd * 0.5f, 0);
 				auto moving_sphere = MovingSphere(center, center1, 0.2f);
 				auto handle = SphereHandle::MakeMovingSphere(moving_sphere, material);
-				//world_bounds += handle.getBounds();
 				sphere_handles.push_back(std::move(handle));
 			}
 			else if (choose_mat < 0.95f) {
 				auto material = newOnDevice<MetalAbstract<Sphere>>(glm::vec3(0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd), 0.5f * (1.0f + rnd)), 0.5f * rnd);
 				auto sphere = Sphere(center, 0.2f);
 				auto handle = SphereHandle::MakeSphere(sphere, material);
-				//world_bounds += handle.getBounds();
 				sphere_handles.push_back(std::move(handle));
 			}
 			else {
 				auto material = newOnDevice<DielectricAbstract<Sphere>>(glm::vec3(1.0f), 1.5f);
 				auto sphere = Sphere(center, 0.2f);
 				auto handle = SphereHandle::MakeSphere(sphere, material);
-				//world_bounds += handle.getBounds();
 				sphere_handles.push_back(std::move(handle));
 			}
 		}
@@ -226,81 +215,18 @@ void SceneBook2BVH::Factory::_populate_world() {
 	Sphere center_sphere = Sphere(glm::vec3(0, 1, 0), 1);
 	DielectricAbstract<Sphere>* center_mat = newOnDevice<DielectricAbstract<Sphere>>(glm::vec3(1.0f), 1.5f);
 	auto center_handle = SphereHandle::MakeSphere(center_sphere, center_mat);
-	//world_bounds += center_handle.getBounds();
 	sphere_handles.push_back(std::move(center_handle));
 
 	Sphere left_sphere = Sphere(glm::vec3(-4, 1, 0), 1);
 	LambertianAbstract<Sphere>* left_mat = newOnDevice<LambertianAbstract<Sphere>>(glm::vec3(0.4f, 0.2f, 0.1f));
 	auto left_handle = SphereHandle::MakeSphere(left_sphere, left_mat);
-	//world_bounds += left_handle.getBounds();
 	sphere_handles.push_back(std::move(left_handle));
 
 	Sphere right_sphere = Sphere(glm::vec3(4, 1, 0), 1);
 	MetalAbstract<Sphere>* right_mat = newOnDevice<MetalAbstract<Sphere>>(glm::vec3(0.7f, 0.6f, 0.5f), 0);
 	auto right_handle = SphereHandle::MakeSphere(right_sphere, right_mat);
-	//world_bounds += right_handle.getBounds();
 	sphere_handles.push_back(std::move(right_handle));
 }
-
-
-#if 0
-aabb _get_partition_bounds(std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end) {
-	aabb partition_bounds{};
-	for (int i = start; i < end; i++) {
-		partition_bounds += std::get<0>(arr[i]);
-	}
-	return partition_bounds;
-}
-
-const Hittable* SceneBook2BVH::Factory::_build_bvh_rec(
-	std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end) {
-	aabb bounds = _get_partition_bounds(arr, start, end);
-	int axis = bounds.longest_axis();
-	auto comparator = (axis == 0) ? box_x_compare : ((axis == 1) ? box_y_compare : box_z_compare);
-
-	int object_span = end - start;
-	if (object_span == 1) {
-		return std::get<1>(arr[start]);
-	}
-	else if (object_span == 2) {
-		auto node_ptr = newOnDevice<bvh_node>(
-			std::get<1>(arr[start + 0]),
-			std::get<1>(arr[start + 1]),
-			bounds
-		);
-		bvh_nodes.push_back(node_ptr);
-		return node_ptr;
-	}
-	else {
-		std::sort(arr.begin() + start, arr.begin() + end,
-			[comparator](const std::tuple<aabb, const Hittable*>& a, const std::tuple<aabb, const Hittable*>& b) {
-				return comparator(std::get<0>(a), std::get<0>(b));
-			}
-		);
-
-		int mid = (start + end) / 2;
-		auto left = _build_bvh_rec(arr, start, mid);
-		auto right = _build_bvh_rec(arr, mid, end);
-		auto node_ptr = newOnDevice<bvh_node>(left, right, bounds);
-		bvh_nodes.push_back(node_ptr);
-		return node_ptr;
-	}
-}
-
-const Hittable* SceneBook2BVH::Factory::_build_bvh() {
-
-	std::vector<std::tuple<aabb, const Hittable*>> objects;
-	for (int i = 0; i < sphere_handles.size(); i++) {
-		auto bounds = sphere_handles[i].getBounds();
-		auto hittable_ptr = sphere_handles[i].getHittablePtr();
-
-		objects.push_back({ bounds, hittable_ptr });
-	}
-
-	const Hittable* root_node = _build_bvh_rec(objects, 0, objects.size());
-	return root_node;
-}
-#endif
 
 SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 
@@ -327,7 +253,6 @@ SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 		objects.push_back({ bounds, hittable_ptr });
 	}
 
-	//const Hittable* root_node = _build_bvh();
 	BVH_Handle::Factory bvh_factory(objects);
 #if 1
 	bvh_factory.BuildBVH_TopDown();
@@ -344,11 +269,6 @@ SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 
 
 	printf("Building world's HittableList... ");
-	//std::vector<const Hittable*> hittable_vec{};
-	//for (int i = 0; i < sphere_handles.size(); i++) {
-	//	const Hittable* ptr = sphere_handles[i].getHittablePtr();
-	//	hittable_vec.push_back(ptr);
-	//}
 
 	Hittable** hittable_list;
 	HittableList* world;
@@ -368,7 +288,6 @@ SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 	scene.world = world;
 	scene.hittable_list = hittable_list;
 	scene.sphere_handles = std::move(sphere_handles);
-	//scene.bvh_nodes = std::move(bvh_nodes);
 
 	return scene;
 }
