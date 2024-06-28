@@ -66,7 +66,11 @@ BVH_Handle BVH_Handle::Factory::MakeHandle() {
 
 void BVH_Handle::Factory::BuildBVH_TopDown() {
 
-	root_idx = _build_bvh_rec(0, arr.size());
+#if 1
+	root_idx = _build_bvh_rec1(0, arr.size());
+#else
+	root_idx = _build_bvh_rec2(0, arr.size());
+#endif
 
 	hittables.reserve(arr.size());
 	for (int i = 0; i < arr.size(); i++) {
@@ -74,7 +78,7 @@ void BVH_Handle::Factory::BuildBVH_TopDown() {
 	}
 }
 
-int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
+int BVH_Handle::Factory::_build_bvh_rec1(int start, int end) {
 	aabb bounds = _get_partition_bounds(start, end);
 	int axis = bounds.longest_axis();
 	auto comparator = (axis == 0) ? box_x_compare : ((axis == 1) ? box_y_compare : box_z_compare);
@@ -84,7 +88,7 @@ int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
 		BVH::Node node;
 		node.bounds = bounds;
 		node.left_child_idx = _IS_LEAF_CODE;
-		node.right_chlid_hittable_idx = start;
+		node.right_child_hittable_idx = start;
 		bvh_nodes.push_back(node);
 		return bvh_nodes.size() - 1;
 	}
@@ -99,11 +103,105 @@ int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
 
 		BVH::Node node;
 		node.bounds = bounds;
-		node.left_child_idx = _build_bvh_rec(start, mid);
-		node.right_chlid_hittable_idx = _build_bvh_rec(mid, end);
+		node.left_child_idx = _build_bvh_rec1(start, mid);
+		node.right_child_hittable_idx = _build_bvh_rec1(mid, end);
 		bvh_nodes.push_back(node);
 		return bvh_nodes.size() - 1;
 	}
+}
+
+int BVH_Handle::Factory::_build_bvh_rec2(int start, int end) {
+	aabb bounds = _get_partition_bounds(start, end);
+	int object_span = end - start;
+
+	if (object_span == 1) {
+		BVH::Node node;
+		node.bounds = bounds;
+		node.left_child_idx = _IS_LEAF_CODE;
+		node.right_child_hittable_idx = start;
+		bvh_nodes.push_back(node);
+		return bvh_nodes.size() - 1;
+	}
+
+	int axis;
+	float split;
+	_find_optimal_split(start, end, bounds, axis, split);
+
+	int mid_idx;
+	_partition_by_split(start, end, axis, split, mid_idx);
+
+	BVH::Node node;
+	node.bounds = bounds;
+	node.left_child_idx = _build_bvh_rec2(start, mid_idx);
+	node.right_child_hittable_idx = _build_bvh_rec2(mid_idx, end);
+	bvh_nodes.push_back(node);
+	return bvh_nodes.size() - 1;
+}
+
+void BVH_Handle::Factory::_find_optimal_split(int start, int end, const aabb& bounds, int& best_axis, float& best_split) {
+	const int split_points = 16;
+	float best_cost = FLT_MAX;
+
+	for (int axis = 0; axis < 3; axis++) {
+		for (int split = 0; split < split_points; split++) {
+			// create N points equally spaced between 0 and 1 but not including either
+			// e.g. N == 1 : 0.50
+			//		N == 2 : 0.33, 0.66
+			//		N == 3 : 0.25, 0.50, 0.75
+			float pos = (split + 1.0f) / (split_points + 1.0f);
+			pos = glm::mix(bounds.getMin()[axis], bounds.getMax()[axis], pos);
+			aabb left_bounds{}, right_bounds{};
+			int left_count = 0, right_count = 0;
+
+			for (int i = start; i < end; i++) {
+				const aabb& b = std::get<0>(arr[i]);
+				glm::vec3 centeroid = b.centeroid();
+
+				// true if b belongs left of split
+				if (centeroid[axis] < pos) {
+					left_bounds += b;
+					left_count++;
+				}
+				else {
+					right_bounds += b;
+					right_count++;
+				}
+			}
+
+
+			float cost = left_bounds.surface_area() * left_count + right_bounds.surface_area() * right_count;
+
+			if (cost < best_cost) {
+				best_cost = cost;
+				best_axis = axis;
+				best_split = pos;
+			}
+		}
+	}
+}
+
+void BVH_Handle::Factory::_partition_by_split(int start, int end, int axis, float split_pos, int& mid_idx) {
+	// true if b belongs left of split
+	auto comparator = [axis, split_pos](const aabb& b) {
+		glm::vec3 centeroid = b.centeroid();
+		return centeroid[axis] < split_pos;
+	};
+
+	int i = start;
+	int j = end;
+	while (i < j) {
+		const aabb& b = std::get<0>(arr[i]);
+
+		if (comparator(b)) {
+			i++;
+		}
+		else {
+			std::swap(arr[i], arr[--j]);
+		}
+	}
+
+	//mid_idx = comparator(std::get<0>(arr[i])) ? i : i + 1;
+	mid_idx = i;
 }
 
 aabb BVH_Handle::Factory::_get_partition_bounds(int start, int end) {
@@ -122,7 +220,7 @@ void BVH_Handle::Factory::BuildBVH_BottomUp() {
 		BVH::Node node;
 		node.bounds = std::get<0>(arr[i]);
 		node.left_child_idx = _IS_LEAF_CODE;
-		node.right_chlid_hittable_idx = hittables.size();
+		node.right_child_hittable_idx = hittables.size();
 		hittables.push_back(std::get<1>(arr[i]));
 
 		building_nodes.push_back(std::make_tuple(node, 1, bvh_nodes.size()));
@@ -173,7 +271,7 @@ void BVH_Handle::Factory::_merge_nodes(int a_idx, int b_idx) {
 	BVH::Node node;
 	node.bounds = bounds;
 	node.left_child_idx = a_list_idx;
-	node.right_chlid_hittable_idx = b_list_idx;
+	node.right_child_hittable_idx = b_list_idx;
 
 
 	// delete the later index first otherwise everything shifts over and your index points to the wrong element

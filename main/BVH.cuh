@@ -19,7 +19,7 @@ public:
 	struct Node {
 		aabb bounds;
 		int left_child_idx;
-		int right_chlid_hittable_idx;
+		int right_child_hittable_idx;
 		// if leaf node then right_child_hittable_idx holds the hittable idx
 		// otherwise left_child_idx and right_child_hittable_idx hold the indices
 		// for the left and right child nodes respectively.
@@ -54,14 +54,14 @@ public:
 			//if (!node.bounds.intersects(ray, rec.distance)) continue;
 
 			if (node.isLeaf()) {
-				auto ptr = hittables[node.right_chlid_hittable_idx];
+				auto ptr = hittables[node.right_child_hittable_idx];
 				hit_any |= ptr->ClosestIntersection(ray, rec);
 				continue;
 			}
 			else {
 				float left_dist{ _MISS_DIST }, right_dist{ _MISS_DIST };
 				int left_idx = node.left_child_idx;
-				int right_idx = node.right_chlid_hittable_idx;
+				int right_idx = node.right_child_hittable_idx;
 
 				bvh_nodes[left_idx].bounds.intersects(ray, rec.distance, left_dist);
 				bvh_nodes[right_idx].bounds.intersects(ray, rec.distance, right_dist);
@@ -107,11 +107,14 @@ public:
 		std::vector<const Hittable*> hittables;
 		int root_idx;
 
-		// top down
 		std::vector<std::tuple<aabb, const Hittable*>>& arr;
 		
+		// top down
 		aabb _get_partition_bounds(int start, int end);
-		int _build_bvh_rec(int start, int end);
+		int _build_bvh_rec1(int start, int end);
+		int _build_bvh_rec2(int start, int end);
+		void _find_optimal_split(int start, int end, const aabb& bounds, int& axis, float& split);
+		void _partition_by_split(int start, int end, int axis, float split, int& mid_idx);
 
 
 		// bottom up
