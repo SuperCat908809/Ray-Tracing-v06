@@ -379,7 +379,7 @@ void FirstApp::Run() {
 	printf("done.\n");
 
 	printf("Writing render to disk... ");
-	write_renderbuffer("../renders/Book 2/test_017.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
+	write_renderbuffer("../renders/Book 2/test_018.jpg"s, m.render_width, m.render_height, m.host_output_framebuffer);
 	printf("done.\n");
 }
 
