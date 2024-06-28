@@ -42,12 +42,12 @@ protected:
 
 
 template <typename GeoType, typename MatType>
-concept GeoDependant = std::derived_from<MatType, GeometryDependantMaterial<GeoType>>;
+concept GeoDependantMat = std::derived_from<MatType, GeometryDependantMaterial<GeoType>>;
 
 template <typename MatType>
-concept GeoIndependant = std::derived_from<MatType, GeoIndependantMaterial>;
+concept GeoIndependantMat = std::derived_from<MatType, GeoIndependantMaterial>;
 
 template <typename GeoType, typename MatType>
-concept GeoAcceptable = GeoIndependant<MatType> || GeoDependant<GeoType, MatType>;
+concept GeoAcceptableMat = GeoIndependantMat<MatType> || GeoDependantMat<GeoType, MatType>;
 
 #endif // MATERIAL_ABSTRACT_CLASS_H //

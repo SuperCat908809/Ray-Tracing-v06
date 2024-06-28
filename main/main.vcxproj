@@ -181,6 +181,7 @@
     </CudaCompile>
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="Renderer.cu" />
+    <CudaCompile Include="Scenes.cu" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuHostRND.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="material.cuh" />
     <ClInclude Include="cu_Cameras.cuh" />
     <ClInclude Include="HittableList.cuh" />
+    <ClInclude Include="Scenes.h" />
     <ClInclude Include="SphereHittable.cuh" />
     <ClInclude Include="cu_rtCommon.cuh" />
     <ClInclude Include="dmemory.cuh" />

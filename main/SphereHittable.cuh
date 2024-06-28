@@ -1,11 +1,14 @@
 #ifndef CU_GEOMETRY_CLASSES_H
 #define CU_GEOMETRY_CLASSES_H
 
-#include <glm/glm.hpp>
 #include <cuda_runtime.h>
+#include <glm/glm.hpp>
+
+#include "cuda_utils.cuh"
+
 #include "ray_data.cuh"
 #include "hittable.cuh"
-#include "cuda_utils.cuh"
+#include "material.cuh"
 
 
 __device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
@@ -69,7 +72,7 @@ class SphereHittable : public Hittable {
 
 public:
 
-	template <typename MatType> requires GeoAcceptable<Sphere, MatType>
+	template <typename MatType> requires GeoAcceptableMat<Sphere, MatType>
 	__device__ SphereHittable(const Sphere* sphere, const MatType* mat_ptr) : sphere(sphere), mat_ptr(mat_ptr) {}
 
 	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
@@ -130,7 +133,7 @@ class MovingSphereHittable : public Hittable {
 
 public:
 
-	template <typename MatType> requires GeoAcceptable<MovingSphere, MatType>
+	template <typename MatType> requires GeoAcceptableMat<MovingSphere, MatType>
 	__device__ MovingSphereHittable(const MovingSphere* moving_sphere, const MatType* mat_ptr) : moving_sphere(moving_sphere), mat_ptr(mat_ptr) {}
 
 	__device__ virtual bool ClosestIntersection(const Ray& ray, RayPayload& rec) const override {
@@ -193,7 +196,7 @@ public:
 		_delete();
 	}
 
-	template <typename MatType> requires GeoAcceptable<Sphere, MatType>
+	template <typename MatType> requires GeoAcceptableMat<Sphere, MatType>
 	static SphereHandle MakeSphere(const Sphere& sphere, MatType* mat_ptr) {
 		SphereHandle sp{};
 		sp.bounds = getSphereBounds(sphere);
@@ -204,7 +207,7 @@ public:
 		return sp;
 	}
 
-	template <typename MatType> requires GeoAcceptable<MovingSphere, MatType>
+	template <typename MatType> requires GeoAcceptableMat<MovingSphere, MatType>
 	static SphereHandle MakeMovingSphere(const MovingSphere& sphere, MatType* mat_ptr) {
 		SphereHandle sp{};
 		sp.bounds = getMovingSphereBounds(sphere);

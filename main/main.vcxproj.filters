@@ -44,6 +44,9 @@
     <CudaCompile Include="BVH.cu">
       <Filter>RT Engine\Geometry</Filter>
     </CudaCompile>
+    <CudaCompile Include="Scenes.cu">
+      <Filter>RT Engine\Geometry</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glm_utils.h">
@@ -132,6 +135,9 @@
     </ClInclude>
     <ClInclude Include="cuda_utils.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenes.h">
+      <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

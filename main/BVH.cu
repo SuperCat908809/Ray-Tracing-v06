@@ -1,11 +1,110 @@
 #include "BVH.cuh"
 
+#include <cuda_runtime.h>
+#include <glm/glm.hpp>
 #include <vector>
 #include <tuple>
 #include <algorithm>
 
 #include "cuError.h"
 #include "cuda_utils.cuh"
+
+#include "ray_data.cuh"
+#include "hittable.cuh"
+#include "aabb.cuh"
+
+
+#define _PRIO_QUEUE_ELEM_COUNT (32)
+#define _USE_PRIO_QUEUE false
+struct BVH::priority_queue {
+	int indices[_PRIO_QUEUE_ELEM_COUNT];
+	int head = 0;
+#if _USE_PRIO_QUEUE
+	float distances[_PRIO_QUEUE_ELEM_COUNT];
+#endif
+
+	__device__ bool isEmpty() const { return head == 0; }
+	__device__ int  dequeue()		{ return indices[--head]; }
+	__device__ void enqueue(int idx, float dist);
+};
+
+__device__ void BVH::priority_queue::enqueue(int idx, float dist) {
+#if !_USE_PRIO_QUEUE
+	indices[head] = idx;
+	head++;
+
+#else
+	indices[head] = idx;
+	head++;
+	distances[head] = dist;
+
+	for (int i = head - 1; i >= 1; i--) {
+		if (distances[i] > distances[i - 1]) {
+			cuda_swap(distances[i], distances[i - 1]);
+			cuda_swap(indices[i], indices[i - 1]);
+		}
+		else break;
+	}
+#endif
+}
+
+__device__ BVH::BVH(const Node* bvh_nodes, const Hittable** hittables, int root_idx)
+	: bvh_nodes(bvh_nodes), hittables(hittables), root_idx(root_idx) {}
+
+__device__ bool BVH::ClosestIntersection(const Ray& ray, RayPayload& rec) const {
+
+	priority_queue q{};
+
+	float root_dist;
+	if (!bvh_nodes[root_idx].bounds.intersects(ray, rec.distance, root_dist)) return false;
+
+	q.enqueue(root_idx, root_dist);
+
+	bool hit_any = false;
+
+	while (!q.isEmpty()) {
+		int idx = q.dequeue();
+		const Node& node = bvh_nodes[idx];
+
+		if (node.isLeaf()) {
+			auto ptr = hittables[node.right_child_hittable_idx];
+			hit_any |= ptr->ClosestIntersection(ray, rec);
+			continue;
+		}
+		else {
+			float left_dist{ _MISS_DIST }, right_dist{ _MISS_DIST };
+			int left_idx = node.left_child_idx;
+			int right_idx = node.right_child_hittable_idx;
+
+#if _USE_PRIO_QUEUE
+			if (bvh_nodes[left_idx].bounds.intersects(ray, rec.distance, left_dist)) {
+				q.enqueue(left_idx, left_dist);
+			}
+			if (bvh_nodes[right_idx].bounds.intersects(ray, rec.distance, right_dist)) {
+				q.enqueue(right_idx, right_dist);
+			}
+#else
+			bvh_nodes[left_idx].bounds.intersects(ray, rec.distance, left_dist);
+			bvh_nodes[right_idx].bounds.intersects(ray, rec.distance, right_dist);
+
+			// assert that left is closer for next step
+			if (left_dist > right_dist) {
+				cuda_swap(left_idx, right_idx);
+				cuda_swap(left_dist, right_dist);
+			}
+
+			if (right_dist < rec.distance) q.enqueue(right_idx, right_dist);
+			if (left_dist < rec.distance) q.enqueue(left_idx, left_dist); // push then increment
+			// left is closer so it is pushed last to be popped first
+#endif
+
+			continue;
+		}
+	}
+
+	return hit_any;
+}
+
 
 
 BVH_Handle::BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables) {
