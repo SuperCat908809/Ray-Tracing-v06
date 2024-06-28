@@ -14,7 +14,7 @@ class aabb {
 public:
 	// float maximum in min and float minimum in max guarantees that all rays will 'miss' this aabb and guarantees that 
 	// expanding this aabb by another will equal the other, effectively initialising it.
-	__host__ __device__ aabb() : min(3.402823466e+38F), max(-3.402823466e+38F) {}
+	__host__ __device__ aabb() : min(1e9f), max(-1e9f) {}
 	__host__ __device__ aabb(glm::vec3 min, glm::vec3 max) : min(min), max(max) {}
 	__host__ __device__ aabb(const aabb& a, const aabb& b) : min(glm::min(a.min, b.min)), max(glm::max(a.max, b.max)) {}
 
@@ -50,6 +50,21 @@ public:
 			return span.x > span.z ? 0 : 2;
 		else
 			return span.y > span.z ? 1 : 2;
+	}
+
+	__host__ __device__ float surface_area() const {
+		glm::vec3 span = max - min;
+		if (span.x < 0 || span.y < 0 || span.z < 0) return 0.0f;
+
+		float cost = 0.0f;
+		cost += span.x * span.y;
+		cost += span.x * span.z;
+		cost += span.y * span.z;
+		return 2.0f * cost;
+	}
+
+	__host__ __device__ glm::vec3 centeroid() const {
+		return (max + min) * 0.5f;
 	}
 };
 

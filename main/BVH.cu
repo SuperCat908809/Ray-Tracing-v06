@@ -8,69 +8,91 @@
 #include "cuda_utils.cuh"
 
 
-void BVH_Handle::_delete() {
-	CUDA_ASSERT(cudaFree(bvh));
-	CUDA_ASSERT(cudaFree(bvh_nodes));
-	CUDA_ASSERT(cudaFree(hittables));
+BVH_Handle::BVH_Handle(aabb bounds, int root_idx, std::vector<BVH::Node>& nodes, std::vector<const Hittable*>& hittables) {
+	BVH_Handle::bounds = bounds;
+
+	CUDA_ASSERT(cudaMalloc((void**)&d_hittables, sizeof(const Hittable*) * hittables.size()));
+	CUDA_ASSERT(cudaMemcpy(d_hittables, hittables.data(), sizeof(const Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
+
+	CUDA_ASSERT(cudaMalloc((void**)&d_bvh_nodes, sizeof(BVH::Node) * nodes.size()));
+	CUDA_ASSERT(cudaMemcpy(d_bvh_nodes, nodes.data(), sizeof(BVH::Node) * nodes.size(), cudaMemcpyHostToDevice));
+
+	d_bvh = newOnDevice<BVH>(d_bvh_nodes, d_hittables, root_idx);
 }
 
 BVH_Handle::~BVH_Handle() {
 	_delete();
 }
 
-BVH_Handle::BVH_Handle(BVH_Handle&& bvhh) {
-	bvh = bvhh.bvh;
-	bvh_nodes = bvhh.bvh_nodes;
-	hittables = bvhh.hittables;
+void BVH_Handle::_delete() {
+	CUDA_ASSERT(cudaFree(d_bvh));
+	CUDA_ASSERT(cudaFree(d_bvh_nodes));
+	CUDA_ASSERT(cudaFree(d_hittables));
+}
 
-	bvhh.bvh = nullptr;
-	bvhh.bvh_nodes = nullptr;
-	bvhh.hittables = nullptr;
+BVH_Handle::BVH_Handle(BVH_Handle&& bvhh) {
+	d_bvh = bvhh.d_bvh;
+	d_bvh_nodes = bvhh.d_bvh_nodes;
+	d_hittables = bvhh.d_hittables;
+
+	bvhh.d_bvh = nullptr;
+	bvhh.d_bvh_nodes = nullptr;
+	bvhh.d_hittables = nullptr;
 }
 BVH_Handle& BVH_Handle::operator=(BVH_Handle&& bvhh) {
 	_delete();
 
-	bvh = bvhh.bvh;
-	bvh_nodes = bvhh.bvh_nodes;
-	hittables = bvhh.hittables;
+	d_bvh = bvhh.d_bvh;
+	d_bvh_nodes = bvhh.d_bvh_nodes;
+	d_hittables = bvhh.d_hittables;
 
-	bvhh.bvh = nullptr;
-	bvhh.bvh_nodes = nullptr;
-	bvhh.hittables = nullptr;
+	bvhh.d_bvh = nullptr;
+	bvhh.d_bvh_nodes = nullptr;
+	bvhh.d_hittables = nullptr;
 
 	return *this;
 }
 
 
-aabb BVH_Handle::Factory::_get_partition_bounds(int start, int end) {
-	aabb partition_bounds{};
-	for (int i = start; i < end; i++) {
-		partition_bounds += std::get<0>(arr[i]);
-	}
-	return partition_bounds;
+
+BVH_Handle::Factory::Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr)
+	: arr(arr) {}
+
+BVH_Handle BVH_Handle::Factory::MakeHandle() {
+	aabb bounds = bvh_nodes[root_idx].bounds;
+	return BVH_Handle(bounds, root_idx, bvh_nodes, hittables);
 }
 
-int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
+
+void BVH_Handle::Factory::BuildBVH_TopDown() {
+
+#if 1
+	root_idx = _build_bvh_rec1(0, arr.size());
+#else
+	root_idx = _build_bvh_rec2(0, arr.size());
+#endif
+
+	hittables.reserve(arr.size());
+	for (int i = 0; i < arr.size(); i++) {
+		hittables.push_back(std::get<1>(arr[i]));
+	}
+}
+
+int BVH_Handle::Factory::_build_bvh_rec1(int start, int end) {
 	aabb bounds = _get_partition_bounds(start, end);
 	int axis = bounds.longest_axis();
-	//auto comparator = (axis == 0) ? box_x_compare : ((axis == 1) ? box_y_compare : box_z_compare);
 	auto comparator = (axis == 0) ? box_x_compare : ((axis == 1) ? box_y_compare : box_z_compare);
 
 	int object_span = end - start;
 	if (object_span == 1) {
 		BVH::Node node;
 		node.bounds = bounds;
-		node.left_child_idx = -1;
-		node.right_chlid_hittable_idx = start;
+		node.left_child_idx = _IS_LEAF_CODE;
+		node.right_child_hittable_idx = start;
 		bvh_nodes.push_back(node);
 		return bvh_nodes.size() - 1;
 	}
 	else {
-		//std::sort(arr.begin() + start, arr.begin() + end,
-		//	[comparator](const std::tuple<aabb, const Hittable*>& a, const std::tuple<aabb, const Hittable*>& b)
-		//	{
-		//		return comparator(std::get<0>(a), std::get<0>(b));
-		//	});
 		std::sort(arr.begin() + start, arr.begin() + end,
 			[comparator](const std::tuple<aabb, const Hittable*>& a, const std::tuple<aabb, const Hittable*>& b) {
 				return comparator(std::get<0>(a), std::get<0>(b));
@@ -81,42 +103,183 @@ int BVH_Handle::Factory::_build_bvh_rec(int start, int end) {
 
 		BVH::Node node;
 		node.bounds = bounds;
-		node.left_child_idx = _build_bvh_rec(start, mid);
-		node.right_chlid_hittable_idx = _build_bvh_rec(mid, end);
+		node.left_child_idx = _build_bvh_rec1(start, mid);
+		node.right_child_hittable_idx = _build_bvh_rec1(mid, end);
 		bvh_nodes.push_back(node);
 		return bvh_nodes.size() - 1;
 	}
 }
 
+int BVH_Handle::Factory::_build_bvh_rec2(int start, int end) {
+	aabb bounds = _get_partition_bounds(start, end);
+	int object_span = end - start;
 
-BVH_Handle::Factory::Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr)
-	: arr(arr) {}
-
-BVH_Handle BVH_Handle::Factory::MakeBVH() {
-
-	int root_idx = _build_bvh_rec(0, arr.size());
-	aabb bounds = bvh_nodes[root_idx].bounds;
-
-	std::vector<const Hittable*> hittables;
-	hittables.reserve(arr.size());
-	for (int i = 0; i < arr.size(); i++) {
-		hittables.push_back(std::get<1>(arr[i]));
+	if (object_span == 1) {
+		BVH::Node node;
+		node.bounds = bounds;
+		node.left_child_idx = _IS_LEAF_CODE;
+		node.right_child_hittable_idx = start;
+		bvh_nodes.push_back(node);
+		return bvh_nodes.size() - 1;
 	}
 
-	const Hittable** d_hittables;
-	CUDA_ASSERT(cudaMalloc((void**)&d_hittables, sizeof(const Hittable*) * hittables.size()));
-	CUDA_ASSERT(cudaMemcpy(d_hittables, hittables.data(), sizeof(const Hittable*) * hittables.size(), cudaMemcpyHostToDevice));
+	int axis;
+	float split;
+	_find_optimal_split(start, end, bounds, axis, split);
 
-	BVH::Node* d_nodes;
-	CUDA_ASSERT(cudaMalloc((void**)&d_nodes, sizeof(BVH::Node) * bvh_nodes.size()));
-	CUDA_ASSERT(cudaMemcpy(d_nodes, bvh_nodes.data(), sizeof(BVH::Node) * bvh_nodes.size(), cudaMemcpyHostToDevice));
+	int mid_idx;
+	_partition_by_split(start, end, axis, split, mid_idx);
 
-	BVH* bvh = newOnDevice<BVH>(d_nodes, d_hittables, root_idx);
+	BVH::Node node;
+	node.bounds = bounds;
+	node.left_child_idx = _build_bvh_rec2(start, mid_idx);
+	node.right_child_hittable_idx = _build_bvh_rec2(mid_idx, end);
+	bvh_nodes.push_back(node);
+	return bvh_nodes.size() - 1;
+}
 
-	BVH_Handle handle{};
-	handle.bvh = bvh;
-	handle.bounds = bounds;
-	handle.bvh_nodes = d_nodes;
-	handle.hittables = d_hittables;
-	return handle;
+void BVH_Handle::Factory::_find_optimal_split(int start, int end, const aabb& bounds, int& best_axis, float& best_split) {
+	const int split_points = 16;
+	float best_cost = FLT_MAX;
+
+	for (int axis = 0; axis < 3; axis++) {
+		for (int split = 0; split < split_points; split++) {
+			// create N points equally spaced between 0 and 1 but not including either
+			// e.g. N == 1 : 0.50
+			//		N == 2 : 0.33, 0.66
+			//		N == 3 : 0.25, 0.50, 0.75
+			float pos = (split + 1.0f) / (split_points + 1.0f);
+			pos = glm::mix(bounds.getMin()[axis], bounds.getMax()[axis], pos);
+			aabb left_bounds{}, right_bounds{};
+			int left_count = 0, right_count = 0;
+
+			for (int i = start; i < end; i++) {
+				const aabb& b = std::get<0>(arr[i]);
+				glm::vec3 centeroid = b.centeroid();
+
+				// true if b belongs left of split
+				if (centeroid[axis] < pos) {
+					left_bounds += b;
+					left_count++;
+				}
+				else {
+					right_bounds += b;
+					right_count++;
+				}
+			}
+
+
+			float cost = left_bounds.surface_area() * left_count + right_bounds.surface_area() * right_count;
+
+			if (cost < best_cost) {
+				best_cost = cost;
+				best_axis = axis;
+				best_split = pos;
+			}
+		}
+	}
+}
+
+void BVH_Handle::Factory::_partition_by_split(int start, int end, int axis, float split_pos, int& mid_idx) {
+	// true if b belongs left of split
+	auto comparator = [axis, split_pos](const aabb& b) {
+		glm::vec3 centeroid = b.centeroid();
+		return centeroid[axis] < split_pos;
+	};
+
+	int i = start;
+	int j = end;
+	while (i < j) {
+		const aabb& b = std::get<0>(arr[i]);
+
+		if (comparator(b)) {
+			i++;
+		}
+		else {
+			std::swap(arr[i], arr[--j]);
+		}
+	}
+
+	//mid_idx = comparator(std::get<0>(arr[i])) ? i : i + 1;
+	mid_idx = i;
+}
+
+aabb BVH_Handle::Factory::_get_partition_bounds(int start, int end) {
+	aabb partition_bounds{};
+	for (int i = start; i < end; i++) {
+		partition_bounds += std::get<0>(arr[i]);
+	}
+	return partition_bounds;
+}
+
+
+void BVH_Handle::Factory::BuildBVH_BottomUp() {
+
+	for (int i = 0; i < arr.size(); i++) {
+
+		BVH::Node node;
+		node.bounds = std::get<0>(arr[i]);
+		node.left_child_idx = _IS_LEAF_CODE;
+		node.right_child_hittable_idx = hittables.size();
+		hittables.push_back(std::get<1>(arr[i]));
+
+		building_nodes.push_back(std::make_tuple(node, 1, bvh_nodes.size()));
+		bvh_nodes.push_back(node);
+	}
+
+	while (building_nodes.size() > 1) {
+		int a, b;
+		_find_optimal_merge(a, b);
+		_merge_nodes(a, b);
+	}
+
+	root_idx = std::get<2>(building_nodes[0]);
+}
+
+void BVH_Handle::Factory::_find_optimal_merge(int& a_idx, int& b_idx) {
+	float best_cost = FLT_MAX;
+
+	for (int a = 0; a < building_nodes.size(); a++) {
+		for (int b = a + 1; b < building_nodes.size(); b++) {
+			if (a == b) continue;
+
+			auto& a_node = building_nodes[a];
+			auto& b_node = building_nodes[b];
+
+			aabb new_bounds = aabb(std::get<0>(a_node).bounds, std::get<0>(b_node).bounds);
+			int hittable_count = std::get<1>(a_node) + std::get<1>(b_node);
+			float new_cost = new_bounds.surface_area() * hittable_count;
+
+			if (new_cost < best_cost) {
+				a_idx = a;
+				b_idx = b;
+				best_cost = new_cost;
+			}
+		}
+	}
+}
+
+void BVH_Handle::Factory::_merge_nodes(int a_idx, int b_idx) {
+	auto& a = building_nodes[a_idx];
+	auto& b = building_nodes[b_idx];
+
+	int hittable_count = std::get<1>(a) + std::get<1>(b);
+	aabb bounds = aabb(std::get<0>(a).bounds, std::get<0>(b).bounds);
+	int a_list_idx = std::get<2>(a);
+	int b_list_idx = std::get<2>(b);
+
+	BVH::Node node;
+	node.bounds = bounds;
+	node.left_child_idx = a_list_idx;
+	node.right_child_hittable_idx = b_list_idx;
+
+
+	// delete the later index first otherwise everything shifts over and your index points to the wrong element
+	if (a_idx > b_idx) std::swap(a_idx, b_idx);
+	building_nodes.erase(building_nodes.begin() + b_idx);
+	building_nodes.erase(building_nodes.begin() + a_idx);
+
+
+	building_nodes.push_back(std::make_tuple(node, hittable_count, bvh_nodes.size()));
+	bvh_nodes.push_back(node);
 }

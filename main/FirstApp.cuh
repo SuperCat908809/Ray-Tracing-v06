@@ -66,7 +66,6 @@ class SceneBook2BVH {
 	HittableList* world{ nullptr };
 	Hittable** hittable_list{ nullptr };
 	std::vector<SphereHandle> sphere_handles;
-	//std::vector<Hittable*> bvh_nodes;
 	BVH_Handle bvh;
 
 	void _delete();
@@ -76,18 +75,11 @@ class SceneBook2BVH {
 public:
 
 	class Factory {
-
-		//aabb world_bounds;
-		//HittableList* world;
-		//Hittable** hittable_list;
 		std::vector<SphereHandle> sphere_handles;
-		//std::vector<Hittable*> bvh_nodes;
 
 		cuHostRND host_rnd{ 512,1984 };
 
 		void _populate_world();
-		//const Hittable* _build_bvh();
-		//const Hittable* _build_bvh_rec(std::vector<std::tuple<aabb, const Hittable*>>& arr, int start, int end);
 
 	public:
 
