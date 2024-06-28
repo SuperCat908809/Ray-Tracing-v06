@@ -4,8 +4,8 @@
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
-#include "glm_utils.h"
-#include "ray_data.cuh"
+#include "../../utilities/glm_utils.h"
+#include "../ray_data.cuh"
 
 
 class aabb {

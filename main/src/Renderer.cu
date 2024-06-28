@@ -6,22 +6,22 @@
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
-#include "cuError.h"
-#include "timers.h"
+#include "utilities/cuda_utilities/cuError.h"
+#include "utilities/timers.h"
 
-#include "darray.cuh"
-#include "dobj.cuh"
+#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
+#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
 
-#include "ray_data.cuh"
+#include "rt_engine/ray_data.cuh"
 
-#include "cu_Cameras.cuh"
-#include "material.cuh"
-#include "hittable.cuh"
+#include "rt_engine/geometry/hittable.cuh"
+#include "rt_engine/geometry/HittableList.cuh"
 
-#include "cu_Materials.cuh"
-#include "HittableList.cuh"
+#include "rt_engine/shaders/cu_Cameras.cuh"
+#include "rt_engine/shaders/cu_Materials.cuh"
+#include "rt_engine/shaders/material.cuh"
 
-#include "cuThreadManagement.cuh"
+#include "utilities/cuda_utilities/cuThreadManagement.cuh"
 
 
 __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cuRandom* rngs) {

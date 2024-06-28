@@ -3,7 +3,7 @@
 
 #include <chrono>
 #include <cuda.h>
-#include "cuError.h"
+#include "cuda_utilities/cuError.h"
 
 
 class cudaTimer {

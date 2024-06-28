@@ -4,9 +4,9 @@
 #include <math.h>
 #include <glm/glm.hpp>
 #include <cuda_runtime.h>
-#include "cuRandom.cuh"
-#include "ray_data.cuh"
-#include "glm_utils.h"
+#include "../../utilities/cuda_utilities/cuRandom.cuh"
+#include "../ray_data.cuh"
+#include "../../utilities/glm_utils.h"
 
 
 struct PinholeCamera {

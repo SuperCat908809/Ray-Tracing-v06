@@ -6,10 +6,10 @@
 #include <tuple>
 #include <algorithm>
 
-#include "cuError.h"
-#include "cuda_utils.cuh"
+#include "../../utilities/cuda_utilities/cuError.h"
+#include "../../utilities/cuda_utilities/cuda_utils.cuh"
 
-#include "ray_data.cuh"
+#include "../ray_data.cuh"
 #include "hittable.cuh"
 #include "aabb.cuh"
 

@@ -3,7 +3,7 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "cuError.h"
+#include "../cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
 //#include "cuAllocators.cuh"

@@ -2,7 +2,7 @@
 #define HITTABLE_LIST_CLASS_H
 
 #include <cuda_runtime.h>
-#include "ray_data.cuh"
+#include "../ray_data.cuh"
 #include "hittable.cuh"
 #include "aabb.cuh"
 

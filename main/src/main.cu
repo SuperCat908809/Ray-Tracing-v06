@@ -1,5 +1,5 @@
 #include <iostream>
-#include "cuError.h"
+#include "utilities/cuda_utilities/cuError.h"
 #include "FirstApp.cuh"
 
 int main() {

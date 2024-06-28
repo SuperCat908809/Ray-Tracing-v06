@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include "cuError.h"
-#include "darray.cuh"
+#include "cuda_objects/darray.cuh"
 
 
 void cuHostRND::_populate_buffer() {

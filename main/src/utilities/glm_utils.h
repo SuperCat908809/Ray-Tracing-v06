@@ -76,7 +76,7 @@ namespace glm {
 
 #include <curand_kernel.h>
 #include <glm/glm.hpp>
-#include "cuRandom.cuh"
+#include "cuda_utilities/cuRandom.cuh"
 
 
 namespace glm {

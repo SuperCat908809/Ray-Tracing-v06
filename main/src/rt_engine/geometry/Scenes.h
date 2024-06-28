@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "cuHostRND.h"
+#include "../../utilities/cuda_utilities/cuHostRND.h"
 
 #include "aabb.cuh"
 #include "hittable.cuh"

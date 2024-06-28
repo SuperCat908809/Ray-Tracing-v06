@@ -5,14 +5,15 @@
 #include <glm/glm.hpp>
 #include <curand_kernel.h>
 
-#include "darray.cuh"
-#include "dobj.cuh"
-#include "cuRandom.cuh"
+#include "utilities/cuda_utilities/cuRandom.cuh"
+#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
+#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
 
-#include "cu_Cameras.cuh"
-#include "material.cuh"
-#include "hittable.cuh"
-#include "HittableList.cuh"
+#include "rt_engine/geometry/hittable.cuh"
+#include "rt_engine/geometry/HittableList.cuh"
+
+#include "rt_engine/shaders/cu_Cameras.cuh"
+#include "rt_engine/shaders/material.cuh"
 
 
 class Renderer {

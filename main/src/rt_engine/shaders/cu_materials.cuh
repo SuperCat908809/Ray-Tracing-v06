@@ -3,9 +3,11 @@
 
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
-#include "glm_utils.h"
-#include "ray_data.cuh"
-#include "cuRandom.cuh"
+
+#include "../../utilities/glm_utils.h"
+#include "../../utilities/cuda_utilities/cuRandom.cuh"
+
+#include "../ray_data.cuh"
 #include "material.cuh"
 #include "texture.cuh"
 #include "cu_Textures.cuh"
