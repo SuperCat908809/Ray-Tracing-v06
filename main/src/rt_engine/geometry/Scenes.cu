@@ -4,10 +4,10 @@
 #include <vector>
 #include <tuple>
 
-#include "cuda_utils.cuh"
-#include "cuError.h"
-#include "timers.h"
-#include "cuHostRND.h"
+#include "../../utilities/cuda_utilities/cuda_utils.cuh"
+#include "../../utilities/cuda_utilities/cuError.h"
+#include "../../utilities/cuda_utilities/cuHostRND.h"
+#include "../../utilities/timers.h"
 
 #include "aabb.cuh"
 #include "hittable.cuh"
@@ -15,8 +15,8 @@
 #include "SphereHittable.cuh"
 #include "BVH.cuh"
 
-#include "material.cuh"
-#include "cu_Materials.cuh"
+#include "../shaders/material.cuh"
+#include "../shaders/cu_Materials.cuh"
 
 
 SceneBook1::SceneBook1(SceneBook1&& scene) {

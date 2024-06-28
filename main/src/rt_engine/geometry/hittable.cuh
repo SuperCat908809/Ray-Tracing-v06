@@ -2,7 +2,7 @@
 #define HITTABLE_ABSTRACT_CLASS_H
 
 #include <cuda_runtime.h>
-#include "ray_data.cuh"
+#include "../ray_data.cuh"
 #include <concepts>
 
 // abstract class that all hittable classes should inherit from

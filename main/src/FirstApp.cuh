@@ -4,9 +4,9 @@
 #include <inttypes.h>
 #include <glm/glm.hpp>
 
-#include "cu_Cameras.cuh"
+#include "rt_engine/shaders/cu_Cameras.cuh"
 #include "Renderer.cuh"
-#include "Scenes.h"
+#include "rt_engine/geometry/Scenes.h"
 
 
 class FirstApp {

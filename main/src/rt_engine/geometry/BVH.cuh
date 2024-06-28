@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "ray_data.cuh"
+#include "../ray_data.cuh"
 #include "hittable.cuh"
 #include "aabb.cuh"
 

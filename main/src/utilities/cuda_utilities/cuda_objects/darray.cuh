@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include <cuda_runtime.h>
-#include "cuError.h"
+#include "../cuError.h"
 #include "dmemory.cuh"
 #include <concepts>
 #include <vector>
@@ -12,7 +12,7 @@
 
 #ifdef __CUDACC__
 #include <device_launch_parameters.h>
-#include "ceilDiv.h"
+#include "../../ceilDiv.h"
 
 template <typename T>
 __global__ void _destruct_objs(T* objs_ptr, size_t length) {

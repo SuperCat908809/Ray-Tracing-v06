@@ -13,8 +13,8 @@
 #include <curand_kernel.h>
 
 #include "ray_data.cuh"
-#include "cuError.h"
-#include "glm_utils.h"
+#include "../utilities/cuda_utilities/cuError.h"
+#include "../utilities/glm_utils.h"
 
 inline constexpr int ceilDiv(int n, int d) { return (n + d - 1) / d; }
 

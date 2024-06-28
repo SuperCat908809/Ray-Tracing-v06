@@ -8,9 +8,9 @@
 #include <device_launch_parameters.h>
 #include <concepts>
 #include <vector>
-#include "cuError.h"
+#include "../cuError.h"
 
-#include "ceilDiv.h"
+#include "../../ceilDiv.h"
 
 
 #ifdef __CUDACC__

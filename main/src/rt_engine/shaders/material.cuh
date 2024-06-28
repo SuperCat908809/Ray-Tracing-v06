@@ -3,9 +3,12 @@
 
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
-#include "cuRandom.cuh"
-#include "ray_data.cuh"
-#include "hittable.cuh"
+
+#include "../../utilities/cuda_utilities/cuRandom.cuh"
+
+#include "../ray_data.cuh"
+
+#include "../geometry/hittable.cuh"
 
 
 // abstract class that all material classes should inherit from

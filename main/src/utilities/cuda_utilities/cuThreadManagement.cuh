@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "ceilDiv.h"
+#include "../ceilDiv.h"
 
 
 #define THREAD_LOCAL_X_ID (threadIdx.x)

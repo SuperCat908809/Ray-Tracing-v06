@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include <cuda_runtime.h>
-#include "cuError.h"
+#include "../cuError.h"
 
 
 class dmemory {

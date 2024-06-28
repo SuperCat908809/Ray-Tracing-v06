@@ -18,135 +18,135 @@
     <Filter Include="RT Engine">
       <UniqueIdentifier>{172f45ce-42c6-4e9c-b41b-4949fc14a669}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RT Engine\Graphics">
-      <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RT Engine\Geometry">
       <UniqueIdentifier>{11f60267-4914-4c54-9903-5e7290379da4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utilities\CUDA utilities\CUDA Objects">
       <UniqueIdentifier>{ad024fae-0382-4fb1-892c-24ed5cd592a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RT Engine\Shaders">
+      <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="main.cu">
+    <CudaCompile Include="src\FirstApp.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="Renderer.cu">
+    <CudaCompile Include="src\main.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="FirstApp.cu">
+    <CudaCompile Include="src\Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuHostRND.cpp">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </CudaCompile>
-    <CudaCompile Include="BVH.cu">
+    <CudaCompile Include="src\rt_engine\geometry\BVH.cu">
       <Filter>RT Engine\Geometry</Filter>
     </CudaCompile>
-    <CudaCompile Include="Scenes.cu">
+    <CudaCompile Include="src\rt_engine\geometry\Scenes.cu">
       <Filter>RT Engine\Geometry</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glm_utils.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="SphereHittable.cuh">
-      <Filter>RT Engine\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="cu_Cameras.cuh">
-      <Filter>RT Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="cu_Materials.cuh">
-      <Filter>RT Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.cuh">
+    <ClInclude Include="src\FirstApp.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="FirstApp.cuh">
+    <ClInclude Include="src\Renderer.cuh">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="cuError.h">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="cuHostRND.h">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="hittable.cuh">
-      <Filter>RT Engine\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="ray_data.cuh">
+    <ClInclude Include="src\rt_engine\cu_rtCommon.cuh">
       <Filter>RT Engine</Filter>
     </ClInclude>
-    <ClInclude Include="cu_rtCommon.cuh">
+    <ClInclude Include="src\rt_engine\ray_data.cuh">
       <Filter>RT Engine</Filter>
     </ClInclude>
-    <ClInclude Include="HittableList.cuh">
+    <ClInclude Include="src\rt_engine\shaders\cu_Cameras.cuh">
+      <Filter>RT Engine\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\shaders\cu_materials.cuh">
+      <Filter>RT Engine\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\shaders\cu_Textures.cuh">
+      <Filter>RT Engine\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\shaders\material.cuh">
+      <Filter>RT Engine\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\shaders\texture.cuh">
+      <Filter>RT Engine\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\geometry\aabb.cuh">
       <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
-    <ClInclude Include="material.cuh">
-      <Filter>RT Engine\Graphics</Filter>
+    <ClInclude Include="src\rt_engine\geometry\BVH.cuh">
+      <Filter>RT Engine\Geometry</Filter>
     </ClInclude>
-    <ClInclude Include="ceilDiv.h">
+    <ClInclude Include="src\rt_engine\geometry\bvh_node.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\geometry\hittable.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\geometry\HittableList.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\geometry\Scenes.h">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rt_engine\geometry\SphereHittable.cuh">
+      <Filter>RT Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\ceilDiv.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="dAbstracts.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="darray.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="dmemory.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="dobj.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="cuRandom.cuh">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="cuIterators.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="cuThreadManagement.cuh">
-      <Filter>Utilities\CUDA utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="dptrarray.cuh">
-      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="aabb.cuh">
-      <Filter>RT Engine\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="bvh_node.cuh">
-      <Filter>RT Engine\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="texture.cuh">
-      <Filter>RT Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="cu_Textures.cuh">
-      <Filter>RT Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="timers.h">
+    <ClInclude Include="src\utilities\glm_utils.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="BVH.cuh">
-      <Filter>RT Engine\Geometry</Filter>
+    <ClInclude Include="src\utilities\timers.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="cuda_utils.cuh">
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_utils.cuh">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Scenes.h">
-      <Filter>RT Engine\Geometry</Filter>
+    <ClInclude Include="src\utilities\cuda_utilities\cuError.h">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuHostRND.h">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuRandom.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuThreadManagement.cuh">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\cuIterators.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\darray.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dmemory.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dobj.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dptrarray.cuh">
+      <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
       <Filter>externals</Filter>
     </ClCompile>
+    <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
+      <Filter>Utilities\CUDA utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="dAbstracts.inl">
+    <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </None>
   </ItemGroup>

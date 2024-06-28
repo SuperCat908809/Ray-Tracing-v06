@@ -4,11 +4,11 @@
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
 
-#include "cuda_utils.cuh"
+#include "../../utilities/cuda_utilities/cuda_utils.cuh"
 
-#include "ray_data.cuh"
+#include "../ray_data.cuh"
 #include "hittable.cuh"
-#include "material.cuh"
+#include "../shaders/material.cuh"
 
 
 __device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
