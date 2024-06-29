@@ -44,6 +44,9 @@
     <CudaCompile Include="src\rt_engine\geometry\Scenes.cu">
       <Filter>RT Engine\Geometry</Filter>
     </CudaCompile>
+    <CudaCompile Include="src\rt_engine\geometry\SphereHittable.cu">
+      <Filter>RT Engine\Geometry</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\FirstApp.cuh">

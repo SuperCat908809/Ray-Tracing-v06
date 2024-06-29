@@ -181,6 +181,7 @@
     <CudaCompile Include="src\Renderer.cu" />
     <CudaCompile Include="src\rt_engine\geometry\BVH.cu" />
     <CudaCompile Include="src\rt_engine\geometry\Scenes.cu" />
+    <CudaCompile Include="src\rt_engine\geometry\SphereHittable.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp" />
