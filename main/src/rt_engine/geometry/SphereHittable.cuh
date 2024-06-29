@@ -7,6 +7,7 @@
 #include "../../utilities/cuda_utilities/cuda_utils.cuh"
 
 #include "../ray_data.cuh"
+#include "aabb.cuh"
 #include "hittable.cuh"
 #include "../shaders/material.cuh"
 
