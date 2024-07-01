@@ -11,7 +11,8 @@
 #include "../shaders/material.cuh"
 
 
-__device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
+#if 0
+__host__ __device__ float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
 	glm::vec3 oc = ray.o - center;
 
 	float a = glm::dot(ray.d, ray.d);
@@ -30,6 +31,7 @@ __device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 c
 
 	return t;
 }
+#endif
 
 
 

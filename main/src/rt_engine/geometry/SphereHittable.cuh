@@ -12,7 +12,25 @@
 #include "../shaders/material.cuh"
 
 
-__device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius);
+__host__ __device__ inline float _sphere_closest_intersection(const Ray& ray, glm::vec3 center, float radius) {
+	glm::vec3 oc = ray.o - center;
+
+	float a = glm::dot(ray.d, ray.d);
+	float hb = glm::dot(ray.d, oc);
+	float c = glm::dot(oc, oc) - radius * radius;
+	float d = hb * hb - a * c;
+	if (d <= 0) return _MISS_DIST;
+
+	d = sqrtf(d);
+	float t = (-hb - d) / a;
+	if (t < 0.0f) {
+		t = (-hb + d) / a;
+		if (t < 0.0f)
+			return _MISS_DIST;
+	}
+
+	return t;
+}
 
 class Sphere : public Geometry {
 public:
