@@ -1,6 +1,11 @@
 #include <iostream>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include "utilities/cuda_utilities/cuError.h"
 #include "FirstApp.cuh"
+
 
 int main() {
 

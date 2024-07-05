@@ -14,8 +14,8 @@ using namespace std::string_literals;
 
 
 FirstApp FirstApp::MakeApp() {
-	uint32_t _width = 1920 * 2;
-	uint32_t _height = 1080 * 2;
+	uint32_t _width = 1280;
+	uint32_t _height = 720;
 
 	printf("Building MotionBlurCamera object... ");
 	glm::vec3 lookfrom(13, 2, 3);
@@ -32,7 +32,7 @@ FirstApp FirstApp::MakeApp() {
 	printf("SceneBook2BVH object built.\n");
 		
 	printf("Making Renderer object...\n");
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1024, 16, cam, scene_desc.getWorldPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1, 4, cam, scene_desc.getWorldPtr());
 	printf("Renderer object built.\n");
 
 	glm::vec4* host_output_framebuffer{};

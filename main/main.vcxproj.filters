@@ -5,9 +5,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="externals">
-      <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -26,6 +23,9 @@
     </Filter>
     <Filter Include="RT Engine\Shaders">
       <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -139,10 +139,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stb.cpp">
-      <Filter>externals</Filter>
+      <Filter>Libraries</Filter>
     </ClCompile>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
       <Filter>Utilities\CUDA utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\glad.c">
+      <Filter>Libraries</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
