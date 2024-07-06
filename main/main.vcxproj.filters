@@ -138,13 +138,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\stb.cpp">
-      <Filter>Libraries</Filter>
-    </ClCompile>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
       <Filter>Utilities\CUDA utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\glad.c">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\stb.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
   </ItemGroup>
