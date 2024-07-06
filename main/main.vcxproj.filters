@@ -27,6 +27,9 @@
     <Filter Include="Libraries">
       <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\imgui">
+      <UniqueIdentifier>{2235c7b3-bf25-479b-95d7-8313b677c238}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\FirstApp.cu">
@@ -146,6 +149,18 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\stb.cpp">
       <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_draw.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_tables.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_widgets.cpp">
+      <Filter>Libraries\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

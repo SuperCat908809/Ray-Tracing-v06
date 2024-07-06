@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <imgui/imgui.h>
+
 #include "utilities/cuda_utilities/cuError.h"
 #include "FirstApp.cuh"
 
