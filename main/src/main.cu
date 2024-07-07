@@ -35,13 +35,15 @@ int nmain() {
 
 const char* vert_shader_source = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"uniform float size;\n"
 "void main() {\n"
-"    gl_Position = vec4(aPos, 1.0f);\n"
+"    gl_Position = vec4(size * aPos, 1.0f);\n"
 "}\0";
 const char* frag_shader_source = "#version 330 core\n"
 "out vec4 frag_color;\n"
+"uniform vec4 color;\n"
 "void main() {\n"
-"    frag_color = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
+"    frag_color = vec4(color);\n"
 "}\0";
 
 float vertices[] = {
@@ -124,6 +126,9 @@ int main() {
 
 	bool b_widget_open = true;
 	bool first_ctrl_w = true;
+	bool draw_triangle = true;
+	float triangle_size = 1.0f;
+	float triangle_color[] = {0.8f, 0.3f, 0.02f, 1.0f};
 
 	while (!glfwWindowShouldClose(window)) {
 		// being frame
@@ -154,30 +159,45 @@ int main() {
 			}
 
 			ImGui::Text("Hello there adventurer!");
+			ImGui::Checkbox("Draw triangle", &draw_triangle);
+			ImGui::SliderFloat("Triangle size", &triangle_size, 0.05f, 2.0f);
+			ImGui::ColorEdit4("Triangle color", triangle_color, ImGuiColorEditFlags_PickerHueWheel);
+
 			ImGui::End();
 		}
 
 
 
-		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_Q)) {
-			glfwSetWindowShouldClose(window, true);
-			continue;
-		}
+		if (!io.WantCaptureKeyboard) {
 
-		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W)) {
-			if (first_ctrl_w) {
-				b_widget_open = !b_widget_open;
-				first_ctrl_w = false;
+			// close program
+			if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_Q)) {
+				glfwSetWindowShouldClose(window, true);
+				continue;
 			}
-		}
-		else {
-			first_ctrl_w = true;
+
+			// toggle widget
+			if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W)) {
+				if (first_ctrl_w) {
+					b_widget_open = !b_widget_open;
+					first_ctrl_w = false;
+				}
+			}
+			else {
+				first_ctrl_w = true;
+			}
+
 		}
 
 
-		glUseProgram(shader_program);
-		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		if (draw_triangle) {
+			glUseProgram(shader_program);
+			glUniform1f(glGetUniformLocation(shader_program, "size"), triangle_size);
+			glUniform4fv(glGetUniformLocation(shader_program, "color"), 1, triangle_color);
+
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
 
 
 		// render ImGUI last so its drawn on top
