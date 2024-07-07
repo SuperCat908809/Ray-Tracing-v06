@@ -139,6 +139,9 @@
     <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dptrarray.cuh">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
+    <ClInclude Include="src\pch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\include\imgui\imgui_impl_opengl3.cpp">
       <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pch.cpp">
+      <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
