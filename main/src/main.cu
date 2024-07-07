@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 #include "utilities/cuda_utilities/cuError.h"
 #include "FirstApp.cuh"
@@ -48,6 +50,41 @@ float vertices[] = {
 	 0.0f,  0.5f * sqrtf(3) * 2 / 3, 0.0f,
 };
 
+void make_mesh(uint32_t& vao, uint32_t& vbo) {
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void make_shader(uint32_t& shader_program) {
+	uint32_t vert_shader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vert_shader, 1, &vert_shader_source, nullptr);
+	glCompileShader(vert_shader);
+
+	uint32_t frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(frag_shader, 1, &frag_shader_source, nullptr);
+	glCompileShader(frag_shader);
+
+	shader_program = glCreateProgram();
+	glAttachShader(shader_program, vert_shader);
+	glAttachShader(shader_program, frag_shader);
+	glLinkProgram(shader_program);
+
+	glDetachShader(shader_program, vert_shader);
+	glDetachShader(shader_program, frag_shader);
+	glDeleteShader(vert_shader);
+	glDeleteShader(frag_shader);
+}
+
 int main() {
 
 	glfwInit();
@@ -66,54 +103,42 @@ int main() {
 	glfwMakeContextCurrent(window);
 	gladLoadGL();
 
-	glViewport(0, 0, 800, 800);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
 
 
-
-	uint32_t vert_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vert_shader, 1, &vert_shader_source, nullptr);
-	glCompileShader(vert_shader);
-
-	uint32_t frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(frag_shader, 1, &frag_shader_source, nullptr);
-	glCompileShader(frag_shader);
-
-	uint32_t shader_program = glCreateProgram();
-	glAttachShader(shader_program, vert_shader);
-	glAttachShader(shader_program, frag_shader);
-	glLinkProgram(shader_program);
-
-	glDetachShader(shader_program, vert_shader);
-	glDetachShader(shader_program, frag_shader);
-	glDeleteShader(vert_shader);
-	glDeleteShader(frag_shader);
-
-
+	uint32_t shader_program;
+	make_shader(shader_program);
 
 	uint32_t vao, vbo;
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
-	glEnableVertexAttribArray(0);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+	make_mesh(vao, vbo);
 
 
 	glfwPollEvents();
+	glViewport(0, 0, 800, 800);
 
 	while (!glfwWindowShouldClose(window)) {
 		// being frame
 		// clear screen to default color
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		// process ImGUI first as its the controller
+
+		ImGui::Begin("My name is window, ImGUI window");
+		ImGui::Text("Hello there adventurer!");
+		ImGui::End();
+
 
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
@@ -127,6 +152,11 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
+		// render ImGUI last so its drawn on top
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
 		// end frame
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -136,6 +166,10 @@ int main() {
 	glDeleteProgram(shader_program);
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

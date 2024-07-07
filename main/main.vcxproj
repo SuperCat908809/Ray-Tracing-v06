@@ -186,6 +186,8 @@
     <ClCompile Include="..\Libraries\include\glad\glad.c" />
     <ClCompile Include="..\Libraries\include\imgui\imgui.cpp" />
     <ClCompile Include="..\Libraries\include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Libraries\include\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\Libraries\include\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Libraries\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Libraries\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\Libraries\include\stb\stb.cpp" />
