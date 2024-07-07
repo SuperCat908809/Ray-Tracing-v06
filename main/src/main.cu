@@ -122,6 +122,9 @@ int main() {
 	glfwPollEvents();
 	glViewport(0, 0, 800, 800);
 
+	bool b_widget_open = true;
+	bool first_ctrl_w = true;
+
 	while (!glfwWindowShouldClose(window)) {
 		// being frame
 		// clear screen to default color
@@ -135,15 +138,40 @@ int main() {
 
 		// process ImGUI first as its the controller
 
-		ImGui::Begin("My name is window, ImGUI window");
-		ImGui::Text("Hello there adventurer!");
-		ImGui::End();
+		if (b_widget_open) {
+			ImGui::Begin("My name is window, ImGUI window", &b_widget_open, ImGuiWindowFlags_MenuBar);
+			// menu bar
+			if (ImGui::BeginMenuBar()) {
+				if (ImGui::BeginMenu("File")) {
+					if (ImGui::MenuItem("Toggle widget", "Ctrl+W")) { b_widget_open = !b_widget_open; }
+					if (ImGui::MenuItem("Close application", "Ctrl+Q")) {
+						glfwSetWindowShouldClose(window, true);
+						continue;
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenuBar();
+			}
+
+			ImGui::Text("Hello there adventurer!");
+			ImGui::End();
+		}
 
 
 
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_Q)) {
 			glfwSetWindowShouldClose(window, true);
 			continue;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W)) {
+			if (first_ctrl_w) {
+				b_widget_open = !b_widget_open;
+				first_ctrl_w = false;
+			}
+		}
+		else {
+			first_ctrl_w = true;
 		}
 
 
