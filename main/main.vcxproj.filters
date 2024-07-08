@@ -35,9 +35,6 @@
     <CudaCompile Include="src\FirstApp.cu">
       <Filter>Main</Filter>
     </CudaCompile>
-    <CudaCompile Include="src\main.cu">
-      <Filter>Main</Filter>
-    </CudaCompile>
     <CudaCompile Include="src\Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
@@ -172,6 +169,9 @@
       <Filter>Libraries\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>

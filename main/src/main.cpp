@@ -13,7 +13,7 @@
 #include "FirstApp.cuh"
 
 
-int nmain() {
+int main() {
 
 	{
 		printf("Creating FirstApp object...\n");
@@ -89,7 +89,7 @@ void make_shader(uint32_t& shader_program) {
 	glDeleteShader(frag_shader);
 }
 
-int main() {
+int nmain() {
 
 	glfwInit();
 

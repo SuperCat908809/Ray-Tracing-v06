@@ -23,16 +23,18 @@ FirstApp FirstApp::MakeApp() {
 	glm::vec3 up(0, 1, 0);
 	float fov = 30.0f;
 	float aspect = _width / (float)_height;
-	MotionBlurCamera cam(lookfrom, lookat, up, fov, aspect, 0.1f, 1.0f);
+	auto cam = new MotionBlurCamera(lookfrom, lookat, up, fov, aspect, 0.1f, 1.0f);
 	printf("done.\n");
 
 	printf("Building SceneBook2BVH object...\n");
 	SceneBook2BVH::Factory scene_factory{};
-	SceneBook2BVH scene_desc = scene_factory.MakeScene();
+	SceneBook2BVH scene = scene_factory.MakeScene();
+	auto scene_ptr = new SceneBook2BVH(std::move(scene));
 	printf("SceneBook2BVH object built.\n");
 		
 	printf("Making Renderer object...\n");
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1, 4, cam, scene_desc.getWorldPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1, 4, *cam, scene_ptr->getWorldPtr());
+	auto renderer_ptr = new Renderer(std::move(renderer));
 	printf("Renderer object built.\n");
 
 	glm::vec4* host_output_framebuffer{};
@@ -45,24 +47,54 @@ FirstApp FirstApp::MakeApp() {
 		_height,
 		cam,
 		host_output_framebuffer,
-		std::move(renderer),
-		std::move(scene_desc),
+		renderer_ptr,
+		scene_ptr,
 	});
 }
-FirstApp::~FirstApp() {
-	printf("Freeing host framebuffer allocation... ");
+
+void FirstApp::_delete() {
+	delete m.cam;
+	delete m.renderer;
+	delete m._sceneDesc;
 	CUDA_ASSERT(cudaFreeHost(m.host_output_framebuffer));
-	printf("done.\n");
+
+	m.cam = nullptr;
+	m.renderer = nullptr;
+	m._sceneDesc = nullptr;
+	m.host_output_framebuffer = nullptr;
 }
+FirstApp::~FirstApp() {
+	_delete();
+}
+
+FirstApp& FirstApp::operator=(FirstApp&& other) {
+	_delete();
+
+	m = std::move(other.m);
+
+	other.m.cam = nullptr;
+	other.m.host_output_framebuffer = nullptr;
+	other.m.renderer = nullptr;
+	other.m._sceneDesc = nullptr;
+
+	return *this;
+}
+FirstApp::FirstApp(FirstApp&& other) : m(std::move(m)) {
+	other.m.cam = nullptr;
+	other.m.host_output_framebuffer = nullptr;
+	other.m.renderer = nullptr;
+	other.m._sceneDesc = nullptr;
+}
+
 
 void write_renderbuffer(std::string filepath, uint32_t width, uint32_t height, glm::vec4* data);
 void FirstApp::Run() {
 	printf("Rendering scene...\n");
-	m.renderer.Render();
+	m.renderer->Render();
 	printf("Scene rendered.\n");
 
 	printf("Downloading render to host framebuffer... ");
-	m.renderer.DownloadRenderbuffer(m.host_output_framebuffer);
+	m.renderer->DownloadRenderbuffer(m.host_output_framebuffer);
 	printf("done.\n");
 
 	printf("Writing render to disk... ");

@@ -185,7 +185,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="src\FirstApp.cu" />
-    <CudaCompile Include="src\main.cu" />
+    <ClCompile Include="src\main.cpp">
+      <FileType>Document</FileType>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <CudaCompile Include="src\Renderer.cu" />
     <CudaCompile Include="src\rt_engine\geometry\BVH.cu" />
     <CudaCompile Include="src\rt_engine\geometry\Scenes.cu" />
