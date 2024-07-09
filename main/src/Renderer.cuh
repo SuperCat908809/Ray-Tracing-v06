@@ -6,15 +6,18 @@
 #include <curand_kernel.h>
 
 #include "utilities/cuda_utilities/cuRandom.cuh"
-#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
-#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
+//#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
+//#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
 
 #include "rt_engine/geometry/hittable.cuh"
-#include "rt_engine/geometry/HittableList.cuh"
+//#include "rt_engine/geometry/HittableList.cuh"
 
 #include "rt_engine/shaders/cu_Cameras.cuh"
-#include "rt_engine/shaders/material.cuh"
+//#include "rt_engine/shaders/material.cuh"
 
+
+//class Hittable;
+//class MotionBlurCamera;
 
 class Renderer {
 
@@ -24,9 +27,11 @@ class Renderer {
 		const MotionBlurCamera* cam{};
 
 		// cuda memory
-		HittableList* d_world_ptr{};
-		darray<glm::vec4> d_output_buffer;
-		darray<cuRandom> rngs;
+		const Hittable* d_world_ptr{};
+		//darray<glm::vec4> d_output_buffer;
+		//darray<cuRandom> rngs;
+		glm::vec4* d_output_buffer;
+		cuRandom* rngs;
 
 		//dobj<Material> default_mat;
 	} m;
@@ -44,7 +49,7 @@ public:
 		uint32_t render_width, uint32_t render_height,
 		uint32_t samples_per_pixel, uint32_t max_depth,
 		const MotionBlurCamera* cam,
-		HittableList* d_world_ptr
+		const Hittable* d_world_ptr
 	);
 	Renderer(Renderer&& other);
 	Renderer& operator=(Renderer&& other);
