@@ -46,7 +46,7 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\FirstApp.cuh">
+    <ClInclude Include="src\FirstApp.h">
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer.cuh">

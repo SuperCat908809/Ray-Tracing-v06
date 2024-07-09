@@ -214,7 +214,7 @@
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\FirstApp.cuh" />
+    <ClInclude Include="src\FirstApp.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Renderer.cuh" />
     <ClInclude Include="src\rt_engine\cu_rtCommon.cuh" />

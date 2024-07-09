@@ -10,7 +10,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include "utilities/cuda_utilities/cuError.h"
-#include "FirstApp.cuh"
+#include "FirstApp.h"
 
 
 int main() {

@@ -1,4 +1,4 @@
-#include "FirstApp.cuh"
+#include "FirstApp.h"
 
 #include <string>
 #include <iostream>
