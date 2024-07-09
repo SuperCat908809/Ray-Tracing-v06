@@ -37,10 +37,12 @@ void Renderer::_delete() {
 
 }
 
-Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
+Renderer Renderer::MakeRenderer(
+	uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
-	const MotionBlurCamera& cam,
-	HittableList* d_world_ptr) {
+	const MotionBlurCamera* cam,
+	HittableList* d_world_ptr
+) {
 
 	printf("Allocating Renderer framebuffer and random number generators... ");
 	darray<glm::vec4> d_output_buffer(render_width * render_height);
@@ -107,7 +109,7 @@ void Renderer::Render() {
 	params.render_height = m.render_height;
 	params.samples_per_pixel = m.samples_per_pixel;
 	params.max_depth = m.max_depth;
-	params.cam = m.cam;
+	params.cam = *m.cam;
 	params.world = m.d_world_ptr;
 	//params.default_mat = m.default_mat.getPtr();
 	params.output_buffer = m.d_output_buffer.getPtr();

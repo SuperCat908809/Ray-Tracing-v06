@@ -33,7 +33,7 @@ FirstApp FirstApp::MakeApp() {
 	printf("SceneBook2BVH object built.\n");
 		
 	printf("Making Renderer object...\n");
-	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1, 4, *cam, scene_ptr->getWorldPtr());
+	Renderer renderer = Renderer::MakeRenderer(_width, _height, 1, 4, cam, scene_ptr->getWorldPtr());
 	auto renderer_ptr = new Renderer(std::move(renderer));
 	printf("Renderer object built.\n");
 
