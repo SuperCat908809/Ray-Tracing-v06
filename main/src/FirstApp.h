@@ -4,10 +4,6 @@
 #include <inttypes.h>
 #include <glm/glm.hpp>
 
-//#include "rt_engine/shaders/cu_Cameras.cuh"
-//#include "Renderer.cuh"
-//#include "rt_engine/geometry/Scenes.h"
-
 
 class Renderer;
 class MotionBlurCamera;

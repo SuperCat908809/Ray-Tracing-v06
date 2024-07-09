@@ -8,8 +8,9 @@
 
 using namespace std::string_literals;
 
+#include "Renderer.h"
 #include "rt_engine/shaders/cu_Cameras.cuh"
-#include "Renderer.cuh"
+#include "rt_engine/geometry/hittable.cuh"
 #include "rt_engine/geometry/Scenes.h"
 
 

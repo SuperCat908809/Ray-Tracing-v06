@@ -49,7 +49,7 @@
     <ClInclude Include="src\FirstApp.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer.cuh">
+    <ClInclude Include="src\Renderer.h">
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="src\rt_engine\cu_rtCommon.cuh">

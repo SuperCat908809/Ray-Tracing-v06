@@ -1,4 +1,4 @@
-#include "Renderer.cuh"
+#include "Renderer.h"
 
 #include <inttypes.h>
 #include <glm/glm.hpp>
@@ -6,20 +6,14 @@
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
-#include "utilities/cuda_utilities/cuError.h"
 #include "utilities/timers.h"
 #include "utilities/glm_utils.h"
-
-//#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
-//#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
+#include "utilities/cuda_utilities/cuError.h"
+#include "utilities/cuda_utilities/cuRandom.cuh"
 
 #include "rt_engine/ray_data.cuh"
-
 #include "rt_engine/geometry/hittable.cuh"
-//#include "rt_engine/geometry/HittableList.cuh"
-
 #include "rt_engine/shaders/cu_Cameras.cuh"
-//#include "rt_engine/shaders/cu_Materials.cuh"
 #include "rt_engine/shaders/material.cuh"
 
 #include "utilities/cuda_utilities/cuThreadManagement.cuh"
@@ -42,8 +36,6 @@ Renderer Renderer::MakeRenderer(
 ) {
 
 	printf("Allocating Renderer framebuffer and random number generators... ");
-	//darray<glm::vec4> d_output_buffer(render_width * render_height);
-	//darray<cuRandom> rngs(render_width * render_height);
 
 	glm::vec4* d_output_buffer;
 	CUDA_ASSERT(cudaMalloc((void**)&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
@@ -52,8 +44,6 @@ Renderer Renderer::MakeRenderer(
 	CUDA_ASSERT(cudaMalloc((void**)&rngs, sizeof(cuRandom) * render_width * render_height));
 
 	printf("done.\n");
-
-	//dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
 
 	printf("Initialising random states... ");
 	dim3 threads(8, 8, 1);
@@ -113,7 +103,6 @@ struct LaunchParams {
 	uint32_t max_depth{};
 	MotionBlurCamera cam{};
 	const Hittable* world{};
-	//Material* default_mat{};
 	glm::vec4* output_buffer{};
 	cuRandom* rngs{};
 };
@@ -127,7 +116,6 @@ void Renderer::Render() {
 	params.max_depth = m.max_depth;
 	params.cam = *m.cam;
 	params.world = m.d_world_ptr;
-	//params.default_mat = m.default_mat.getPtr();
 	params.output_buffer = m.d_output_buffer;
 	params.rngs = m.rngs;
 

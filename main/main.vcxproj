@@ -216,7 +216,7 @@
   <ItemGroup>
     <ClInclude Include="src\FirstApp.h" />
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\Renderer.cuh" />
+    <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\rt_engine\cu_rtCommon.cuh" />
     <ClInclude Include="src\rt_engine\geometry\aabb.cuh" />
     <ClInclude Include="src\rt_engine\geometry\BVH.cuh" />

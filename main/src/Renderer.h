@@ -3,21 +3,11 @@
 
 #include <inttypes.h>
 #include <glm/glm.hpp>
-#include <curand_kernel.h>
-
-#include "utilities/cuda_utilities/cuRandom.cuh"
-//#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
-//#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
-
-#include "rt_engine/geometry/hittable.cuh"
-//#include "rt_engine/geometry/HittableList.cuh"
-
-#include "rt_engine/shaders/cu_Cameras.cuh"
-//#include "rt_engine/shaders/material.cuh"
 
 
-//class Hittable;
-//class MotionBlurCamera;
+class Hittable;
+class MotionBlurCamera;
+class cuRandom;
 
 class Renderer {
 
@@ -28,12 +18,8 @@ class Renderer {
 
 		// cuda memory
 		const Hittable* d_world_ptr{};
-		//darray<glm::vec4> d_output_buffer;
-		//darray<cuRandom> rngs;
 		glm::vec4* d_output_buffer;
 		cuRandom* rngs;
-
-		//dobj<Material> default_mat;
 	} m;
 
 	void _delete();
