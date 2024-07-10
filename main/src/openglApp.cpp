@@ -47,7 +47,7 @@ void _make_mesh(uint32_t& vao, uint32_t& vbo) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void _make_shader(uint32_t& shader_program) {
+void _make_shader(uint32_t& triangle_shader_program) {
 	uint32_t vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_shader_source, nullptr);
 	glCompileShader(vert_shader);
@@ -56,13 +56,13 @@ void _make_shader(uint32_t& shader_program) {
 	glShaderSource(frag_shader, 1, &frag_shader_source, nullptr);
 	glCompileShader(frag_shader);
 
-	shader_program = glCreateProgram();
-	glAttachShader(shader_program, vert_shader);
-	glAttachShader(shader_program, frag_shader);
-	glLinkProgram(shader_program);
+	triangle_shader_program = glCreateProgram();
+	glAttachShader(triangle_shader_program, vert_shader);
+	glAttachShader(triangle_shader_program, frag_shader);
+	glLinkProgram(triangle_shader_program);
 
-	glDetachShader(shader_program, vert_shader);
-	glDetachShader(shader_program, frag_shader);
+	glDetachShader(triangle_shader_program, vert_shader);
+	glDetachShader(triangle_shader_program, frag_shader);
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
 }
@@ -125,7 +125,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	_make_shader(shader_program);
+	_make_shader(triangle_shader_program);
 	_make_mesh(vao, vbo);
 }
 OpenGL_App::~OpenGL_App() {
@@ -138,15 +138,15 @@ void OpenGL_App::_delete() {
 		glfwDestroyWindow(glfw_window);
 	}
 
-	if (shader_program != 0)
-		glDeleteProgram(shader_program);
+	if (triangle_shader_program != 0)
+		glDeleteProgram(triangle_shader_program);
 	if (vao != 0)
 		glDeleteVertexArrays(1, &vao);
 	if (vbo != 0)
 		glDeleteBuffers(1, &vbo);
 
 	glfw_window = nullptr;
-	shader_program = 0;
+	triangle_shader_program = 0;
 	vao = 0;
 	vbo = 0;
 }
@@ -156,12 +156,12 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	glfw_window = other.glfw_window;
 	imgui_io = other.imgui_io;
 
-	shader_program = other.shader_program;
+	triangle_shader_program = other.triangle_shader_program;
 	vao = other.vao;
 	vbo = other.vbo;
 
 	other.glfw_window = nullptr;
-	other.shader_program = 0;
+	other.triangle_shader_program = 0;
 	other.vao = 0;
 	other.vbo = 0;
 }
@@ -174,12 +174,12 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	glfw_window = other.glfw_window;
 	imgui_io = other.imgui_io;
 
-	shader_program = other.shader_program;
+	triangle_shader_program = other.triangle_shader_program;
 	vao = other.vao;
 	vbo = other.vbo;
 
 	other.glfw_window = nullptr;
-	other.shader_program = 0;
+	other.triangle_shader_program = 0;
 	other.vao = 0;
 	other.vbo = 0;
 
@@ -256,9 +256,9 @@ void OpenGL_App::Run() {
 
 		// render
 		if (draw_triangle) {
-			glUseProgram(shader_program);
-			glUniform1f(glGetUniformLocation(shader_program, "size"), triangle_size);
-			glUniform4fv(glGetUniformLocation(shader_program, "color"), 1, triangle_color);
+			glUseProgram(triangle_shader_program);
+			glUniform1f(glGetUniformLocation(triangle_shader_program, "size"), triangle_size);
+			glUniform4fv(glGetUniformLocation(triangle_shader_program, "color"), 1, triangle_color);
 
 			glBindVertexArray(vao);
 			glDrawArrays(GL_TRIANGLES, 0, 3);

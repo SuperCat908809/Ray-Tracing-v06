@@ -27,7 +27,7 @@ class OpenGL_App {
 	float triangle_size = 1.0f;
 	float triangle_color[4] = { 0.8f, 0.3f, 0.02f, 1.0f };
 
-	uint32_t shader_program;
+	uint32_t triangle_shader_program;
 	uint32_t vao, vbo;
 
 
