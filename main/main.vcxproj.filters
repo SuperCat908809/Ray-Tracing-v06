@@ -136,6 +136,9 @@
     <ClInclude Include="src\pch.h">
       <Filter>Main</Filter>
     </ClInclude>
+    <ClInclude Include="src\openglApp.h">
+      <Filter>Main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -172,6 +175,9 @@
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="src\FirstApp.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\openglApp.cpp">
       <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>

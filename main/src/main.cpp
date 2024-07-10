@@ -11,9 +11,10 @@
 
 #include "utilities/cuda_utilities/cuError.h"
 #include "FirstApp.h"
+#include "openglApp.h"
 
 
-int main() {
+int n1main() {
 
 	{
 		printf("Creating FirstApp object...\n");
@@ -32,6 +33,24 @@ int main() {
 	return 0;
 }
 
+int main() {
+
+	{
+		printf("Creating OpenGL_App object...\n");
+		OpenGL_App app = OpenGL_App(800, 800, "OpenGL App testing");
+		printf("OpenGL_App object created.\n");
+
+		printf("Running application\n");
+		app.Run();
+		printf("Application finished\n");
+	}
+
+	CUDA_ASSERT(cudaDeviceReset());
+
+	printf("\n\nFinished.\n");
+
+	return 0;
+}
 
 
 
@@ -89,7 +108,7 @@ void make_shader(uint32_t& shader_program) {
 	glDeleteShader(frag_shader);
 }
 
-int nmain() {
+int n2main() {
 
 	glfwInit();
 
