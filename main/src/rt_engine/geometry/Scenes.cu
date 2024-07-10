@@ -300,14 +300,14 @@ SceneBook2BVH* SceneBook2BVH::Factory::MakeScene() {
 #else
 	bvh_factory.BuildBVH_BottomUp();
 #endif
-	BVH_Handle bvh_handle = bvh_factory.MakeHandle();
+	BVH_Handle* bvh_handle = bvh_factory.MakeHandle();
 
 	bvh_timer.end();
 	printf("done in %fms.\n", bvh_timer.elapsedms());
 
 	auto scene = new SceneBook2BVH();
 
-	scene->bvh = new BVH_Handle(std::move(bvh_handle));
+	scene->bvh = bvh_handle;
 	scene->world_bounds = new aabb(scene->bvh->getBounds());
 	scene->sphere_handles = std::move(sphere_handles);
 

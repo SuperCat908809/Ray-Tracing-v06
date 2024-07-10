@@ -55,40 +55,9 @@ class BVH_Handle {
 
 public:
 
-	class Factory {
-
-		std::vector<BVH::Node> bvh_nodes;
-		std::vector<const Hittable*> hittables;
-		int root_idx;
-
-		std::vector<std::tuple<aabb, const Hittable*>>& arr;
-		
-		// top down
-		aabb _get_partition_bounds(int start, int end);
-		int _build_bvh_rec1(int start, int end);
-		int _build_bvh_rec2(int start, int end);
-		void _find_optimal_split(int start, int end, const aabb& bounds, int& axis, float& split);
-		void _partition_by_split(int start, int end, int axis, float split, int& mid_idx);
-
-
-		// bottom up
-		// BHV::Node node, int hittable_count, int bvh_list_index
-		std::vector<std::tuple<BVH::Node, int, int>> building_nodes;
-
-		void _find_optimal_merge(int& a_idx, int& b_idx);
-		void _merge_nodes(int a, int b);
-
-	public:
-
-		Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr);
-		void BuildBVH_TopDown();
-		void BuildBVH_BottomUp();
-		BVH_Handle MakeHandle();
-
-	};
+	class Factory;
 
 	~BVH_Handle();
-
 	BVH_Handle(BVH_Handle&& bvhh);
 	BVH_Handle& operator=(BVH_Handle&& bvhh);
 
@@ -97,5 +66,39 @@ public:
 
 };
 
+class BVH_Handle::Factory {
+
+	std::vector<BVH::Node> bvh_nodes;
+	std::vector<const Hittable*> hittables;
+	int root_idx;
+
+	std::vector<std::tuple<aabb, const Hittable*>>& arr;
+
+	// top down
+	aabb _get_partition_bounds(int start, int end);
+	int _build_bvh_rec1(int start, int end);
+	int _build_bvh_rec2(int start, int end);
+	void _find_optimal_split(int start, int end, const aabb& bounds, int& axis, float& split);
+	void _partition_by_split(int start, int end, int axis, float split, int& mid_idx);
+
+
+	// bottom up
+	// BHV::Node node, int hittable_count, int bvh_list_index
+	std::vector<std::tuple<BVH::Node, int, int>> building_nodes;
+
+	void _find_optimal_merge(int& a_idx, int& b_idx);
+	void _merge_nodes(int a, int b);
+
+	Factory(Factory&) = delete;
+	Factory& operator=(Factory&) = delete;
+
+public:
+
+	Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr);
+	void BuildBVH_TopDown();
+	void BuildBVH_BottomUp();
+	BVH_Handle* MakeHandle();
+
+};
 
 #endif // BVH_CLASS_CUH //

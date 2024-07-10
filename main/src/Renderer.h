@@ -26,10 +26,14 @@ class Renderer {
 
 	Renderer(M m) : m(std::move(m)) {}
 
-public:
-
 	Renderer(const Renderer&) = delete;
 	Renderer& operator=(const Renderer&) = delete;
+
+public:
+
+	~Renderer();
+	Renderer(Renderer&& other);
+	Renderer& operator=(Renderer&& other);
 
 	static Renderer MakeRenderer(
 		uint32_t render_width, uint32_t render_height,
@@ -37,9 +41,6 @@ public:
 		const MotionBlurCamera* cam,
 		const Hittable* d_world_ptr
 	);
-	Renderer(Renderer&& other);
-	Renderer& operator=(Renderer&& other);
-	~Renderer();
 
 	void Render();
 	void DownloadRenderbuffer(glm::vec4* host_dst) const;
