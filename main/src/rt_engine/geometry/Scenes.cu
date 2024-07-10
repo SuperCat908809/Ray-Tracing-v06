@@ -2,16 +2,13 @@
 
 #include <glm/glm.hpp>
 #include <vector>
-#include <tuple>
 
 #include "../../utilities/cuda_utilities/cuda_utils.cuh"
-#include "../../utilities/cuda_utilities/cuError.h"
 #include "../../utilities/cuda_utilities/cuHostRND.h"
 #include "../../utilities/timers.h"
 
 #include "aabb.cuh"
 #include "hittable.cuh"
-#include "HittableList.cuh"
 #include "SphereHittable.cuh"
 #include "BVH.cuh"
 
