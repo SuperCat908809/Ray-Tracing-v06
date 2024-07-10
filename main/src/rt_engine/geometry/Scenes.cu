@@ -19,6 +19,7 @@
 #include "../shaders/cu_Materials.cuh"
 
 
+#if 0
 SceneBook1::SceneBook1(SceneBook1&& scene) {
 	world_bounds = scene.world_bounds;
 	world = scene.world;
@@ -147,46 +148,75 @@ SceneBook1 SceneBook1::Factory::MakeScene() {
 
 	return scene;
 }
+#endif
 
+SceneBook2BVH::SceneBook2BVH() = default;
+SceneBook2BVH::~SceneBook2BVH() {
+	_delete();
+}
+void SceneBook2BVH::_delete() {
+	delete bvh;
+	delete world_bounds;
+	sphere_handles.clear();
 
-SceneBook2BVH::SceneBook2BVH(SceneBook2BVH&& scene)
-	: bvh(std::move(scene.bvh)) {
-	world_bounds = scene.world_bounds;
-	world = scene.world;
-	hittable_list = scene.hittable_list;
-	sphere_handles = std::move(scene.sphere_handles);
-	//bvh_nodes = std::move(scene.bvh_nodes);
-
-	scene.world = nullptr;
-	scene.hittable_list = nullptr;
+	bvh = nullptr;
+	world_bounds = nullptr;
 }
 
+SceneBook2BVH::SceneBook2BVH(SceneBook2BVH&& scene) {
+	bvh = scene.bvh;
+	world_bounds = scene.world_bounds;
+	sphere_handles = std::move(scene.sphere_handles);
+
+	scene.bvh = nullptr;
+	scene.world_bounds = nullptr;
+}
 SceneBook2BVH& SceneBook2BVH::operator=(SceneBook2BVH&& scene) {
 	_delete();
 
+	bvh = scene.bvh;
 	world_bounds = scene.world_bounds;
-	world = scene.world;
-	hittable_list = scene.hittable_list;
 	sphere_handles = std::move(scene.sphere_handles);
-	//bvh_nodes = std::move(scene.bvh_nodes);
-	bvh = std::move(scene.bvh);
 
-	scene.world = nullptr;
-	scene.hittable_list = nullptr;
+	scene.bvh = nullptr;
+	scene.world_bounds = nullptr;
 
 	return *this;
 }
 
-SceneBook2BVH::~SceneBook2BVH() {
-	_delete();
+const Hittable* SceneBook2BVH::getWorldPtr() const {
+	return bvh->getBVHPtr();
 }
 
-void SceneBook2BVH::_delete() {
-	CUDA_ASSERT(cudaFree(world));
-	CUDA_ASSERT(cudaFree(hittable_list));
 
-	world = nullptr;
-	hittable_list = nullptr;
+SceneBook2BVH::Factory::Factory() {
+	host_rnd = new cuHostRND(512, 1984);
+}
+SceneBook2BVH::Factory::~Factory() {
+	_delete();
+}
+void SceneBook2BVH::Factory::_delete() {
+	delete host_rnd;
+	sphere_handles.clear();
+
+	host_rnd = nullptr;
+}
+
+SceneBook2BVH::Factory::Factory(SceneBook2BVH::Factory&& factory) {
+	host_rnd = factory.host_rnd;
+	sphere_handles = std::move(factory.sphere_handles);
+
+	factory.host_rnd = nullptr;
+}
+SceneBook2BVH::Factory& SceneBook2BVH::Factory::operator=(SceneBook2BVH::Factory&& factory) {
+	_delete();
+
+	host_rnd = factory.host_rnd;
+	sphere_handles = std::move(factory.sphere_handles);
+
+	factory.host_rnd = nullptr;
+
+	return *this;
 }
 
 void SceneBook2BVH::Factory::_populate_world() {
@@ -199,7 +229,7 @@ void SceneBook2BVH::Factory::_populate_world() {
 	for (int a = -11; a < 11; a++) {
 		for (int b = -11; b < 11; b++) {
 
-#define rnd host_rnd.next()
+#define rnd host_rnd->next()
 
 			float choose_mat = rnd;
 			glm::vec3 center(a + rnd, 0.2f, b + rnd);
@@ -242,7 +272,7 @@ void SceneBook2BVH::Factory::_populate_world() {
 	sphere_handles.push_back(std::move(right_handle));
 }
 
-SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
+SceneBook2BVH* SceneBook2BVH::Factory::MakeScene() {
 
 	printf("Populating world... ");
 	hostTimer populate_timer{};
@@ -275,33 +305,14 @@ SceneBook2BVH SceneBook2BVH::Factory::MakeScene() {
 #endif
 	BVH_Handle bvh_handle = bvh_factory.MakeHandle();
 
-	const Hittable* bvh_ptr = bvh_handle.getBVHPtr();
-	aabb world_bounds = bvh_handle.getBounds();
-
 	bvh_timer.end();
 	printf("done in %fms.\n", bvh_timer.elapsedms());
 
+	auto scene = new SceneBook2BVH();
 
-	printf("Building world's HittableList... ");
-
-	Hittable** hittable_list;
-	HittableList* world;
-
-	CUDA_ASSERT(cudaMalloc((void**)&hittable_list, sizeof(Hittable**)));
-	CUDA_ASSERT(cudaMemcpy(hittable_list, &bvh_ptr, sizeof(Hittable**), cudaMemcpyHostToDevice));
-	world = newOnDevice<HittableList>(
-		const_cast<const Hittable**>(hittable_list),
-		1,
-		world_bounds
-	);
-	printf("done.\n");
-
-	SceneBook2BVH scene(std::move(bvh_handle));
-
-	scene.world_bounds = world_bounds;
-	scene.world = world;
-	scene.hittable_list = hittable_list;
-	scene.sphere_handles = std::move(sphere_handles);
+	scene->bvh = new BVH_Handle(std::move(bvh_handle));
+	scene->world_bounds = new aabb(scene->bvh->getBounds());
+	scene->sphere_handles = std::move(sphere_handles);
 
 	return scene;
 }

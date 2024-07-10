@@ -3,15 +3,16 @@
 
 #include <vector>
 
-#include "../../utilities/cuda_utilities/cuHostRND.h"
+//#include "../../utilities/cuda_utilities/cuHostRND.h"
 
-#include "aabb.cuh"
-#include "hittable.cuh"
-#include "HittableList.cuh"
-#include "SphereHittable.cuh"
-#include "BVH.cuh"
+//#include "aabb.cuh"
+//#include "hittable.cuh"
+//#include "HittableList.cuh"
+//#include "SphereHittable.cuh"
+//#include "BVH.cuh"
 
 
+#if 0
 class SceneBook1 {
 
 	aabb world_bounds;
@@ -50,42 +51,52 @@ public:
 
 	HittableList* getWorldPtr() { return world; }
 };
+#endif
 
+
+class aabb;
+class Hittable;
+class cuHostRND;
+class BVH_Handle;
+class SphereHandle;
 
 class SceneBook2BVH {
 
-	aabb world_bounds;
-	HittableList* world{ nullptr };
-	Hittable** hittable_list{ nullptr };
-	std::vector<SphereHandle> sphere_handles;
-	BVH_Handle bvh;
-
+	SceneBook2BVH();
 	void _delete();
 
-	SceneBook2BVH(BVH_Handle&& bvh) : bvh(std::move(bvh)) {}
+	BVH_Handle* bvh;
+	aabb* world_bounds;
+	std::vector<SphereHandle> sphere_handles;
 
 public:
 
-	class Factory {
-		std::vector<SphereHandle> sphere_handles;
-
-		cuHostRND host_rnd{ 512,1984 };
-
-		void _populate_world();
-
-	public:
-
-		Factory() = default;
-
-		SceneBook2BVH MakeScene();
-	};
-
+	~SceneBook2BVH();
 	SceneBook2BVH(SceneBook2BVH&& scene);
 	SceneBook2BVH& operator=(SceneBook2BVH&& scene);
-	~SceneBook2BVH();
 
-	HittableList* getWorldPtr() { return world; }
+	class Factory;
+
+	const Hittable* getWorldPtr() const;
 };
 
+class SceneBook2BVH::Factory {
+
+	void _delete();
+	void _populate_world();
+
+	cuHostRND* host_rnd;
+	std::vector<SphereHandle> sphere_handles;
+
+public:
+
+	Factory();
+	~Factory();
+
+	Factory(Factory&& factory);
+	Factory& operator=(Factory&& factory);
+
+	SceneBook2BVH* MakeScene();
+};
 
 #endif // SCENE_CLASSES_CUH //

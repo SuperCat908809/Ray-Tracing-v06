@@ -8,6 +8,8 @@
 
 using namespace std::string_literals;
 
+#include "utilities/cuda_utilities/cuError.h"
+
 #include "Renderer.h"
 #include "rt_engine/shaders/cu_Cameras.cuh"
 #include "rt_engine/geometry/hittable.cuh"
@@ -29,8 +31,7 @@ FirstApp FirstApp::MakeApp() {
 
 	printf("Building SceneBook2BVH object...\n");
 	SceneBook2BVH::Factory scene_factory{};
-	SceneBook2BVH scene = scene_factory.MakeScene();
-	auto scene_ptr = new SceneBook2BVH(std::move(scene));
+	SceneBook2BVH* scene_ptr = scene_factory.MakeScene();
 	printf("SceneBook2BVH object built.\n");
 		
 	printf("Making Renderer object...\n");
