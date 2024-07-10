@@ -13,20 +13,20 @@
 #include "utilities/cuda_utilities/cuError.h"
 
 
-static const char* vert_shader_source = "#version 330 core\n"
+const char* vert_shader_source = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "uniform float size;\n"
 "void main() {\n"
 "    gl_Position = vec4(size * aPos, 1.0f);\n"
 "}\0";
-static const char* frag_shader_source = "#version 330 core\n"
+const char* frag_shader_source = "#version 330 core\n"
 "out vec4 frag_color;\n"
 "uniform vec4 color;\n"
 "void main() {\n"
 "    frag_color = vec4(color);\n"
 "}\0";
 
-static float vertices[] = {
+float vertices[] = {
 	-0.5f, -0.5f * sqrtf(3) / 3, 0.0f,
 	 0.5f, -0.5f * sqrtf(3) / 3, 0.0f,
 	 0.0f,  0.5f * sqrtf(3) * 2 / 3, 0.0f,
