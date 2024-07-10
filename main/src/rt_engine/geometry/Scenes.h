@@ -3,14 +3,6 @@
 
 #include <vector>
 
-//#include "../../utilities/cuda_utilities/cuHostRND.h"
-
-//#include "aabb.cuh"
-//#include "hittable.cuh"
-//#include "HittableList.cuh"
-//#include "SphereHittable.cuh"
-//#include "BVH.cuh"
-
 
 #if 0
 class SceneBook1 {

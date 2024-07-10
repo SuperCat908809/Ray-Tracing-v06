@@ -32,9 +32,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\FirstApp.cu">
-      <Filter>Main</Filter>
-    </CudaCompile>
     <CudaCompile Include="src\Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
@@ -172,6 +169,9 @@
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FirstApp.cpp">
       <Filter>Main</Filter>
     </ClCompile>
   </ItemGroup>
