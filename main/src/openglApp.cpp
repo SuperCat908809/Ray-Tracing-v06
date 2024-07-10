@@ -32,12 +32,12 @@ float vertices[] = {
 	 0.0f,  0.5f * sqrtf(3) * 2 / 3, 0.0f,
 };
 
-void _make_mesh(uint32_t& vao, uint32_t& vbo) {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+void _make_mesh(uint32_t& triangle_vao, uint32_t& triangle_vbo) {
+	glGenVertexArrays(1, &triangle_vao);
+	glBindVertexArray(triangle_vao);
 
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glGenBuffers(1, &triangle_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
@@ -126,7 +126,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 
 	_make_shader(triangle_shader_program);
-	_make_mesh(vao, vbo);
+	_make_mesh(triangle_vao, triangle_vbo);
 }
 OpenGL_App::~OpenGL_App() {
 	_delete();
@@ -140,15 +140,15 @@ void OpenGL_App::_delete() {
 
 	if (triangle_shader_program != 0)
 		glDeleteProgram(triangle_shader_program);
-	if (vao != 0)
-		glDeleteVertexArrays(1, &vao);
-	if (vbo != 0)
-		glDeleteBuffers(1, &vbo);
+	if (triangle_vao != 0)
+		glDeleteVertexArrays(1, &triangle_vao);
+	if (triangle_vbo != 0)
+		glDeleteBuffers(1, &triangle_vbo);
 
 	glfw_window = nullptr;
 	triangle_shader_program = 0;
-	vao = 0;
-	vbo = 0;
+	triangle_vao = 0;
+	triangle_vbo = 0;
 }
 OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	window_width = other.window_width;
@@ -157,13 +157,13 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	imgui_io = other.imgui_io;
 
 	triangle_shader_program = other.triangle_shader_program;
-	vao = other.vao;
-	vbo = other.vbo;
+	triangle_vao = other.triangle_vao;
+	triangle_vbo = other.triangle_vbo;
 
 	other.glfw_window = nullptr;
 	other.triangle_shader_program = 0;
-	other.vao = 0;
-	other.vbo = 0;
+	other.triangle_vao = 0;
+	other.triangle_vbo = 0;
 }
 
 OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
@@ -175,13 +175,13 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	imgui_io = other.imgui_io;
 
 	triangle_shader_program = other.triangle_shader_program;
-	vao = other.vao;
-	vbo = other.vbo;
+	triangle_vao = other.triangle_vao;
+	triangle_vbo = other.triangle_vbo;
 
 	other.glfw_window = nullptr;
 	other.triangle_shader_program = 0;
-	other.vao = 0;
-	other.vbo = 0;
+	other.triangle_vao = 0;
+	other.triangle_vbo = 0;
 
 	return *this;
 }
@@ -260,7 +260,7 @@ void OpenGL_App::Run() {
 			glUniform1f(glGetUniformLocation(triangle_shader_program, "size"), triangle_size);
 			glUniform4fv(glGetUniformLocation(triangle_shader_program, "color"), 1, triangle_color);
 
-			glBindVertexArray(vao);
+			glBindVertexArray(triangle_vao);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
 
