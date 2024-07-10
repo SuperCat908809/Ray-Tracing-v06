@@ -10,6 +10,9 @@
 #include <string>
 #include <format>
 #include <chrono>
+#include <errno.h>
+#include <sstream>
+#include <fstream>
 #include <assert.h>
 #include <stdlib.h>
 #include <concepts>

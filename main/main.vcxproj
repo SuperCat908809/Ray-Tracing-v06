@@ -190,6 +190,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\gl_engine\shader.cpp" />
     <ClCompile Include="src\main.cpp">
       <FileType>Document</FileType>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -226,6 +227,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\FirstApp.h" />
+    <ClInclude Include="src\gl_engine\shader.h" />
     <ClInclude Include="src\openglApp.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Renderer.h" />
@@ -259,6 +261,8 @@
     <ClInclude Include="src\utilities\timers.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\triangle_frag.glsl" />
+    <None Include="resources\shaders\triangle_vert.glsl" />
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

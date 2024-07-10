@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <string>
+#include "gl_engine/shader.h"
 
 class GLFWwindow;
 class ImGuiIO;
@@ -25,10 +26,10 @@ class OpenGL_App {
 	bool b_widget_open = true;
 	bool draw_triangle = true;
 	float triangle_size = 1.0f;
-	float triangle_color[4] = { 0.8f, 0.3f, 0.02f, 1.0f };
+	glm::vec4 triangle_color = { 0.8f, 0.3f, 0.02f, 1.0f };
 
-	uint32_t triangle_shader_program;
-	uint32_t triangle_vao, triangle_vbo;
+	Shader* triangle_shader;
+	uint32_t triangle_vao, triangle_ebo, triangle_vbo;
 
 
 public:

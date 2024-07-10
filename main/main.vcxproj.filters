@@ -30,6 +30,12 @@
     <Filter Include="Libraries\imgui">
       <UniqueIdentifier>{2235c7b3-bf25-479b-95d7-8313b677c238}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GL Engine">
+      <UniqueIdentifier>{741b4869-3876-48ad-9f79-5ed15e2b33ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GL Engine\shaders">
+      <UniqueIdentifier>{d7addaf7-b085-4f92-9e81-f2d5530d0b3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Renderer.cu">
@@ -139,6 +145,9 @@
     <ClInclude Include="src\openglApp.h">
       <Filter>Main</Filter>
     </ClInclude>
+    <ClInclude Include="src\gl_engine\shader.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -180,10 +189,19 @@
     <ClCompile Include="src\openglApp.cpp">
       <Filter>Main</Filter>
     </ClCompile>
+    <ClCompile Include="src\gl_engine\shader.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </None>
+    <None Include="resources\shaders\triangle_vert.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\triangle_frag.glsl">
+      <Filter>GL Engine\shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

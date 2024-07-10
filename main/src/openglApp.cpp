@@ -27,24 +27,37 @@ const char* frag_shader_source = "#version 330 core\n"
 "}\0";
 
 float vertices[] = {
-	-0.5f, -0.5f * sqrtf(3) / 3, 0.0f,
-	 0.5f, -0.5f * sqrtf(3) / 3, 0.0f,
-	 0.0f,  0.5f * sqrtf(3) * 2 / 3, 0.0f,
+	-0.5f    , -0.5f * sqrtf(3)     / 3, 0.0f,
+	 0.5f    , -0.5f * sqrtf(3)     / 3, 0.0f,
+	 0.0f    ,  0.5f * sqrtf(3) * 2 / 3, 0.0f,
+	-0.5f / 2,  0.5f * sqrtf(3)     / 6, 0.0f,
+	 0.5f / 2,  0.5f * sqrtf(3)     / 6, 0.0f,
+	 0.0f    , -0.5f * sqrtf(3)     / 3, 0.0f,
 };
 
-void _make_mesh(uint32_t& triangle_vao, uint32_t& triangle_vbo) {
-	glGenVertexArrays(1, &triangle_vao);
-	glBindVertexArray(triangle_vao);
+uint32_t indices[] = {
+	0, 3, 5,
+	3, 2, 4,
+	5, 4, 1
+};
 
-	glGenBuffers(1, &triangle_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
+void _make_mesh(uint32_t& vao, uint32_t& ebo, uint32_t& vbo) {
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
 	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void _make_shader(uint32_t& triangle_shader_program) {
@@ -125,8 +138,8 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	_make_shader(triangle_shader_program);
-	_make_mesh(triangle_vao, triangle_vbo);
+	triangle_shader = new Shader("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
+	_make_mesh(triangle_vao, triangle_ebo, triangle_vbo);
 }
 OpenGL_App::~OpenGL_App() {
 	_delete();
@@ -138,16 +151,18 @@ void OpenGL_App::_delete() {
 		glfwDestroyWindow(glfw_window);
 	}
 
-	if (triangle_shader_program != 0)
-		glDeleteProgram(triangle_shader_program);
+	delete triangle_shader;
 	if (triangle_vao != 0)
 		glDeleteVertexArrays(1, &triangle_vao);
+	if (triangle_ebo != 0)
+		glDeleteBuffers(1, &triangle_ebo);
 	if (triangle_vbo != 0)
 		glDeleteBuffers(1, &triangle_vbo);
 
 	glfw_window = nullptr;
-	triangle_shader_program = 0;
+	triangle_shader = nullptr;
 	triangle_vao = 0;
+	triangle_ebo = 0;
 	triangle_vbo = 0;
 }
 OpenGL_App::OpenGL_App(OpenGL_App&& other) {
@@ -156,13 +171,21 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	glfw_window = other.glfw_window;
 	imgui_io = other.imgui_io;
 
-	triangle_shader_program = other.triangle_shader_program;
+	first_ctrl_w = other.first_ctrl_w;
+	b_widget_open = other.b_widget_open;
+	draw_triangle = other.draw_triangle;
+	triangle_size = other.triangle_size;
+	triangle_color = other.triangle_color;
+
+	triangle_shader = other.triangle_shader;
 	triangle_vao = other.triangle_vao;
+	triangle_ebo = other.triangle_ebo;
 	triangle_vbo = other.triangle_vbo;
 
+	other.triangle_shader = nullptr;
 	other.glfw_window = nullptr;
-	other.triangle_shader_program = 0;
 	other.triangle_vao = 0;
+	other.triangle_ebo = 0;
 	other.triangle_vbo = 0;
 }
 
@@ -174,13 +197,21 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	glfw_window = other.glfw_window;
 	imgui_io = other.imgui_io;
 
-	triangle_shader_program = other.triangle_shader_program;
+	first_ctrl_w = other.first_ctrl_w;
+	b_widget_open = other.b_widget_open;
+	draw_triangle = other.draw_triangle;
+	triangle_size = other.triangle_size;
+	triangle_color = other.triangle_color;
+
+	triangle_shader = other.triangle_shader;
 	triangle_vao = other.triangle_vao;
+	triangle_ebo = other.triangle_ebo;
 	triangle_vbo = other.triangle_vbo;
 
 	other.glfw_window = nullptr;
-	other.triangle_shader_program = 0;
+	other.triangle_shader = nullptr;
 	other.triangle_vao = 0;
+	other.triangle_ebo = 0;
 	other.triangle_vbo = 0;
 
 	return *this;
@@ -207,7 +238,7 @@ void OpenGL_App::_imgui_inputs() {
 	ImGui::Text("Hello there adventurer!");
 	ImGui::Checkbox("Draw triangle", &draw_triangle);
 	ImGui::SliderFloat("Triangle size", &triangle_size, 0.05f, 2.0f);
-	ImGui::ColorEdit4("Triangle color", triangle_color, ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::ColorEdit4("Triangle color", &triangle_color[0], ImGuiColorEditFlags_PickerHueWheel);
 
 	ImGui::End();
 }
@@ -256,12 +287,13 @@ void OpenGL_App::Run() {
 
 		// render
 		if (draw_triangle) {
-			glUseProgram(triangle_shader_program);
-			glUniform1f(glGetUniformLocation(triangle_shader_program, "size"), triangle_size);
-			glUniform4fv(glGetUniformLocation(triangle_shader_program, "color"), 1, triangle_color);
+			triangle_shader->Use();
+			glUniform1f(glGetUniformLocation(triangle_shader->id, "size"), triangle_size);
+			glUniform4fv(glGetUniformLocation(triangle_shader->id, "color"), 1, &triangle_color[0]);
 
 			glBindVertexArray(triangle_vao);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			//glDrawArrays(GL_TRIANGLES, 0, 3);
+			glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
 		}
 
 		// render ImGUI last so its drawn on top
