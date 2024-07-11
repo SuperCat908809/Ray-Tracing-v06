@@ -4,6 +4,8 @@
 #include <inttypes.h>
 #include <string>
 #include "gl_engine/shader.h"
+#include "gl_engine/gl_texture.h"
+#include <memory>
 
 class GLFWwindow;
 class ImGuiIO;
@@ -28,10 +30,9 @@ class OpenGL_App {
 	float triangle_size = 1.0f;
 	glm::vec4 triangle_color = { 0.8f, 0.3f, 0.02f, 1.0f };
 
-	Shader* triangle_shader;
+	std::unique_ptr<Shader> triangle_shader;
 	uint32_t triangle_vao, triangle_ebo, triangle_vbo;
-	uint32_t popcat_texture;
-
+	std::unique_ptr<gl_engine::Texture> popcat_texture;
 
 public:
 

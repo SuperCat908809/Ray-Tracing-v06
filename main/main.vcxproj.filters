@@ -148,6 +148,9 @@
     <ClInclude Include="src\gl_engine\shader.h">
       <Filter>GL Engine</Filter>
     </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_texture.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -190,6 +193,9 @@
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="src\gl_engine\shader.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_texture.cpp">
       <Filter>GL Engine</Filter>
     </ClCompile>
   </ItemGroup>

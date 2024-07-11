@@ -2,6 +2,7 @@
 #include "openglApp.h"
 
 #include <cuda_runtime.h>
+#include <memory>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -27,22 +28,17 @@ void OpenGL_App::_delete() {
 		glfwDestroyWindow(glfw_window);
 	}
 
-	delete triangle_shader;
 	if (triangle_vao != 0)
 		glDeleteVertexArrays(1, &triangle_vao);
 	if (triangle_ebo != 0)
 		glDeleteBuffers(1, &triangle_ebo);
 	if (triangle_vbo != 0)
 		glDeleteBuffers(1, &triangle_vbo);
-	if (popcat_texture != 0)
-		glDeleteTextures(1, &popcat_texture);
 
 	glfw_window = nullptr;
-	triangle_shader = nullptr;
 	triangle_vao = 0;
 	triangle_ebo = 0;
 	triangle_vbo = 0;
-	popcat_texture = 0;
 }
 OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	window_width = other.window_width;
@@ -56,18 +52,16 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	triangle_size = other.triangle_size;
 	triangle_color = other.triangle_color;
 
-	triangle_shader = other.triangle_shader;
+	triangle_shader = std::move(other.triangle_shader);
 	triangle_vao = other.triangle_vao;
 	triangle_ebo = other.triangle_ebo;
 	triangle_vbo = other.triangle_vbo;
-	popcat_texture = other.popcat_texture;
+	popcat_texture = std::move(other.popcat_texture);
 
-	other.triangle_shader = nullptr;
 	other.glfw_window = nullptr;
 	other.triangle_vao = 0;
 	other.triangle_ebo = 0;
 	other.triangle_vbo = 0;
-	other.popcat_texture = 0;
 }
 OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	_delete();
@@ -83,18 +77,16 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	triangle_size = other.triangle_size;
 	triangle_color = other.triangle_color;
 
-	triangle_shader = other.triangle_shader;
+	triangle_shader = std::move(other.triangle_shader);
 	triangle_vao = other.triangle_vao;
 	triangle_ebo = other.triangle_ebo;
 	triangle_vbo = other.triangle_vbo;
-	popcat_texture = other.popcat_texture;
+	popcat_texture = std::move(other.popcat_texture);
 
-	other.triangle_shader = nullptr;
 	other.glfw_window = nullptr;
 	other.triangle_vao = 0;
 	other.triangle_ebo = 0;
 	other.triangle_vbo = 0;
-	other.popcat_texture = 0;
 
 	return *this;
 }
@@ -195,8 +187,8 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	triangle_shader = new Shader("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
-	_load_texture(popcat_texture, "resources/images/pop_cat.png");
+	triangle_shader = std::make_unique<Shader>("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
+	popcat_texture = std::make_unique<gl_engine::Texture>("resources/images/pop_cat.png");
 	_make_mesh(triangle_vao, triangle_ebo, triangle_vbo);
 }
 
@@ -276,7 +268,7 @@ void OpenGL_App::Run() {
 			glUniform1i(glGetUniformLocation(triangle_shader->id, "tex0"), 0);
 
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, popcat_texture);
+			glBindTexture(GL_TEXTURE_2D, popcat_texture->id);
 
 			glBindVertexArray(triangle_vao);
 			//glDrawArrays(GL_TRIANGLES, 0, 3);
