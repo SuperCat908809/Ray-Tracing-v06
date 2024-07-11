@@ -30,6 +30,7 @@ class OpenGL_App {
 
 	Shader* triangle_shader;
 	uint32_t triangle_vao, triangle_ebo, triangle_vbo;
+	uint32_t popcat_texture;
 
 
 public:
