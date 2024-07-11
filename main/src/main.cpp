@@ -32,7 +32,7 @@ int main() {
 	}
 	case GL_ENGINE: {
 		printf("Creating OpenGL_App object...\n");
-		OpenGL_App app = OpenGL_App(800, 800, "OpenGL App testing");
+		gl_engine::OpenGL_App app = gl_engine::OpenGL_App(800, 800, "OpenGL App testing");
 		printf("OpenGL_App object created.\n");
 
 		printf("Running application\n");

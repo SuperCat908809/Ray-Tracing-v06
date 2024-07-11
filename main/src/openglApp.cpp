@@ -13,6 +13,8 @@
 
 #include "utilities/cuda_utilities/cuError.h"
 
+using namespace gl_engine;
+
 
 void _init_gui();
 void _init_glad();
@@ -188,7 +190,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 
 	triangle_shader = std::make_unique<Shader>("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
-	popcat_texture = std::make_unique<gl_engine::Texture>("resources/images/pop_cat.png");
+	popcat_texture = std::make_unique<Texture>("resources/images/pop_cat.png");
 	_make_mesh(triangle_vao, triangle_ebo, triangle_vbo);
 }
 

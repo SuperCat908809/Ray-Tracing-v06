@@ -7,8 +7,10 @@
 #include "gl_engine/gl_texture.h"
 #include <memory>
 
+
 class GLFWwindow;
 class ImGuiIO;
+namespace gl_engine {
 
 class OpenGL_App {
 	uint32_t window_width, window_height;
@@ -42,6 +44,8 @@ public:
 	OpenGL_App& operator=(OpenGL_App&&);
 
 	void Run();
-};
+
+}; // OpenGL_App //
+} // gl_engine //
 
 #endif OPENGL_APPLICATION_CLASS_H
