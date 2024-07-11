@@ -292,6 +292,8 @@
     <ClInclude Include="src\utilities\timers.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\default_v.glsl" />
+    <None Include="resources\shaders\default_f.glsl" />
     <None Include="resources\shaders\triangle_frag.glsl" />
     <None Include="resources\shaders\triangle_vert.glsl" />
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl" />

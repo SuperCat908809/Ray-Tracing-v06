@@ -215,5 +215,11 @@
     <None Include="resources\shaders\triangle_frag.glsl">
       <Filter>GL Engine\shaders</Filter>
     </None>
+    <None Include="resources\shaders\default_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\default_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -8,6 +8,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -46,12 +50,12 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
 	draw_triangle = other.draw_triangle;
-	triangle_size = other.triangle_size;
-	triangle_color = other.triangle_color;
+	model_size = other.model_size;
+	model_color = other.model_color;
 
-	triangle_shader = std::move(other.triangle_shader);
-	triangle_mesh = std::move(other.triangle_mesh);
-	popcat_texture = std::move(other.popcat_texture);
+	shader = std::move(other.shader);
+	model_mesh = std::move(other.model_mesh);
+	model_albedo_texture = std::move(other.model_albedo_texture);
 
 	other.glfw_window = nullptr;
 }
@@ -66,12 +70,12 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
 	draw_triangle = other.draw_triangle;
-	triangle_size = other.triangle_size;
-	triangle_color = other.triangle_color;
+	model_size = other.model_size;
+	model_color = other.model_color;
 
-	triangle_shader = std::move(other.triangle_shader);
-	triangle_mesh = std::move(other.triangle_mesh);
-	popcat_texture = std::move(other.popcat_texture);
+	shader = std::move(other.shader);
+	model_mesh = std::move(other.model_mesh);
+	model_albedo_texture = std::move(other.model_albedo_texture);
 
 	other.glfw_window = nullptr;
 
@@ -94,7 +98,6 @@ uint32_t indices[] = {
 	5, 4, 1
 };
 }
-
 namespace pop_cat {
 std::vector<Vertex> vertices = {
 	Vertex{ glm::vec3{-0.5f, -0.5f, 0.0f }, glm::vec3{0,0,0}, glm::vec2{0.0f, 0.0f} },
@@ -106,6 +109,23 @@ std::vector<Vertex> vertices = {
 std::vector<uint32_t> indices = {
 	0, 1, 2,
 	0, 2, 3,
+};
+}
+namespace pyramid {
+std::vector<Vertex> vertices = {
+	Vertex { glm::vec3{-0.5f, 0.0f,  0.5f},    glm::vec3{0,0,0},    glm::vec2{0.0f, 0.0f} },
+	Vertex { glm::vec3{-0.5f, 0.0f, -0.5f},    glm::vec3{0,0,0},    glm::vec2{5.0f, 0.0f} },
+	Vertex { glm::vec3{ 0.5f, 0.0f, -0.5f},    glm::vec3{0,0,0},    glm::vec2{0.0f, 0.0f} },
+	Vertex { glm::vec3{ 0.5f, 0.0f,  0.5f},    glm::vec3{0,0,0},    glm::vec2{5.0f, 0.0f} },
+	Vertex { glm::vec3{ 0.0f, 0.8f,  0.0f},    glm::vec3{0,0,0},    glm::vec2{2.5f, 5.0f} },
+};
+std::vector<uint32_t> indices = {
+	0, 1, 2,
+	0, 2, 3,
+	0, 1, 4,
+	1, 2, 4,
+	2, 3, 4,
+	3, 0, 4,
 };
 }
 
@@ -132,9 +152,9 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	triangle_shader = std::make_unique<Shader>("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
-	popcat_texture = std::make_unique<Texture>("resources/images/pop_cat.png");
-	triangle_mesh = std::make_unique<Mesh>(pop_cat::vertices, pop_cat::indices);
+	shader = std::make_unique<Shader>("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl");
+	model_albedo_texture = std::make_unique<Texture>("resources/images/brick.png");
+	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
 }
 
 
@@ -157,8 +177,8 @@ void OpenGL_App::_imgui_inputs() {
 
 	ImGui::Text("Hello there adventurer!");
 	ImGui::Checkbox("Draw triangle", &draw_triangle);
-	ImGui::SliderFloat("Triangle size", &triangle_size, 0.05f, 2.0f);
-	ImGui::ColorEdit4("Triangle color", &triangle_color[0], ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::SliderFloat("Model size", &model_size, 0.05f, 2.0f);
+	ImGui::ColorEdit4("Model color", &model_color[0], ImGuiColorEditFlags_PickerHueWheel);
 
 	ImGui::End();
 }
@@ -189,10 +209,12 @@ void OpenGL_App::Run() {
 	glfwPollEvents();
 	glViewport(0, 0, window_width, window_height);
 
+	glEnable(GL_DEPTH_TEST);
+
 	while (!glfwWindowShouldClose(glfw_window)) {
 
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 		ImGui_ImplOpenGL3_NewFrame();
@@ -207,14 +229,26 @@ void OpenGL_App::Run() {
 
 		// render
 		if (draw_triangle) {
-			triangle_shader->Use();
-			popcat_texture->Bind(0);
+			shader->Use();
+			model_albedo_texture->Bind(0);
 
-			glUniform1f(glGetUniformLocation(triangle_shader->id, "size"), triangle_size);
-			glUniform4fv(glGetUniformLocation(triangle_shader->id, "color"), 1, &triangle_color[0]);
-			glUniform1i(glGetUniformLocation(triangle_shader->id, "tex0"), 0);
+			float rotation = (float)glfwGetTime() / 16;
+			rotation *= 360;
 
-			triangle_mesh->Draw();
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
+
+			glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -2.0f));
+			glm::mat4 proj = glm::perspective(glm::radians(45.0f), window_width / (float)window_height, 0.1f, 100.0f);
+
+			glUniformMatrix4fv(glGetUniformLocation(shader->id, "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(shader->id, "view"), 1, GL_FALSE, glm::value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(shader->id, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+
+			glUniform1f(glGetUniformLocation(shader->id, "scale"), model_size);
+			glUniform1i(glGetUniformLocation(shader->id, "tex0"), 0);
+
+			model_mesh->Draw();
 		}
 
 		// render ImGUI last so its drawn on top

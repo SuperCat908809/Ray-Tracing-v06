@@ -31,12 +31,12 @@ class OpenGL_App {
 	bool first_ctrl_w = true;
 	bool b_widget_open = true;
 	bool draw_triangle = true;
-	float triangle_size = 1.0f;
-	glm::vec4 triangle_color = { 0.8f, 0.3f, 0.02f, 1.0f };
+	float model_size = 1.0f;
+	glm::vec4 model_color = { 0.8f, 0.3f, 0.02f, 1.0f };
 
-	std::unique_ptr<Shader> triangle_shader;
-	std::unique_ptr<Mesh> triangle_mesh;
-	std::unique_ptr<Texture> popcat_texture;
+	std::unique_ptr<Shader> shader;
+	std::unique_ptr<Mesh> model_mesh;
+	std::unique_ptr<Texture> model_albedo_texture;
 
 public:
 
