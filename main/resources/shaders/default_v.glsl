@@ -10,17 +10,14 @@ out vec3 normal;
 out vec2 tex_coord;
 
 
-uniform float scale;
-
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 cam_matrix;
 
 
 void main() {
-	model_pos = aPos * scale;
+	model_pos = aPos;
 	world_pos = vec3(model * vec4(model_pos, 1.0f));
-	gl_Position = proj * view * vec4(world_pos, 1.0f);
+	gl_Position = cam_matrix * vec4(world_pos, 1.0f);
 
 	normal = aNormal;
 	tex_coord = aTexCoord;

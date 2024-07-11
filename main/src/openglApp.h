@@ -31,8 +31,6 @@ class OpenGL_App {
 	bool first_ctrl_w = true;
 	bool b_widget_open = true;
 	bool draw_triangle = true;
-	float model_size = 1.0f;
-	glm::vec4 model_color = { 0.8f, 0.3f, 0.02f, 1.0f };
 
 	std::unique_ptr<Shader> shader;
 	std::unique_ptr<Mesh> model_mesh;

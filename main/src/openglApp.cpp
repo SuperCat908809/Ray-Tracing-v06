@@ -21,6 +21,7 @@
 #include "gl_engine/shader.h"
 #include "gl_engine/gl_texture.h"
 #include "gl_engine/gl_mesh.h"
+#include "gl_engine/gl_camera.h"
 
 using namespace gl_engine;
 
@@ -50,8 +51,6 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
 	draw_triangle = other.draw_triangle;
-	model_size = other.model_size;
-	model_color = other.model_color;
 
 	shader = std::move(other.shader);
 	model_mesh = std::move(other.model_mesh);
@@ -70,8 +69,6 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
 	draw_triangle = other.draw_triangle;
-	model_size = other.model_size;
-	model_color = other.model_color;
 
 	shader = std::move(other.shader);
 	model_mesh = std::move(other.model_mesh);
@@ -177,8 +174,6 @@ void OpenGL_App::_imgui_inputs() {
 
 	ImGui::Text("Hello there adventurer!");
 	ImGui::Checkbox("Draw triangle", &draw_triangle);
-	ImGui::SliderFloat("Model size", &model_size, 0.05f, 2.0f);
-	ImGui::ColorEdit4("Model color", &model_color[0], ImGuiColorEditFlags_PickerHueWheel);
 
 	ImGui::End();
 }
@@ -205,6 +200,8 @@ void OpenGL_App::_user_inputs() {
 }
 
 void OpenGL_App::Run() {
+
+	Camera cam(glm::vec3(0, 0.4f, -2), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
 
 	glfwPollEvents();
 	glViewport(0, 0, window_width, window_height);
@@ -238,14 +235,11 @@ void OpenGL_App::Run() {
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
 
-			glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -2.0f));
-			glm::mat4 proj = glm::perspective(glm::radians(45.0f), window_width / (float)window_height, 0.1f, 100.0f);
+			glm::mat4 cam_matrix = cam.Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
 			glUniformMatrix4fv(glGetUniformLocation(shader->id, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(shader->id, "view"), 1, GL_FALSE, glm::value_ptr(view));
-			glUniformMatrix4fv(glGetUniformLocation(shader->id, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
+			glUniformMatrix4fv(glGetUniformLocation(shader->id, "cam_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
 
-			glUniform1f(glGetUniformLocation(shader->id, "scale"), model_size);
 			glUniform1i(glGetUniformLocation(shader->id, "tex0"), 0);
 
 			model_mesh->Draw();
