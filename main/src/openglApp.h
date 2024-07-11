@@ -3,9 +3,11 @@
 
 #include <inttypes.h>
 #include <string>
+#include <memory>
+
 #include "gl_engine/shader.h"
 #include "gl_engine/gl_texture.h"
-#include <memory>
+#include "gl_engine/gl_mesh.h"
 
 
 class GLFWwindow;
@@ -33,8 +35,8 @@ class OpenGL_App {
 	glm::vec4 triangle_color = { 0.8f, 0.3f, 0.02f, 1.0f };
 
 	std::unique_ptr<Shader> triangle_shader;
-	uint32_t triangle_vao, triangle_ebo, triangle_vbo;
-	std::unique_ptr<gl_engine::Texture> popcat_texture;
+	std::unique_ptr<Mesh> triangle_mesh;
+	std::unique_ptr<Texture> popcat_texture;
 
 public:
 

@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "openglApp.h"
 
-#include <cuda_runtime.h>
 #include <memory>
+#include <vector>
+#include <cuda_runtime.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -12,6 +13,10 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include "utilities/cuda_utilities/cuError.h"
+
+#include "gl_engine/shader.h"
+#include "gl_engine/gl_texture.h"
+#include "gl_engine/gl_mesh.h"
 
 using namespace gl_engine;
 
@@ -30,17 +35,7 @@ void OpenGL_App::_delete() {
 		glfwDestroyWindow(glfw_window);
 	}
 
-	if (triangle_vao != 0)
-		glDeleteVertexArrays(1, &triangle_vao);
-	if (triangle_ebo != 0)
-		glDeleteBuffers(1, &triangle_ebo);
-	if (triangle_vbo != 0)
-		glDeleteBuffers(1, &triangle_vbo);
-
 	glfw_window = nullptr;
-	triangle_vao = 0;
-	triangle_ebo = 0;
-	triangle_vbo = 0;
 }
 OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	window_width = other.window_width;
@@ -55,15 +50,10 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	triangle_color = other.triangle_color;
 
 	triangle_shader = std::move(other.triangle_shader);
-	triangle_vao = other.triangle_vao;
-	triangle_ebo = other.triangle_ebo;
-	triangle_vbo = other.triangle_vbo;
+	triangle_mesh = std::move(other.triangle_mesh);
 	popcat_texture = std::move(other.popcat_texture);
 
 	other.glfw_window = nullptr;
-	other.triangle_vao = 0;
-	other.triangle_ebo = 0;
-	other.triangle_vbo = 0;
 }
 OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	_delete();
@@ -80,15 +70,10 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	triangle_color = other.triangle_color;
 
 	triangle_shader = std::move(other.triangle_shader);
-	triangle_vao = other.triangle_vao;
-	triangle_ebo = other.triangle_ebo;
-	triangle_vbo = other.triangle_vbo;
+	triangle_mesh = std::move(other.triangle_mesh);
 	popcat_texture = std::move(other.popcat_texture);
 
 	other.glfw_window = nullptr;
-	other.triangle_vao = 0;
-	other.triangle_ebo = 0;
-	other.triangle_vbo = 0;
 
 	return *this;
 }
@@ -111,59 +96,17 @@ uint32_t indices[] = {
 }
 
 namespace pop_cat {
-float vertices[] = {
-	-0.5f, -0.5f, 0.0f,    0.0f, 0.0f,
-	-0.5f,  0.5f, 0.0f,    0.0f, 1.0f,
-	 0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
-	 0.5f, -0.5f, 0.0f,    1.0f, 0.0f,
+std::vector<Vertex> vertices = {
+	Vertex{ glm::vec3{-0.5f, -0.5f, 0.0f }, glm::vec3{0,0,0}, glm::vec2{0.0f, 0.0f} },
+	Vertex{ glm::vec3{-0.5f,  0.5f, 0.0f }, glm::vec3{0,0,0}, glm::vec2{0.0f, 1.0f} },
+	Vertex{ glm::vec3{ 0.5f,  0.5f, 0.0f }, glm::vec3{0,0,0}, glm::vec2{1.0f, 1.0f} },
+	Vertex{ glm::vec3{ 0.5f, -0.5f, 0.0f }, glm::vec3{0,0,0}, glm::vec2{1.0f, 0.0f} },
 };
 
-uint32_t indices[] = {
+std::vector<uint32_t> indices = {
 	0, 1, 2,
 	0, 2, 3,
 };
-}
-
-void _make_mesh(uint32_t& vao, uint32_t& ebo, uint32_t& vbo) {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(pop_cat::indices), pop_cat::indices, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(pop_cat::vertices), pop_cat::vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(0 * sizeof(float)));
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void _load_texture(uint32_t& tex, std::string filename) {
-	int width, height, channels;
-	stbi_set_flip_vertically_on_load(true);
-	uint8_t* image_data = stbi_load(filename.c_str(), &width, &height, &channels, 3);
-
-	glGenTextures(1, &tex);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
-
-	stbi_image_free(image_data);
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::string title) 
@@ -191,7 +134,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 	triangle_shader = std::make_unique<Shader>("resources/shaders/triangle_vert.glsl", "resources/shaders/triangle_frag.glsl");
 	popcat_texture = std::make_unique<Texture>("resources/images/pop_cat.png");
-	_make_mesh(triangle_vao, triangle_ebo, triangle_vbo);
+	triangle_mesh = std::make_unique<Mesh>(pop_cat::vertices, pop_cat::indices);
 }
 
 
@@ -265,16 +208,13 @@ void OpenGL_App::Run() {
 		// render
 		if (draw_triangle) {
 			triangle_shader->Use();
+			popcat_texture->Bind(0);
+
 			glUniform1f(glGetUniformLocation(triangle_shader->id, "size"), triangle_size);
 			glUniform4fv(glGetUniformLocation(triangle_shader->id, "color"), 1, &triangle_color[0]);
 			glUniform1i(glGetUniformLocation(triangle_shader->id, "tex0"), 0);
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, popcat_texture->id);
-
-			glBindVertexArray(triangle_vao);
-			//glDrawArrays(GL_TRIANGLES, 0, 3);
-			glDrawElements(GL_TRIANGLES, sizeof(pop_cat::indices) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
+			triangle_mesh->Draw();
 		}
 
 		// render ImGUI last so its drawn on top
