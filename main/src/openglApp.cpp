@@ -50,11 +50,18 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
-	draw_triangle = other.draw_triangle;
+	draw_model = other.draw_model;
+	draw_light = other.draw_light;
+	light_color = other.light_color;
+	light_pos = other.light_pos;
+	light_scale = other.light_scale;
 
-	shader = std::move(other.shader);
+	model_shader = std::move(other.model_shader);
 	model_mesh = std::move(other.model_mesh);
 	model_albedo_texture = std::move(other.model_albedo_texture);
+
+	light_shader = std::move(other.light_shader);
+	light_mesh = std::move(other.light_mesh);
 
 	other.glfw_window = nullptr;
 }
@@ -68,11 +75,18 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 
 	first_ctrl_w = other.first_ctrl_w;
 	b_widget_open = other.b_widget_open;
-	draw_triangle = other.draw_triangle;
+	draw_model = other.draw_model;
+	draw_light = other.draw_light;
+	light_color = other.light_color;
+	light_pos = other.light_pos;
+	light_scale = other.light_scale;
 
-	shader = std::move(other.shader);
+	model_shader = std::move(other.model_shader);
 	model_mesh = std::move(other.model_mesh);
 	model_albedo_texture = std::move(other.model_albedo_texture);
+
+	light_shader = std::move(other.light_shader);
+	light_mesh = std::move(other.light_mesh);
 
 	other.glfw_window = nullptr;
 
@@ -125,6 +139,35 @@ std::vector<uint32_t> indices = {
 	3, 0, 4,
 };
 }
+namespace light_cube {
+std::vector<Vertex> vertices = {
+	Vertex { glm::vec3(-1, -1,  1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3(-1,  1,  1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3( 1,  1,  1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3( 1, -1,  1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+
+	Vertex { glm::vec3(-1, -1, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3(-1,  1, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3( 1,  1, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+	Vertex { glm::vec3( 1, -1, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0) },
+};
+std::vector<uint32_t> indices = {
+	0, 1, 2,
+	0, 2, 3,
+	7, 6, 5,
+	7, 5, 4,
+
+	1, 5, 6,
+	1, 6, 2,
+	3, 7, 4,
+	3, 4, 0,
+
+	0, 4, 5,
+	0, 5, 1,
+	3, 2, 6,
+	3, 6, 7,
+};
+}
 
 OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::string title) 
 	: window_width(window_width), window_height(window_height) {
@@ -149,9 +192,13 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	shader = std::make_unique<Shader>("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl");
+	model_shader = std::make_unique<Shader>("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl");
 	model_albedo_texture = std::make_unique<Texture>("resources/images/brick.png");
 	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
+
+	light_shader = std::make_unique<Shader>("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl");
+	light_mesh = std::make_unique<Mesh>(light_cube::vertices, light_cube::indices);
+
 	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 }
 
@@ -174,7 +221,11 @@ void OpenGL_App::_imgui_inputs() {
 	}
 
 	ImGui::Text("Hello there adventurer!");
-	ImGui::Checkbox("Draw triangle", &draw_triangle);
+	ImGui::Checkbox("Draw model", &draw_model);
+	ImGui::Checkbox("Draw light", &draw_light);
+	ImGui::ColorEdit4("Light color", glm::value_ptr(light_color), ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::DragFloat3("Light pos", glm::value_ptr(light_pos), 0.025f, -1.0f, 1.0f);
+	ImGui::DragFloat("Light scale", &light_scale, 0.001f, 0.005f, 0.5f);
 
 	ImGui::End();
 }
@@ -239,24 +290,39 @@ void OpenGL_App::Run() {
 		if (glfwWindowShouldClose(glfw_window)) break;
 
 		// render
-		if (draw_triangle) {
-			shader->Use();
+		glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
+
+		if (draw_model) {
+			model_shader->Use();
 			model_albedo_texture->Bind(0);
 
 			float rotation = (float)glfwGetTime() / 16;
 			rotation *= 360;
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
+			//model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
 
-			glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
-			glUniformMatrix4fv(glGetUniformLocation(shader->id, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(shader->id, "cam_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
+			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
 
-			glUniform1i(glGetUniformLocation(shader->id, "tex0"), 0);
+			glUniform1i(glGetUniformLocation(model_shader->id, "tex0"), 0);
 
 			model_mesh->Draw();
+		}
+
+		if (draw_light) {
+			light_shader->Use();
+
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, light_pos);
+			model = glm::scale(model, glm::vec3(light_scale));
+
+			glUniformMatrix4fv(glGetUniformLocation(light_shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(light_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
+			glUniform4fv(glGetUniformLocation(light_shader->id, "light_color"), 1, glm::value_ptr(light_color));
+
+			light_mesh->Draw();
 		}
 
 		// render ImGUI last so its drawn on top

@@ -33,14 +33,22 @@ class OpenGL_App {
 
 	bool first_ctrl_w = true;
 	bool b_widget_open = true;
-	bool draw_triangle = true;
+	bool draw_model = true;
+	bool draw_light = true;
+	glm::vec4 light_color = glm::vec4(glm::vec3(1.0f), 1.0f);
+	glm::vec3 light_pos = glm::vec3(0.6f, 0.4f, -0.3f);
+	float light_scale = 0.05f;
 
-	float delta_time;
-	float prev_time;
+	float delta_time = 0.0f;
+	float prev_time = 0.0f;
 
-	std::unique_ptr<Shader> shader;
+	std::unique_ptr<Shader> model_shader;
 	std::unique_ptr<Mesh> model_mesh;
 	std::unique_ptr<Texture> model_albedo_texture;
+
+	std::unique_ptr<Shader> light_shader;
+	std::unique_ptr<Mesh> light_mesh;
+
 	std::unique_ptr<Camera> cam;
 
 public:

@@ -3,13 +3,14 @@
 layout (location = 0) out vec4 frag_color;
 
 in vec3 model_pos;
+in vec3 model_normal;
 in vec3 world_pos;
-in vec3 normal;
+in vec3 world_normal;
 in vec2 tex_coord;
 
-uniform sampler2D tex0;
+uniform vec4 light_color;
 
 
 void main() {
-	frag_color = texture(tex0, tex_coord);
+	frag_color = light_color;
 }

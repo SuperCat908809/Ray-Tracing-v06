@@ -227,5 +227,11 @@
     <None Include="resources\shaders\default_f.glsl">
       <Filter>GL Engine\shaders</Filter>
     </None>
+    <None Include="resources\shaders\light_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\light_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
