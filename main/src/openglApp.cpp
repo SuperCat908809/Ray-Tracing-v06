@@ -152,6 +152,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	shader = std::make_unique<Shader>("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl");
 	model_albedo_texture = std::make_unique<Texture>("resources/images/brick.png");
 	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
+	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 }
 
 
@@ -178,7 +179,7 @@ void OpenGL_App::_imgui_inputs() {
 	ImGui::End();
 }
 
-void OpenGL_App::_user_inputs() {
+void OpenGL_App::_keyboard_inputs() {
 	if (imgui_io->WantCaptureKeyboard) return;
 
 	// close program
@@ -197,11 +198,19 @@ void OpenGL_App::_user_inputs() {
 	else {
 		first_ctrl_w = true;
 	}
+
+	cam->KeyboardInputs(glfw_window, delta_time);
+}
+
+void OpenGL_App::_mouse_inputs() {
+	if (imgui_io->WantCaptureMouse) return;
+
+	cam->MouseInputs(glfw_window, window_width, window_height, delta_time);
 }
 
 void OpenGL_App::Run() {
 
-	Camera cam(glm::vec3(0, 0.4f, -2), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+	prev_time = (float)glfwGetTime();
 
 	glfwPollEvents();
 	glViewport(0, 0, window_width, window_height);
@@ -218,11 +227,16 @@ void OpenGL_App::Run() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		float crnt_time = (float)glfwGetTime();
+		delta_time = crnt_time - prev_time;
+		prev_time = crnt_time;
+
 		_imgui_inputs();
 		if (glfwWindowShouldClose(glfw_window)) break;
-		_user_inputs();
+		_keyboard_inputs();
 		if (glfwWindowShouldClose(glfw_window)) break;
-
+		_mouse_inputs();
+		if (glfwWindowShouldClose(glfw_window)) break;
 
 		// render
 		if (draw_triangle) {
@@ -235,7 +249,7 @@ void OpenGL_App::Run() {
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
 
-			glm::mat4 cam_matrix = cam.Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
+			glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
 			glUniformMatrix4fv(glGetUniformLocation(shader->id, "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(shader->id, "cam_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
