@@ -208,7 +208,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 
 	model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
-	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFile("resources/images/brick.png"));
+	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/brick.png"));
 	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
 
 	light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));

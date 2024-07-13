@@ -29,7 +29,10 @@ public:
 
 	void Delete();
 
-	static Texture* LoadFromImageFile(std::string filepath);
+	static Texture* LoadFromImageFileRGB(std::string filepath);
+	static Texture* LoadFromImageFileRGBA(std::string filepath);
+	static Texture* LoadFromPixelDataRGB(uint32_t width, uint32_t height, const uint8_t* data);
+	static Texture* LoadFromPixelDataRGBA(uint32_t width, uint32_t height, const uint8_t* data);
 };
 }
 
