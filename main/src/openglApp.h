@@ -36,7 +36,7 @@ class OpenGL_App {
 	bool draw_model = true;
 	bool draw_light = true;
 	glm::vec4 light_color = glm::vec4(glm::vec3(1.0f), 1.0f);
-	glm::vec3 light_pos = glm::vec3(0.6f, 0.4f, -0.3f);
+	glm::vec3 light_pos = glm::vec3(0.6f, 0.4f, 0.6f);
 	float light_scale = 0.05f;
 
 	float delta_time = 0.0f;

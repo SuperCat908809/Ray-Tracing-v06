@@ -37,7 +37,7 @@ Shader& Shader::operator=(Shader&& other) {
 
 
 std::string get_file_contents(std::string filename);
-void compileErrors(uint32_t shader);
+void compileErrors(uint32_t shader, std::string filename);
 void linkErrors(uint32_t program);
 
 Shader::Shader(std::string vertex_file, std::string fragment_file) {
@@ -51,12 +51,12 @@ Shader::Shader(std::string vertex_file, std::string fragment_file) {
 	uint32_t vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_ptr, nullptr);
 	glCompileShader(vert_shader);
-	compileErrors(vert_shader);
+	compileErrors(vert_shader, vertex_file);
 
 	uint32_t frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &frag_ptr, nullptr);
 	glCompileShader(frag_shader);
-	compileErrors(frag_shader);
+	compileErrors(frag_shader, fragment_file);
 
 	id = glCreateProgram();
 	glAttachShader(id, vert_shader);
@@ -92,7 +92,7 @@ std::string get_file_contents(std::string filename) {
 	throw (errno);
 }
 
-void compileErrors(uint32_t shader) {
+void compileErrors(uint32_t shader, std::string filename) {
 	int has_compiled;
 	char infoLog[1024];
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &has_compiled);

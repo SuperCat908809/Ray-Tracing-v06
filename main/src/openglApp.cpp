@@ -124,19 +124,34 @@ std::vector<uint32_t> indices = {
 }
 namespace pyramid {
 std::vector<Vertex> vertices = {
-	Vertex { glm::vec3{-0.5f, 0.0f,  0.5f},    glm::vec3{0,0,0},    glm::vec2{0.0f, 0.0f} },
-	Vertex { glm::vec3{-0.5f, 0.0f, -0.5f},    glm::vec3{0,0,0},    glm::vec2{5.0f, 0.0f} },
-	Vertex { glm::vec3{ 0.5f, 0.0f, -0.5f},    glm::vec3{0,0,0},    glm::vec2{0.0f, 0.0f} },
-	Vertex { glm::vec3{ 0.5f, 0.0f,  0.5f},    glm::vec3{0,0,0},    glm::vec2{5.0f, 0.0f} },
-	Vertex { glm::vec3{ 0.0f, 0.8f,  0.0f},    glm::vec3{0,0,0},    glm::vec2{2.5f, 5.0f} },
+	Vertex { glm::vec3(-0.5f, 0.0f,  0.5f),    glm::vec3( 0.0f, -1.0f, 0.0f),    glm::vec2(0.0f, 0.0f) },
+	Vertex { glm::vec3(-0.5f, 0.0f, -0.5f),    glm::vec3( 0.0f, -1.0f, 0.0f),    glm::vec2(0.0f, 5.0f) },
+	Vertex { glm::vec3( 0.5f, 0.0f, -0.5f),    glm::vec3( 0.0f, -1.0f, 0.0f),    glm::vec2(5.0f, 5.0f) },
+	Vertex { glm::vec3( 0.5f, 0.0f,  0.5f),    glm::vec3( 0.0f, -1.0f, 0.0f),    glm::vec2(5.0f, 0.0f) },
+					       					      
+	Vertex { glm::vec3(-0.5f, 0.0f,  0.5f),    glm::vec3(-0.8f, 0.5f,  0.0f),    glm::vec2(0.0f, 0.0f) },
+	Vertex { glm::vec3(-0.5f, 0.0f, -0.5f),    glm::vec3(-0.8f, 0.5f,  0.0f),    glm::vec2(5.0f, 0.0f) },
+	Vertex { glm::vec3( 0.0f, 0.8f,  0.0f),    glm::vec3(-0.8f, 0.5f,  0.0f),    glm::vec2(2.5f, 5.0f) },
+					       					      
+	Vertex { glm::vec3(-0.5f, 0.0f, -0.5f),    glm::vec3( 0.0f, 0.5f, -0.8f),    glm::vec2(5.0f, 0.0f) },
+	Vertex { glm::vec3( 0.5f, 0.0f, -0.5f),    glm::vec3( 0.0f, 0.5f, -0.8f),    glm::vec2(0.0f, 0.0f) },
+	Vertex { glm::vec3( 0.0f, 0.8f,  0.0f),    glm::vec3( 0.0f, 0.5f, -0.8f),    glm::vec2(2.5f, 5.0f) },
+					       					      
+	Vertex { glm::vec3( 0.5f, 0.0f, -0.5f),    glm::vec3( 0.8f, 0.5f,  0.0f),    glm::vec2(0.0f, 0.0f) },
+	Vertex { glm::vec3( 0.5f, 0.0f,  0.5f),    glm::vec3( 0.8f, 0.5f,  0.0f),    glm::vec2(5.0f, 0.0f) },
+	Vertex { glm::vec3( 0.0f, 0.8f,  0.0f),    glm::vec3( 0.8f, 0.5f,  0.0f),    glm::vec2(2.5f, 5.0f) },
+					       					      
+	Vertex { glm::vec3( 0.5f, 0.0f,  0.5f),    glm::vec3( 0.0f, 0.5f,  0.8f),    glm::vec2(5.0f, 0.0f) },
+	Vertex { glm::vec3(-0.5f, 0.0f,  0.5f),    glm::vec3( 0.0f, 0.5f,  0.8f),    glm::vec2(0.0f, 0.0f) },
+	Vertex { glm::vec3( 0.0f, 0.8f,  0.0f),    glm::vec3( 0.0f, 0.5f,  0.8f),    glm::vec2(2.5f, 5.0f) },
 };
 std::vector<uint32_t> indices = {
 	0, 1, 2,
 	0, 2, 3,
-	0, 1, 4,
-	1, 2, 4,
-	2, 3, 4,
-	3, 0, 4,
+	4, 6, 5,
+	7, 9, 8,
+	10, 12, 11,
+	13, 15, 14,
 };
 }
 namespace light_cube {
@@ -307,6 +322,9 @@ void OpenGL_App::Run() {
 			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
 
 			glUniform1i(glGetUniformLocation(model_shader->id, "tex0"), 0);
+			glUniform3fv(glGetUniformLocation(model_shader->id, "camera_pos"), 1, glm::value_ptr(cam->position));
+			glUniform3fv(glGetUniformLocation(model_shader->id, "light_pos"), 1, glm::value_ptr(light_pos));
+			glUniform4fv(glGetUniformLocation(model_shader->id, "light_color"), 1, glm::value_ptr(light_color));
 
 			model_mesh->Draw();
 		}

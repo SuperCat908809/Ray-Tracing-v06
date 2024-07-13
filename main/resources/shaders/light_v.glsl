@@ -19,7 +19,7 @@ void main() {
 	world_pos = vec3(model_matrix * vec4(model_pos, 1.0f));
 	gl_Position = camera_matrix * vec4(world_pos, 1.0f);
 
-	model_normal = aNormal;
+	model_normal = normalize(aNormal);
 	world_normal = vec3(model_matrix * vec4(model_normal, 0.0f));
 
 	tex_coord = aTexCoord;
