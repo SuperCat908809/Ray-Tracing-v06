@@ -45,6 +45,7 @@ class OpenGL_App {
 	std::unique_ptr<Shader> model_shader;
 	std::unique_ptr<Mesh> model_mesh;
 	std::unique_ptr<Texture> model_albedo_texture;
+	std::unique_ptr<Texture> model_specular_texture;
 
 	std::unique_ptr<Shader> light_shader;
 	std::unique_ptr<Mesh> light_mesh;

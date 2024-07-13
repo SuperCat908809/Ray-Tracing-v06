@@ -59,6 +59,7 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	model_shader = std::move(other.model_shader);
 	model_mesh = std::move(other.model_mesh);
 	model_albedo_texture = std::move(other.model_albedo_texture);
+	model_specular_texture = std::move(other.model_specular_texture);
 
 	light_shader = std::move(other.light_shader);
 	light_mesh = std::move(other.light_mesh);
@@ -84,6 +85,7 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	model_shader = std::move(other.model_shader);
 	model_mesh = std::move(other.model_mesh);
 	model_albedo_texture = std::move(other.model_albedo_texture);
+	model_specular_texture = std::move(other.model_specular_texture);
 
 	light_shader = std::move(other.light_shader);
 	light_mesh = std::move(other.light_mesh);
@@ -183,6 +185,18 @@ std::vector<uint32_t> indices = {
 	3, 6, 7,
 };
 }
+namespace ground_plane {
+std::vector<Vertex> vertices = {
+	Vertex { glm::vec3(-1, 0, 1), glm::vec3(0,1,0), glm::vec2(0, 0) },
+	Vertex { glm::vec3(-1, 0,-1), glm::vec3(0,1,0), glm::vec2(0, 1) },
+	Vertex { glm::vec3( 1, 0,-1), glm::vec3(0,1,0), glm::vec2(1, 1) },
+	Vertex { glm::vec3( 1, 0, 1), glm::vec3(0,1,0), glm::vec2(1, 0) },
+};
+std::vector<uint32_t> indices = {
+	0, 1, 2,
+	0, 2, 3,
+};
+}
 
 OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::string title) 
 	: window_width(window_width), window_height(window_height) {
@@ -208,8 +222,9 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 
 	model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
-	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/brick.png"));
-	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
+	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
+	model_specular_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
+	model_mesh = std::make_unique<Mesh>(ground_plane::vertices, ground_plane::indices);
 
 	light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
 	light_mesh = std::make_unique<Mesh>(light_cube::vertices, light_cube::indices);
@@ -310,6 +325,7 @@ void OpenGL_App::Run() {
 		if (draw_model) {
 			model_shader->Use();
 			model_albedo_texture->Bind(0);
+			model_specular_texture->Bind(1);
 
 			float rotation = (float)glfwGetTime() / 16;
 			rotation *= 360;
@@ -322,6 +338,7 @@ void OpenGL_App::Run() {
 			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
 
 			glUniform1i(glGetUniformLocation(model_shader->id, "tex0"), 0);
+			glUniform1i(glGetUniformLocation(model_shader->id, "tex1"), 1);
 			glUniform3fv(glGetUniformLocation(model_shader->id, "camera_pos"), 1, glm::value_ptr(cam->position));
 			glUniform3fv(glGetUniformLocation(model_shader->id, "light_pos"), 1, glm::value_ptr(light_pos));
 			glUniform4fv(glGetUniformLocation(model_shader->id, "light_color"), 1, glm::value_ptr(light_color));
