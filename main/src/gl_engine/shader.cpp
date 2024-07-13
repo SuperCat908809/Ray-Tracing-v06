@@ -37,37 +37,42 @@ Shader& Shader::operator=(Shader&& other) {
 
 
 std::string get_file_contents(std::string filename);
-void compileErrors(uint32_t shader, std::string filename);
+void compileErrors(uint32_t shader);
 void linkErrors(uint32_t program);
 
-Shader::Shader(std::string vertex_file, std::string fragment_file) {
+Shader* Shader::LoadFromFiles(std::string vertex_path, std::string fragment_path) {
+	return LoadFromSource(get_file_contents(vertex_path), get_file_contents(fragment_path));
+}
 
-	std::string vert_shader_source = get_file_contents(vertex_file);
-	const char* vert_ptr = vert_shader_source.c_str();
+Shader* Shader::LoadFromSource(const std::string& vertex_source, const std::string& fragment_source) {
 
-	std::string frag_shader_source = get_file_contents(fragment_file);
-	const char* frag_ptr = frag_shader_source.c_str();
+	Shader* shader = new Shader();
+
+	const char* vert_ptr = vertex_source.c_str();
+	const char* frag_ptr = fragment_source.c_str();
 
 	uint32_t vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_ptr, nullptr);
 	glCompileShader(vert_shader);
-	compileErrors(vert_shader, vertex_file);
+	compileErrors(vert_shader);
 
 	uint32_t frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &frag_ptr, nullptr);
 	glCompileShader(frag_shader);
-	compileErrors(frag_shader, fragment_file);
+	compileErrors(frag_shader);
 
-	id = glCreateProgram();
-	glAttachShader(id, vert_shader);
-	glAttachShader(id, frag_shader);
-	glLinkProgram(id);
-	linkErrors(id);
+	shader->id = glCreateProgram();
+	glAttachShader(shader->id, vert_shader);
+	glAttachShader(shader->id, frag_shader);
+	glLinkProgram(shader->id);
+	linkErrors(shader->id);
 
-	glDetachShader(id, vert_shader);
-	glDetachShader(id, frag_shader);
+	glDetachShader(shader->id, vert_shader);
+	glDetachShader(shader->id, frag_shader);
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
+
+	return shader;
 }
 
 void Shader::Use() {
@@ -92,7 +97,7 @@ std::string get_file_contents(std::string filename) {
 	throw (errno);
 }
 
-void compileErrors(uint32_t shader, std::string filename) {
+void compileErrors(uint32_t shader) {
 	int has_compiled;
 	char infoLog[1024];
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &has_compiled);

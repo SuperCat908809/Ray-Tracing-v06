@@ -207,11 +207,11 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	model_shader = std::make_unique<Shader>("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl");
-	model_albedo_texture = std::make_unique<Texture>("resources/images/brick.png");
+	model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFile("resources/images/brick.png"));
 	model_mesh = std::make_unique<Mesh>(pyramid::vertices, pyramid::indices);
 
-	light_shader = std::make_unique<Shader>("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl");
+	light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
 	light_mesh = std::make_unique<Mesh>(light_cube::vertices, light_cube::indices);
 
 	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));

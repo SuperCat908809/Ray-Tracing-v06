@@ -11,6 +11,8 @@ class Texture{
 	Texture(Texture&) = delete;
 	Texture& operator=(Texture&) = delete;
 
+	Texture() = default;
+
 	void _delete();
 
 public:
@@ -19,15 +21,15 @@ public:
 	Texture(Texture&& other);
 	Texture& operator=(Texture&& other);
 
-	uint32_t id;
+	uint32_t id = 0;
 	uint32_t slot = 0;
-
-	Texture(std::string image_filename);
 
 	void Bind(int slot);
 	void Bind() { Bind(slot); }
 
 	void Delete();
+
+	static Texture* LoadFromImageFile(std::string filepath);
 };
 }
 

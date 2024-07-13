@@ -44,15 +44,17 @@ void Texture::Bind(int slot) {
 	glBindTexture(GL_TEXTURE_2D, id);
 }
 
-Texture::Texture(std::string image_filename) {
+Texture* Texture::LoadFromImageFile(std::string image_filename) {
+
+	Texture* tex = new Texture();
 
 	int width, height, channels;
 	stbi_set_flip_vertically_on_load(true);
 	uint8_t* image_data = stbi_load(image_filename.c_str(), &width, &height, &channels, 3);
 
-	glGenTextures(1, &id);
+	glGenTextures(1, &tex->id);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, id);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -65,4 +67,5 @@ Texture::Texture(std::string image_filename) {
 	stbi_image_free(image_data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	return tex;
 }
