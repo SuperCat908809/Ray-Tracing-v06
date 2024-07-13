@@ -18,7 +18,7 @@
 
 #include "utilities/cuda_utilities/cuError.h"
 
-#include "gl_engine/shader.h"
+#include "gl_engine/gl_shader.h"
 #include "gl_engine/gl_texture.h"
 #include "gl_engine/gl_mesh.h"
 #include "gl_engine/gl_camera.h"

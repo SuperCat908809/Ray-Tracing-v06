@@ -145,7 +145,7 @@
     <ClInclude Include="src\openglApp.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="src\gl_engine\shader.h">
+    <ClInclude Include="src\gl_engine\gl_shader.h">
       <Filter>GL Engine</Filter>
     </ClInclude>
     <ClInclude Include="src\gl_engine\gl_texture.h">
@@ -198,7 +198,7 @@
     <ClCompile Include="src\openglApp.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="src\gl_engine\shader.cpp">
+    <ClCompile Include="src\gl_engine\gl_shader.cpp">
       <Filter>GL Engine</Filter>
     </ClCompile>
     <ClCompile Include="src\gl_engine\gl_texture.cpp">
