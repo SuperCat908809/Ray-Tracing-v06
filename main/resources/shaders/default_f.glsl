@@ -54,7 +54,7 @@ void main() {
 	float specular = texture(tex1, tex_coord).r;
 
 	float ldist = length(light_pos - world_pos);
-	float a = 1.0f;
+	float a = 0.5f;
 	float b = 0.05f;
 	float light_intensity = 1.0f / (a * ldist * ldist + b * ldist + 1.0f);
 

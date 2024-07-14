@@ -8,6 +8,7 @@
 #include "gl_engine/gl_shader.h"
 #include "gl_engine/gl_texture.h"
 #include "gl_engine/gl_mesh.h"
+#include "gl_engine/gl_model.h"
 
 
 class GLFWwindow;
@@ -42,13 +43,8 @@ class OpenGL_App {
 	float delta_time = 0.0f;
 	float prev_time = 0.0f;
 
-	std::unique_ptr<Shader> model_shader;
-	std::unique_ptr<Mesh> model_mesh;
-	std::unique_ptr<Texture> model_albedo_texture;
-	std::unique_ptr<Texture> model_specular_texture;
-
-	std::unique_ptr<Shader> light_shader;
-	std::unique_ptr<Mesh> light_mesh;
+	std::unique_ptr<Model> object_model = nullptr;
+	std::unique_ptr<Model> light_model = nullptr;
 
 	std::unique_ptr<Camera> cam;
 

@@ -157,6 +157,9 @@
     <ClInclude Include="src\gl_engine\gl_camera.h">
       <Filter>GL Engine</Filter>
     </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_model.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -208,6 +211,9 @@
       <Filter>GL Engine</Filter>
     </ClCompile>
     <ClCompile Include="src\gl_engine\gl_camera.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_model.cpp">
       <Filter>GL Engine</Filter>
     </ClCompile>
   </ItemGroup>

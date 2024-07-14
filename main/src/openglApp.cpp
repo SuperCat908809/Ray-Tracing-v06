@@ -56,13 +56,8 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	light_pos = other.light_pos;
 	light_scale = other.light_scale;
 
-	model_shader = std::move(other.model_shader);
-	model_mesh = std::move(other.model_mesh);
-	model_albedo_texture = std::move(other.model_albedo_texture);
-	model_specular_texture = std::move(other.model_specular_texture);
-
-	light_shader = std::move(other.light_shader);
-	light_mesh = std::move(other.light_mesh);
+	object_model = std::move(other.object_model);
+	light_model = std::move(other.light_model);
 
 	other.glfw_window = nullptr;
 }
@@ -82,13 +77,8 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	light_pos = other.light_pos;
 	light_scale = other.light_scale;
 
-	model_shader = std::move(other.model_shader);
-	model_mesh = std::move(other.model_mesh);
-	model_albedo_texture = std::move(other.model_albedo_texture);
-	model_specular_texture = std::move(other.model_specular_texture);
-
-	light_shader = std::move(other.light_shader);
-	light_mesh = std::move(other.light_mesh);
+	object_model = std::move(other.object_model);
+	light_model = std::move(other.light_model);
 
 	other.glfw_window = nullptr;
 
@@ -221,26 +211,38 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
+	std::shared_ptr<Mesh> object_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(ground_plane::vertices, ground_plane::indices));
+	std::shared_ptr<Texture> object_albedo = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
+	std::shared_ptr<Texture> object_specular = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
+
+	object_albedo->slot = 0;
+	object_specular->slot = 1;
+
+	std::shared_ptr<Shader> object_shader = nullptr;
+
 	try {
-		model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+		object_shader = std::shared_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
 	}
 	catch (const std::runtime_error& err) {
-		printf("Error loading model_shader\n\n%s\n\n", err.what());
-		model_shader = nullptr;
+		printf("Error loading object_shader\n\n%s\n\n", err.what());
 	}
 
-	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
-	model_specular_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
-	model_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(ground_plane::vertices, ground_plane::indices));
+	object_model = std::unique_ptr<Model>(Model::MakeFrom(object_mesh, object_shader,
+		{ {"tex0", object_albedo}, {"tex1", object_specular} }));
+
+
+	std::shared_ptr<Mesh> light_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(light_cube::vertices, light_cube::indices));
+	std::shared_ptr<Shader> light_shader = nullptr;
 
 	try {
-		light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
+		light_shader = std::shared_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
 	}
 	catch (const std::runtime_error& err) {
 		printf("Error loading light_shader\n\n%s\n\n", err.what());
 		light_shader = nullptr;
 	}
-	light_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(light_cube::vertices, light_cube::indices));
+
+	light_model = std::unique_ptr<Model>(Model::MakeFrom(light_mesh, light_shader, {}));
 
 	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 }
@@ -270,22 +272,22 @@ void OpenGL_App::_imgui_inputs() {
 	ImGui::DragFloat3("Light pos", glm::value_ptr(light_pos), 0.025f, -1.0f, 1.0f);
 	ImGui::DragFloat("Light scale", &light_scale, 0.001f, 0.005f, 0.5f);
 	ImGui::Spacing();
-	if (ImGui::Button("Reload model shader")) {
+	if (ImGui::Button("Reload object shader")) {
 		try {
-			model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+			object_model->shader = std::shared_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
 		}
 		catch (const std::runtime_error& err) {
 			printf("Error loading model_shader\n\n%s\n\n", err.what());
-			model_shader = nullptr;
+			object_model->shader = nullptr;
 		}
 	}
 	if (ImGui::Button("Reload light shader")) {
 		try {
-			light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
+			light_model->shader = std::shared_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
 		}
 		catch (const std::runtime_error& err) {
 			printf("Error loading model_shader\n\n%s\n\n", err.what());
-			light_shader = nullptr;
+			light_model->shader = nullptr;
 		}
 	}
 
@@ -354,10 +356,8 @@ void OpenGL_App::Run() {
 		// render
 		glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
-		if (draw_model && model_shader != nullptr) {
-			model_shader->Use();
-			model_albedo_texture->Bind(0);
-			model_specular_texture->Bind(1);
+		if (draw_model && object_model->shader != nullptr) {
+			object_model->shader->Use();
 
 			float rotation = (float)glfwGetTime() / 16;
 			rotation *= 360;
@@ -366,30 +366,28 @@ void OpenGL_App::Run() {
 			//model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
 
 
-			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(model_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
+			glUniformMatrix4fv(glGetUniformLocation(object_model->shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(object_model->shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
 
-			glUniform1i(glGetUniformLocation(model_shader->id, "tex0"), 0);
-			glUniform1i(glGetUniformLocation(model_shader->id, "tex1"), 1);
-			glUniform3fv(glGetUniformLocation(model_shader->id, "camera_pos"), 1, glm::value_ptr(cam->position));
-			glUniform3fv(glGetUniformLocation(model_shader->id, "light_pos"), 1, glm::value_ptr(light_pos));
-			glUniform4fv(glGetUniformLocation(model_shader->id, "light_color"), 1, glm::value_ptr(light_color));
+			glUniform3fv(glGetUniformLocation(object_model->shader->id, "camera_pos"), 1, glm::value_ptr(cam->position));
+			glUniform3fv(glGetUniformLocation(object_model->shader->id, "light_pos"), 1, glm::value_ptr(light_pos));
+			glUniform4fv(glGetUniformLocation(object_model->shader->id, "light_color"), 1, glm::value_ptr(light_color));
 
-			model_mesh->Draw();
+			object_model->Draw();
 		}
 
-		if (draw_light && light_shader != nullptr) {
-			light_shader->Use();
+		if (draw_light && light_model->shader != nullptr) {
+			light_model->shader->Use();
 
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, light_pos);
 			model = glm::scale(model, glm::vec3(light_scale));
 
-			glUniformMatrix4fv(glGetUniformLocation(light_shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(light_shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
-			glUniform4fv(glGetUniformLocation(light_shader->id, "light_color"), 1, glm::value_ptr(light_color));
+			glUniformMatrix4fv(glGetUniformLocation(light_model->shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(light_model->shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
+			glUniform4fv(glGetUniformLocation(light_model->shader->id, "light_color"), 1, glm::value_ptr(light_color));
 
-			light_mesh->Draw();
+			light_model->Draw();
 		}
 
 		// render ImGUI last so its drawn on top
