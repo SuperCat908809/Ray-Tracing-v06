@@ -26,18 +26,18 @@
 using namespace gl_engine;
 
 
-void _init_gui();
-void _init_glad();
-void _init_imgui();
-void _kill_gui();
-
 OpenGL_App::~OpenGL_App() {
 	_delete();
-	_kill_gui();
 }
 void OpenGL_App::_delete() {
 	if (glfw_window != nullptr) {
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+
 		glfwDestroyWindow(glfw_window);
+
+		glfwTerminate();
 	}
 
 	glfw_window = nullptr;
@@ -191,7 +191,10 @@ std::vector<uint32_t> indices = {
 OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::string title) 
 	: window_width(window_width), window_height(window_height) {
 	
-	_init_gui();
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	glfw_window = glfwCreateWindow(window_width, window_height, title.c_str(), nullptr, nullptr);
 	if (glfw_window == nullptr) {
@@ -203,11 +206,14 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	}
 	glfwMakeContextCurrent(glfw_window);
 	
-	_init_glad();
-	_init_imgui();
+	gladLoadGL();
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplOpenGL3_Init("#version 330");
 
 	imgui_io = &ImGui::GetIO();
-	(void)(*imgui_io);
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
@@ -265,7 +271,8 @@ void OpenGL_App::_imgui_inputs() {
 		ImGui::EndMenuBar();
 	}
 
-	ImGui::Text("Hello there adventurer!");
+	ImGui::Text("Framerate %.1ffps :: %.3fms", imgui_io->Framerate, imgui_io->DeltaTime * 1000.0f);
+	ImGui::Spacing();
 	ImGui::Checkbox("Draw model", &draw_model);
 	ImGui::Checkbox("Draw light", &draw_light);
 	ImGui::ColorEdit4("Light color", glm::value_ptr(light_color), ImGuiColorEditFlags_PickerHueWheel);
@@ -399,51 +406,4 @@ void OpenGL_App::Run() {
 		glfwSwapBuffers(glfw_window);
 		glfwPollEvents();
 	}
-}
-
-
-bool gui_initialised = false;
-bool glad_initialized = false;
-bool imgui_initialized = false;
-int gui_users = 0;
-void _init_gui() {
-
-	gui_users++;
-	if (gui_initialised) return;
-
-	glfwInit();
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	gui_initialised = true;
-}
-void _init_glad() {
-	if (glad_initialized) return;
-
-	gladLoadGL();
-
-	glad_initialized = true;
-}
-void _init_imgui() {
-	if (imgui_initialized) return;
-
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplOpenGL3_Init("#version 330");
-
-	imgui_initialized = true;
-}
-void _kill_gui() {
-
-	gui_users--;
-	if (gui_users > 0) return;
-
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
-	glfwTerminate();
 }
