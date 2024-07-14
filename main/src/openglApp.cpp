@@ -224,10 +224,10 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
 	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
 	model_specular_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
-	model_mesh = std::make_unique<Mesh>(ground_plane::vertices, ground_plane::indices);
+	model_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(ground_plane::vertices, ground_plane::indices));
 
 	light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
-	light_mesh = std::make_unique<Mesh>(light_cube::vertices, light_cube::indices);
+	light_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(light_cube::vertices, light_cube::indices));
 
 	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 }

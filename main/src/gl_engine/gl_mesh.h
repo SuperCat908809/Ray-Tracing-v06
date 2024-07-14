@@ -21,20 +21,23 @@ class Mesh {
 
 	void _delete();
 
+	Mesh() = default;
+
 	uint32_t vao, ebo, vbo;
 	uint32_t indices;
+
 public:
 
+	~Mesh();
 	Mesh(Mesh&& other);
 	Mesh& operator=(Mesh&& other);
-	~Mesh();
-
-	Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices);
 
 	void Draw() { Draw(0, indices); }
 	void Draw(int offset, int elem_count);
 	void Delete();
 
+	static Mesh* LoadFromVertices(const std::vector<Vertex>& vertices);
+	static Mesh* LoadFromVerticesAndIndices(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 };
 
 } // gl_engine //
