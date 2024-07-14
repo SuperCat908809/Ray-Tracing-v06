@@ -39,7 +39,7 @@ vec3 phong_lighting(
 	float specular_coefficient = pow(max(dot(cam_dir, reflect_dir), 0.0f), 16);
 	vec3 spec = mat.specular * specular_light * specular_coefficient;
 
-	return light.color * light.intensity * (spec + diff * (1 + light.ambient));
+	return light.color * light.intensity * (spec + diff + mat.albedo * light.ambient);
 }
 
 
