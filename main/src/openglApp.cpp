@@ -221,12 +221,25 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+	try {
+		model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+	}
+	catch (const std::runtime_error& err) {
+		printf("Error loading model_shader\n\n%s\n\n", err.what());
+		model_shader = nullptr;
+	}
+
 	model_albedo_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
 	model_specular_texture = std::unique_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
 	model_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(ground_plane::vertices, ground_plane::indices));
 
-	light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
+	try {
+		light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
+	}
+	catch (const std::runtime_error& err) {
+		printf("Error loading light_shader\n\n%s\n\n", err.what());
+		light_shader = nullptr;
+	}
 	light_mesh = std::unique_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(light_cube::vertices, light_cube::indices));
 
 	cam = std::make_unique<Camera>(glm::vec3(0, 0.4f, 2), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
@@ -256,6 +269,25 @@ void OpenGL_App::_imgui_inputs() {
 	ImGui::ColorEdit4("Light color", glm::value_ptr(light_color), ImGuiColorEditFlags_PickerHueWheel);
 	ImGui::DragFloat3("Light pos", glm::value_ptr(light_pos), 0.025f, -1.0f, 1.0f);
 	ImGui::DragFloat("Light scale", &light_scale, 0.001f, 0.005f, 0.5f);
+	ImGui::Spacing();
+	if (ImGui::Button("Reload model shader")) {
+		try {
+			model_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/default_v.glsl", "resources/shaders/default_f.glsl"));
+		}
+		catch (const std::runtime_error& err) {
+			printf("Error loading model_shader\n\n%s\n\n", err.what());
+			model_shader = nullptr;
+		}
+	}
+	if (ImGui::Button("Reload light shader")) {
+		try {
+			light_shader = std::unique_ptr<Shader>(Shader::LoadFromFiles("resources/shaders/light_v.glsl", "resources/shaders/light_f.glsl"));
+		}
+		catch (const std::runtime_error& err) {
+			printf("Error loading model_shader\n\n%s\n\n", err.what());
+			light_shader = nullptr;
+		}
+	}
 
 	ImGui::End();
 }
@@ -322,7 +354,7 @@ void OpenGL_App::Run() {
 		// render
 		glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
-		if (draw_model) {
+		if (draw_model && model_shader != nullptr) {
 			model_shader->Use();
 			model_albedo_texture->Bind(0);
 			model_specular_texture->Bind(1);
@@ -346,7 +378,7 @@ void OpenGL_App::Run() {
 			model_mesh->Draw();
 		}
 
-		if (draw_light) {
+		if (draw_light && light_shader != nullptr) {
 			light_shader->Use();
 
 			glm::mat4 model = glm::mat4(1.0f);

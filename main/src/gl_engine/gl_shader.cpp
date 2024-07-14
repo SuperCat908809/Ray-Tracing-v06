@@ -1,7 +1,7 @@
 #include "../pch.h"
 #include "gl_shader.h"
 
-#include <errno.h>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -20,12 +20,12 @@ Shader::~Shader() {
 	_delete();
 }
 
-Shader::Shader(Shader&& other) {
+Shader::Shader(Shader&& other) noexcept {
 	id = other.id;
 
 	other.id = 0;
 }
-Shader& Shader::operator=(Shader&& other) {
+Shader& Shader::operator=(Shader&& other) noexcept {
 	_delete();
 
 	id = other.id;
@@ -36,15 +36,15 @@ Shader& Shader::operator=(Shader&& other) {
 }
 
 
-std::string get_file_contents(std::string filename);
-void compileErrors(uint32_t shader);
-void linkErrors(uint32_t program);
+std::string get_file_contents(std::string filename) noexcept(false);
+void compileErrors(uint32_t shader) noexcept(false);
+void linkErrors(uint32_t program) noexcept(false);
 
-Shader* Shader::LoadFromFiles(std::string vertex_path, std::string fragment_path) {
+Shader* Shader::LoadFromFiles(std::string vertex_path, std::string fragment_path) noexcept(false) {
 	return LoadFromSource(get_file_contents(vertex_path), get_file_contents(fragment_path));
 }
 
-Shader* Shader::LoadFromSource(const std::string& vertex_source, const std::string& fragment_source) {
+Shader* Shader::LoadFromSource(const std::string& vertex_source, const std::string& fragment_source) noexcept(false) {
 
 	Shader* shader = new Shader();
 
@@ -83,38 +83,42 @@ void Shader::Delete() {
 }
 
 
-std::string get_file_contents(std::string filename) {
+std::string get_file_contents(std::string filename) noexcept(false) {
 	std::ifstream in(filename, std::ios::binary);
-	if (in) {
-		std::string contents{};
-		in.seekg(0, std::ios::end);
-		contents.resize(in.tellg());
-		in.seekg(0, std::ios::beg);
-		in.read(&contents[0], contents.size());
-		in.close();
-		return (contents);
-	}
-	throw (errno);
+	if (!in) throw std::runtime_error("file " + filename + " not found");
+	std::string contents{};
+	in.seekg(0, std::ios::end);
+	contents.resize(in.tellg());
+	in.seekg(0, std::ios::beg);
+	in.read(&contents[0], contents.size());
+	in.close();
+	return (contents);
 }
 
-void compileErrors(uint32_t shader) {
+void compileErrors(uint32_t shader) noexcept(false) {
 	int has_compiled;
-	char infoLog[1024];
+	std::string info_log{};
+
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &has_compiled);
 	if (has_compiled == GL_FALSE) {
-		glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-		std::cerr << "Shader compilation error:\n" << infoLog;
-		assert(has_compiled);
+		int length;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+		info_log.resize(length);
+		glGetShaderInfoLog(shader, length, nullptr, info_log.data());
+		throw std::runtime_error("Shader compilation error:\n" + info_log);
 	}
 }
 
-void linkErrors(uint32_t program) {
+void linkErrors(uint32_t program) noexcept(false) {
 	int has_compiled;
-	char infoLog[1024];
+	std::string info_log{};
+
 	glGetProgramiv(program, GL_COMPILE_STATUS, &has_compiled);
 	if (has_compiled == GL_FALSE) {
-		glGetProgramInfoLog(program, 1024, nullptr, infoLog);
-		std::cerr << "Program linking error:\n" << infoLog;
-		assert(has_compiled);
+		int length;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+		info_log.resize(length);
+		glGetProgramInfoLog(program, length, nullptr, info_log.data());
+		throw std::runtime_error("Shader linking error:\n" + info_log);
 	}
 }
