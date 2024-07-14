@@ -11,7 +11,7 @@ class Texture{
 	Texture(Texture&) = delete;
 	Texture& operator=(Texture&) = delete;
 
-	Texture() = default;
+	Texture();
 
 	void _delete();
 

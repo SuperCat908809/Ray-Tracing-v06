@@ -10,6 +10,7 @@
 using namespace gl_engine;
 
 
+Texture::Texture() = default;
 void Texture::_delete() {
 	if (id != 0)
 		glDeleteTextures(1, &id);

@@ -10,6 +10,7 @@
 #include <glad/glad.h>
 
 
+Shader::Shader() = default;
 void Shader::_delete() {
 	if (id != 0)
 		glDeleteProgram(id);

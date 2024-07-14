@@ -21,7 +21,7 @@ class Mesh {
 
 	void _delete();
 
-	Mesh() = default;
+	Mesh();
 
 	uint32_t vao, ebo, vbo;
 	uint32_t indices;

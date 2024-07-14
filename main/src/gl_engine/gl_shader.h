@@ -11,7 +11,7 @@ class Shader {
 	Shader(Shader&) = delete;
 	Shader& operator=(Shader&) = delete;
 
-	Shader() = default;
+	Shader();
 
 	void _delete();
 

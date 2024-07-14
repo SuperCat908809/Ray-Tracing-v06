@@ -4,6 +4,7 @@
 using namespace gl_engine;
 
 
+Mesh::Mesh() = default;
 void Mesh::_delete() {
 	if (vao != 0)
 		glDeleteVertexArrays(1, &vao);
