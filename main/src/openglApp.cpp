@@ -55,6 +55,7 @@ OpenGL_App::OpenGL_App(OpenGL_App&& other) {
 	light_color = other.light_color;
 	light_pos = other.light_pos;
 	light_scale = other.light_scale;
+	light_intensity = other.light_intensity;
 
 	object_model = std::move(other.object_model);
 	light_model = std::move(other.light_model);
@@ -76,6 +77,7 @@ OpenGL_App& OpenGL_App::operator=(OpenGL_App&& other) {
 	light_color = other.light_color;
 	light_pos = other.light_pos;
 	light_scale = other.light_scale;
+	light_intensity = other.light_intensity;
 
 	object_model = std::move(other.object_model);
 	light_model = std::move(other.light_model);
@@ -217,7 +219,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 
 
-	std::shared_ptr<Mesh> object_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(ground_plane::vertices, ground_plane::indices));
+	std::shared_ptr<Mesh> object_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromObjFile("resources/models/monkey1.obj"));
 	std::shared_ptr<Texture> object_albedo = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
 	std::shared_ptr<Texture> object_specular = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
 
@@ -237,7 +239,7 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 		{ {"tex0", object_albedo}, {"tex1", object_specular} }));
 
 
-	std::shared_ptr<Mesh> light_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromVerticesAndIndices(light_cube::vertices, light_cube::indices));
+	std::shared_ptr<Mesh> light_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromObjFile("resources/models/cube.obj"));
 	std::shared_ptr<Shader> light_shader = nullptr;
 
 	try {
@@ -275,8 +277,10 @@ void OpenGL_App::_imgui_inputs() {
 	ImGui::Spacing();
 	ImGui::Checkbox("Draw model", &draw_model);
 	ImGui::Checkbox("Draw light", &draw_light);
+	ImGui::Spacing();
+	ImGui::SliderFloat("Light intensity", &light_intensity, 0.05f, 10.0f);
 	ImGui::ColorEdit4("Light color", glm::value_ptr(light_color), ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::DragFloat3("Light pos", glm::value_ptr(light_pos), 0.025f, -1.0f, 1.0f);
+	ImGui::DragFloat3("Light pos", glm::value_ptr(light_pos), 0.025f, -2.0f, 2.0f);
 	ImGui::DragFloat("Light scale", &light_scale, 0.001f, 0.005f, 0.5f);
 	ImGui::Spacing();
 	if (ImGui::Button("Reload object shader")) {
@@ -338,6 +342,7 @@ void OpenGL_App::Run() {
 	glViewport(0, 0, window_width, window_height);
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	while (!glfwWindowShouldClose(glfw_window)) {
 
@@ -378,7 +383,7 @@ void OpenGL_App::Run() {
 
 			glUniform3fv(glGetUniformLocation(object_model->shader->id, "camera_pos"), 1, glm::value_ptr(cam->position));
 			glUniform3fv(glGetUniformLocation(object_model->shader->id, "light_pos"), 1, glm::value_ptr(light_pos));
-			glUniform4fv(glGetUniformLocation(object_model->shader->id, "light_color"), 1, glm::value_ptr(light_color));
+			glUniform4fv(glGetUniformLocation(object_model->shader->id, "light_color"), 1, glm::value_ptr(light_color * light_intensity));
 
 			object_model->Draw();
 		}

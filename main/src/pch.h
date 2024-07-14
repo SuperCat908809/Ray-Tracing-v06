@@ -18,6 +18,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <cuda.h>
 #include <curand.h>

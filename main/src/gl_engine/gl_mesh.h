@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 
 
 namespace gl_engine {
@@ -29,8 +30,8 @@ class Mesh {
 public:
 
 	~Mesh();
-	Mesh(Mesh&& other);
-	Mesh& operator=(Mesh&& other);
+	Mesh(Mesh&& other) noexcept;
+	Mesh& operator=(Mesh&& other) noexcept;
 
 	void Draw() { Draw(0, indices); }
 	void Draw(int offset, int elem_count);
@@ -38,6 +39,8 @@ public:
 
 	static Mesh* LoadFromVertices(const std::vector<Vertex>& vertices);
 	static Mesh* LoadFromVerticesAndIndices(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+
+	static Mesh* LoadFromObjFile(const std::string& filepath) noexcept(false);
 };
 
 } // gl_engine //
