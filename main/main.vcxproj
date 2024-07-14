@@ -323,6 +323,23 @@
     <None Include="resources\shaders\triangle_vert.glsl" />
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\models\cube.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="resources\models\monkey.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="resources\models\monkey1.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="resources\models\monkey2.obj">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="resources\models\monkey3.obj">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.5.targets" />

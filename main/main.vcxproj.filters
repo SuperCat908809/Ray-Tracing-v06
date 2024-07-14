@@ -36,6 +36,9 @@
     <Filter Include="GL Engine\shaders">
       <UniqueIdentifier>{d7addaf7-b085-4f92-9e81-f2d5530d0b3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GL Engine\models">
+      <UniqueIdentifier>{0e78adcc-0552-4274-a097-3a279d492d9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Renderer.cu">
@@ -241,6 +244,21 @@
     </None>
     <None Include="resources\shaders\light_f.glsl">
       <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\models\cube.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey1.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey2.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey3.obj">
+      <Filter>GL Engine\models</Filter>
     </None>
   </ItemGroup>
 </Project>
