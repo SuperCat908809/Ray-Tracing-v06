@@ -216,6 +216,9 @@
     <ClCompile Include="src\gl_engine\gl_model.cpp">
       <Filter>GL Engine</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\include\tiny_obj\tiny_obj_loader.cc">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl">

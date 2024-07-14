@@ -41,5 +41,7 @@
 #include <stb/stb_image_write.h>
 #include <stb/stb_image_resize.h>
 
+#include <tiny_obj/tiny_obj_loader.h>
+
 
 #endif // PRE_COMPILED_HEADER_H //
