@@ -260,5 +260,14 @@
     <None Include="resources\models\monkey3.obj">
       <Filter>GL Engine\models</Filter>
     </None>
+    <None Include="resources\models\screen_quad.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\shaders\post_process_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\post_process_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

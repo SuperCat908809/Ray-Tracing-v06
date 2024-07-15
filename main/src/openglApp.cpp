@@ -241,21 +241,70 @@ void OpenGL_App::Run() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+	uint32_t fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	uint32_t fbo_tex;
+	glGenTextures(1, &fbo_tex);
+	glBindTexture(GL_TEXTURE_2D, fbo_tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_tex, 0);
+
+	uint32_t fbo_rbo;
+	glGenRenderbuffers(1, &fbo_rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, fbo_rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fbo_rbo);
+
+	auto fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fbo_status != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer error: " << fbo_status << "\n";
+		assert(0);
+	}
+
+	Mesh* screen_quad = Mesh::LoadFromObjFile("resources/models/screen_quad.obj");
+	Shader* post_process_shader = nullptr;
+	try {
+		post_process_shader = Shader::LoadFromFiles("resources/shaders/post_process_v.glsl", "resources/shaders/post_process_f.glsl");
+	}
+	catch (...) { post_process_shader = nullptr; }
+	float slider = 0.5f;
+	bool split_hori = true;
+	bool post_process = true;
+
 	while (!glfwWindowShouldClose(glfw_window)) {
-
-		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 
 		float crnt_time = (float)glfwGetTime();
 		delta_time = crnt_time - prev_time;
 		prev_time = crnt_time;
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		_imgui_inputs();
+		ImGui::Begin("New window");
+		ImGui::Checkbox("Use post processsing", &post_process);
+		ImGui::Checkbox("Split horizontally", &split_hori);
+		ImGui::SliderFloat("Split pos", &slider, 0.0f, 1.0f);
+		ImGui::Spacing();
+		if (ImGui::Button("Reload post processing shader")) {
+			try {
+				if (post_process_shader != nullptr) {
+					delete post_process_shader;
+					post_process_shader = nullptr;
+				}
+
+				post_process_shader = Shader::LoadFromFiles("resources/shaders/post_process_v.glsl", "resources/shaders/post_process_f.glsl");
+			}
+			catch (...) { post_process_shader = nullptr; }
+		}
+		ImGui::End();
 		if (glfwWindowShouldClose(glfw_window)) break;
 		_keyboard_inputs();
 		if (glfwWindowShouldClose(glfw_window)) break;
@@ -263,6 +312,14 @@ void OpenGL_App::Run() {
 		if (glfwWindowShouldClose(glfw_window)) break;
 
 		// render
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_DEPTH_TEST);
+
+
 		glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
 		if (draw_model && object_model->shader != nullptr) {
@@ -299,6 +356,30 @@ void OpenGL_App::Run() {
 			light_model->Draw();
 		}
 
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		if (post_process_shader != nullptr && post_process) {
+			glDisable(GL_DEPTH_TEST);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, fbo_tex);
+
+			post_process_shader->Use();
+			glUniform1i(glGetUniformLocation(post_process_shader->id, "screen_tex"), 0);
+			glUniform1f(glGetUniformLocation(post_process_shader->id, "split"), slider);
+			glUniform1i(glGetUniformLocation(post_process_shader->id, "split_hori"), split_hori);
+			screen_quad->Draw();
+
+			glEnable(GL_DEPTH_TEST);
+		}
+		else {
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+			glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+
+
 		// render ImGUI last so its drawn on top
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -308,4 +389,11 @@ void OpenGL_App::Run() {
 		glfwSwapBuffers(glfw_window);
 		glfwPollEvents();
 	}
+
+	delete post_process_shader;
+	delete screen_quad;
+
+	glDeleteFramebuffers(1, &fbo);
+	glDeleteTextures(1, &fbo_tex);
+	glDeleteRenderbuffers(1, &fbo_rbo);
 }

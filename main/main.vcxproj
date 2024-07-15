@@ -319,6 +319,8 @@
     <None Include="resources\shaders\default_f.glsl" />
     <None Include="resources\shaders\light_f.glsl" />
     <None Include="resources\shaders\light_v.glsl" />
+    <None Include="resources\shaders\post_process_f.glsl" />
+    <None Include="resources\shaders\post_process_v.glsl" />
     <None Include="resources\shaders\triangle_frag.glsl" />
     <None Include="resources\shaders\triangle_vert.glsl" />
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl" />
@@ -337,6 +339,11 @@
       <FileType>Document</FileType>
     </None>
     <None Include="resources\models\monkey3.obj">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\models\screen_quad.obj">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
