@@ -106,7 +106,9 @@ void compileErrors(uint32_t shader) noexcept(false) {
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 		info_log.resize(length);
 		glGetShaderInfoLog(shader, length, nullptr, info_log.data());
-		throw std::runtime_error("Shader compilation error:\n" + info_log);
+		std::string err_msg = "Shader compilation error:\n" + info_log;
+		std::cerr << err_msg;
+		throw std::runtime_error(err_msg);
 	}
 }
 
@@ -120,6 +122,8 @@ void linkErrors(uint32_t program) noexcept(false) {
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
 		info_log.resize(length);
 		glGetProgramInfoLog(program, length, nullptr, info_log.data());
-		throw std::runtime_error("Shader linking error:\n" + info_log);
+		std::string err_msg = "Shader linking error:\n" + info_log;
+		std::cerr << err_msg;
+		throw std::runtime_error(err_msg);
 	}
 }
