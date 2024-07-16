@@ -10,7 +10,7 @@
 using namespace gl_engine;
 
 
-Texture::Texture() = default;
+Texture::Texture() : width(0), height(0) {}
 void Texture::_delete() {
 	if (id != 0)
 		glDeleteTextures(1, &id);
@@ -23,15 +23,19 @@ Texture::~Texture() {
 void Texture::Delete() {
 	_delete();
 }
-Texture::Texture(Texture&& other) {
+Texture::Texture(Texture&& other) noexcept {
 	id = other.id;
+	width = other.width;
+	height = other.height;
 
 	other.id = 0;
 }
-Texture& Texture::operator=(Texture&& other) {
+Texture& Texture::operator=(Texture&& other) noexcept {
 	_delete();
 
 	id = other.id;
+	width = other.width;
+	height = other.height;
 
 	other.id = 0;
 

@@ -18,11 +18,12 @@ class Texture{
 public:
 
 	~Texture();
-	Texture(Texture&& other);
-	Texture& operator=(Texture&& other);
+	Texture(Texture&& other) noexcept;
+	Texture& operator=(Texture&& other) noexcept;
 
 	uint32_t id = 0;
 	uint32_t slot = 0;
+	uint32_t width, height;
 
 	void Bind(int slot);
 	void Bind() { Bind(slot); }

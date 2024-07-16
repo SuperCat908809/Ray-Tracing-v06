@@ -163,6 +163,12 @@
     <ClInclude Include="src\gl_engine\gl_model.h">
       <Filter>GL Engine</Filter>
     </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_framebuffer.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_renderbuffer.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
@@ -221,6 +227,12 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\include\tiny_obj\tiny_obj_loader.cc">
       <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_framebuffer.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_renderbuffer.cpp">
+      <Filter>GL Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
