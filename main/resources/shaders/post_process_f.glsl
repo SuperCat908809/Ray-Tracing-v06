@@ -23,12 +23,6 @@ float kernel[9] = float[] (
 	 1,  1,  1
 );
 
-vec3 process_color(vec3 color) {
-	float grey = dot(color, vec3(0.30f, 0.59f, 0.11f));
-	return color;
-	return vec3(grey, 0, 1-grey);
-}
-
 void main() {
 
 	if (split_hori == 1) {
@@ -47,8 +41,7 @@ void main() {
 	vec3 color = vec3(0.0f);
 
 	for (int i = 0; i < 9; i++)
-		color += process_color(vec3(texture(screen_tex, tex_coord + dv[i]))) * kernel[i];
+		color += vec3(texture(screen_tex, tex_coord + dv[i])) * kernel[i];
 
-	//frag_color = process_color(vec3(texture(screen_tex, tex_coord)));
 	frag_color = color;
 }
