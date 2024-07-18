@@ -235,52 +235,19 @@ void OpenGL_App::_mouse_inputs() {
 
 void OpenGL_App::Run() {
 
-	prev_time = (float)glfwGetTime();
-
-	glfwPollEvents();
-	glViewport(0, 0, window_width, window_height);
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-#if 0
-	uint32_t fbo;
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	uint32_t fbo_tex;
-	glGenTextures(1, &fbo_tex);
-	glBindTexture(GL_TEXTURE_2D, fbo_tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_tex, 0);
-
-	uint32_t fbo_rbo;
-	glGenRenderbuffers(1, &fbo_rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, fbo_rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fbo_rbo);
-
-	auto fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (fbo_status != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Framebuffer error: " << fbo_status << "\n";
-		assert(0);
-	}
-#endif
-
 	Texture* fbo_tex = Texture::Make(window_width, window_height, GL_RGBA);
-	Renderbuffer* fbo_rbo = Renderbuffer::Make(window_width, window_height, GL_DEPTH24_STENCIL8);
-	Framebuffer* fbo = Framebuffer::Make(window_width, window_height);
-
 	fbo_tex->SetWrappingMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT);
-
-	fbo->BindTexture(*fbo_tex, GL_COLOR_ATTACHMENT0);
-	fbo->BindRBO(*fbo_rbo, GL_DEPTH_STENCIL_ATTACHMENT);
+	Renderbuffer* fbo_rbo = Renderbuffer::Make(window_width, window_height, GL_DEPTH24_STENCIL8);
 
 	Framebuffer* default_fbo = Framebuffer::DefaultFramebuffer(window_width, window_height);
+	Framebuffer* fbo = Framebuffer::Make(window_width, window_height);
+	fbo->BindTexture(*fbo_tex, GL_COLOR_ATTACHMENT0);
+	fbo->BindRBO(*fbo_rbo, GL_DEPTH_STENCIL_ATTACHMENT);
+	if (!fbo->IsComplete()) {
+		printf("Error creating framebuffer object\n");
+		std::terminate();
+	}
+
 
 	Mesh* screen_quad = Mesh::LoadFromObjFile("resources/models/screen_quad.obj");
 	Shader* post_process_shader = nullptr;
@@ -291,6 +258,10 @@ void OpenGL_App::Run() {
 	float slider = 0.5f;
 	bool split_hori = true;
 	bool post_process = true;
+
+
+	prev_time = (float)glfwGetTime();
+	glfwPollEvents();
 
 	while (!glfwWindowShouldClose(glfw_window)) {
 
@@ -303,6 +274,8 @@ void OpenGL_App::Run() {
 		ImGui::NewFrame();
 
 		_imgui_inputs();
+		if (glfwWindowShouldClose(glfw_window)) break;
+
 		ImGui::Begin("New window");
 		ImGui::Checkbox("Use post processsing", &post_process);
 		ImGui::Checkbox("Split horizontally", &split_hori);
@@ -320,22 +293,21 @@ void OpenGL_App::Run() {
 			catch (...) { post_process_shader = nullptr; }
 		}
 		ImGui::End();
-		if (glfwWindowShouldClose(glfw_window)) break;
+
 		_keyboard_inputs();
 		if (glfwWindowShouldClose(glfw_window)) break;
 		_mouse_inputs();
 		if (glfwWindowShouldClose(glfw_window)) break;
 
 		// render
-		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		fbo->Bind(GL_FRAMEBUFFER);
 		fbo->SetDrawRegion();
 
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glEnable(GL_DEPTH_TEST);
-
+		glEnable(GL_CULL_FACE);
 
 		glm::mat4 cam_matrix = cam->Matrix(45.0f, window_width / (float)window_height, 0.1f, 100.0f);
 
@@ -368,18 +340,18 @@ void OpenGL_App::Run() {
 
 			glUniformMatrix4fv(glGetUniformLocation(light_model->shader->id, "model_matrix"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(light_model->shader->id, "camera_matrix"), 1, GL_FALSE, glm::value_ptr(cam_matrix));
-			glUniform4fv(glGetUniformLocation(light_model->shader->id, "light_color"), 1, glm::value_ptr(light_color));
+			glUniform4fv(glGetUniformLocation(light_model->shader->id, "light_color"), 1, glm::value_ptr(light_color * light_intensity));
 
 			light_model->Draw();
 		}
 
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		if (post_process_shader != nullptr && post_process) {
-			glDisable(GL_DEPTH_TEST);
+			default_fbo->Bind(GL_FRAMEBUFFER);
 
-			//glActiveTexture(GL_TEXTURE0);
-			//glBindTexture(GL_TEXTURE_2D, fbo_tex);
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+
 			fbo_tex->Bind(0);
 
 			post_process_shader->Use();
@@ -387,29 +359,15 @@ void OpenGL_App::Run() {
 			glUniform1f(glGetUniformLocation(post_process_shader->id, "split"), slider);
 			glUniform1i(glGetUniformLocation(post_process_shader->id, "split_hori"), split_hori);
 			screen_quad->Draw();
-
-			glEnable(GL_DEPTH_TEST);
 		}
 		else {
-			//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			//glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-			//fbo->Bind(GL_READ_FRAMEBUFFER);
-			//glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-#if 1
 			Framebuffer::Blit(*fbo, *default_fbo, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#else
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->id);
-			glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#endif
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		default_fbo->Bind(GL_FRAMEBUFFER);
+		default_fbo->SetDrawRegion();
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		glViewport(0, 0, window_width, window_height);
 
 		// render ImGUI last so its drawn on top
 		ImGui::Render();
@@ -424,10 +382,8 @@ void OpenGL_App::Run() {
 	delete post_process_shader;
 	delete screen_quad;
 
-	//glDeleteFramebuffers(1, &fbo);
-	//glDeleteTextures(1, &fbo_tex);
-	//glDeleteRenderbuffers(1, &fbo_rbo);
 	delete fbo;
+	delete default_fbo;
 	delete fbo_tex;
 	delete fbo_rbo;
 }
