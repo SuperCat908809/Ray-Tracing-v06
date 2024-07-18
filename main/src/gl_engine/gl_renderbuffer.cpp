@@ -6,6 +6,7 @@
 using namespace gl_engine;
 
 
+#if 0
 template <GL_COMPONENT, GL_SIZE, GL_TYPE> GLenum getFormat() { assert(false, "Invalid renderbuffer configuration"); return GL_FALSE; }
 
 template <> GLenum getFormat<RED, QUARTER, NORM>() { return GL_R8; }
@@ -57,10 +58,11 @@ template <> GLenum getFormat<RGBA, HALF, FLOAT>() { return GL_RGBA16F; }
 template <> GLenum getFormat<RED, FULL, FLOAT>() { return GL_R32F; }
 template <> GLenum getFormat<RG, FULL, FLOAT>() { return GL_RG32F; }
 template <> GLenum getFormat<RGBA, FULL, FLOAT>() { return GL_RGBA32F; }
+#endif
 
 
 
-Renderbuffer::Renderbuffer() : id(0), width(0), height(0) {}
+Renderbuffer::Renderbuffer() : id(0), width(0), height(0), internal_format(GL_FALSE) {}
 Renderbuffer::~Renderbuffer() {
 	_delete();
 }
@@ -77,6 +79,7 @@ Renderbuffer::Renderbuffer(Renderbuffer&& other) noexcept {
 	id = other.id;
 	width = other.width;
 	height = other.height;
+	internal_format = other.internal_format;
 
 	other.id = 0;
 }
@@ -86,6 +89,7 @@ Renderbuffer& Renderbuffer::operator=(Renderbuffer&& other) noexcept {
 	id = other.id;
 	width = other.width;
 	height = other.height;
+	internal_format = other.internal_format;
 
 	other.id = 0;
 
@@ -101,6 +105,7 @@ Renderbuffer* Renderbuffer::Make(uint32_t width, uint32_t height, GLenum format)
 
 	rb->width = width;
 	rb->height = height;
+	rb->internal_format = format;
 
 	glGenRenderbuffers(1, &rb->id);
 	glBindRenderbuffer(GL_RENDERBUFFER, rb->id);

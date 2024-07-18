@@ -5,10 +5,12 @@
 
 namespace gl_engine {
 
+#if 0
 enum GL_COMPONENT { RED, RG, RGBA };
 enum GL_TYPE { NORM, SNORM, UINT, INT, FLOAT };
 enum GL_SIZE { QUARTER, HALF, FULL };
 template <GL_COMPONENT, GL_SIZE, GL_TYPE> GLenum getFormat();
+#endif
 
 class Renderbuffer{
 
@@ -22,6 +24,7 @@ class Renderbuffer{
 public:
 
 	uint32_t id, width, height;
+	GLenum internal_format;
 
 	~Renderbuffer();
 	Renderbuffer(Renderbuffer&& other) noexcept;

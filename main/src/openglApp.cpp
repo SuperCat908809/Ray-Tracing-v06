@@ -20,6 +20,8 @@
 
 #include "gl_engine/gl_shader.h"
 #include "gl_engine/gl_texture.h"
+#include "gl_engine/gl_renderbuffer.h"
+#include "gl_engine/gl_framebuffer.h"
 #include "gl_engine/gl_mesh.h"
 #include "gl_engine/gl_camera.h"
 
@@ -241,6 +243,7 @@ void OpenGL_App::Run() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+#if 0
 	uint32_t fbo;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -266,6 +269,16 @@ void OpenGL_App::Run() {
 		std::cout << "Framebuffer error: " << fbo_status << "\n";
 		assert(0);
 	}
+#endif
+
+	Texture* fbo_tex = Texture::Make(window_width, window_height, GL_RGBA);
+	Renderbuffer* fbo_rbo = Renderbuffer::Make(window_width, window_height, GL_DEPTH24_STENCIL8);
+	Framebuffer* fbo = Framebuffer::Make(window_width, window_height);
+
+	fbo_tex->SetWrappingMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT);
+
+	fbo->BindTexture(*fbo_tex, GL_COLOR_ATTACHMENT0);
+	fbo->BindRBO(*fbo_rbo, GL_DEPTH_STENCIL_ATTACHMENT);
 
 	Mesh* screen_quad = Mesh::LoadFromObjFile("resources/models/screen_quad.obj");
 	Shader* post_process_shader = nullptr;
@@ -312,7 +325,8 @@ void OpenGL_App::Run() {
 		if (glfwWindowShouldClose(glfw_window)) break;
 
 		// render
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		fbo->Bind(GL_FRAMEBUFFER);
 
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -361,11 +375,12 @@ void OpenGL_App::Run() {
 		if (post_process_shader != nullptr && post_process) {
 			glDisable(GL_DEPTH_TEST);
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, fbo_tex);
+			//glActiveTexture(GL_TEXTURE0);
+			//glBindTexture(GL_TEXTURE_2D, fbo_tex);
+			fbo_tex->Bind(0);
 
 			post_process_shader->Use();
-			glUniform1i(glGetUniformLocation(post_process_shader->id, "screen_tex"), 0);
+			glUniform1i(glGetUniformLocation(post_process_shader->id, "screen_tex"), fbo_tex->slot);
 			glUniform1f(glGetUniformLocation(post_process_shader->id, "split"), slider);
 			glUniform1i(glGetUniformLocation(post_process_shader->id, "split_hori"), split_hori);
 			screen_quad->Draw();
@@ -374,7 +389,8 @@ void OpenGL_App::Run() {
 		}
 		else {
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+			//glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+			fbo->Bind(GL_READ_FRAMEBUFFER);
 			glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
@@ -393,7 +409,10 @@ void OpenGL_App::Run() {
 	delete post_process_shader;
 	delete screen_quad;
 
-	glDeleteFramebuffers(1, &fbo);
-	glDeleteTextures(1, &fbo_tex);
-	glDeleteRenderbuffers(1, &fbo_rbo);
+	//glDeleteFramebuffers(1, &fbo);
+	//glDeleteTextures(1, &fbo_tex);
+	//glDeleteRenderbuffers(1, &fbo_rbo);
+	delete fbo;
+	delete fbo_tex;
+	delete fbo_rbo;
 }
