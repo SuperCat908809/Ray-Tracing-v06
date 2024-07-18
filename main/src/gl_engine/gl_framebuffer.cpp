@@ -37,6 +37,16 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept {
 	return *this;
 }
 
+Framebuffer* Framebuffer::DefaultFramebuffer(uint32_t width, uint32_t height) {
+	Framebuffer* fb = new Framebuffer();
+
+	fb->width = width;
+	fb->height = height;
+	fb->id = 0;
+
+	return fb;
+}
+
 Framebuffer* Framebuffer::Make(uint32_t width, uint32_t height) {
 	Framebuffer* fb = new Framebuffer();
 
@@ -49,31 +59,20 @@ Framebuffer* Framebuffer::Make(uint32_t width, uint32_t height) {
 }
 
 void Framebuffer::Bind(GLenum binder) {
-	//GLenum glenum = GL_FRAMEBUFFER;
-	//switch (binder) {
-	//case BOTH: glenum = GL_FRAMEBUFFER; break;
-	//case DRAW: glenum = GL_DRAW_BUFFER; break;
-	//case READ: glenum = GL_READ_BUFFER; break;
-	//}
 	glBindFramebuffer(binder, id);
 }
-void Framebuffer::ClearBinding() {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+void Framebuffer::SetDrawRegion(glm::uvec2 dimension, glm::uvec2 offset) {
+	dimension += offset;
+	if (dimension.x > width || dimension.y > height) {
+		throw std::runtime_error("Drawing outside of framebuffer bounds");
+	}
+	glViewport(offset.x, offset.y, dimension.x, dimension.y);
 }
 
 void Framebuffer::BindTexture(Texture& tex, GLenum buffer, int level) noexcept(false) {
 	if (tex.width != width || tex.height != width) {
 		throw std::runtime_error("Texture does not match framebuffer resolution");
 	}
-	//if ((buffer == GL_DEPTH_ATTACHMENT || buffer == GL_STENCIL_ATTACHMENT || buffer == GL_DEPTH_STENCIL_ATTACHMENT) && slot != 0) {
-	//	throw std::runtime_error("Cannot bind multiple non color attachments");
-	//}
-
-	//GLenum glbuffer = GL_COLOR_ATTACHMENT0;
-	//if (buffer & DEPTH) glbuffer = GL_DEPTH_ATTACHMENT;
-	//if (buffer & STENCIL) glbuffer = GL_STENCIL_ATTACHMENT;
-	//if ((buffer ^ DEPTH ^ STENCIL) & 0) glbuffer = GL_DEPTH_STENCIL_ATTACHMENT;
-	//if (buffer & COLOR) glbuffer = GL_COLOR_ATTACHMENT0 + slot;
 
 	Bind(GL_FRAMEBUFFER);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, buffer, GL_TEXTURE_2D, tex.id, level);
@@ -83,15 +82,6 @@ void Framebuffer::BindRBO(Renderbuffer& rbo, GLenum buffer) noexcept(false) {
 	if (rbo.width != width || rbo.height != height) {
 		throw std::runtime_error("Renderbuffer does not match framebuffer resolution");
 	}
-	//if ((buffer == GL_DEPTH_ATTACHMENT || buffer == GL_STENCIL_ATTACHMENT || buffer == GL_DEPTH_STENCIL_ATTACHMENT) && slot != 0) {
-	//	throw std::runtime_error("Cannot bind multiple non color attachments");
-	//}
-
-	//GLenum glbuffer = GL_COLOR_ATTACHMENT0;
-	//if (buffer & DEPTH) glbuffer = GL_DEPTH_ATTACHMENT;
-	//if (buffer & STENCIL) glbuffer = GL_STENCIL_ATTACHMENT;
-	//if ((buffer ^ DEPTH ^ STENCIL) & 0) glbuffer = GL_DEPTH_STENCIL_ATTACHMENT;
-	//if (buffer & COLOR) glbuffer = GL_COLOR_ATTACHMENT0 + slot;
 
 	Bind(GL_FRAMEBUFFER);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, buffer, GL_RENDERBUFFER, rbo.id);
@@ -99,20 +89,35 @@ void Framebuffer::BindRBO(Renderbuffer& rbo, GLenum buffer) noexcept(false) {
 
 bool Framebuffer::IsComplete() const { return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE; }
 
-void Framebuffer::Blit(Framebuffer& src, Framebuffer& dst, GLenum mask, GLenum interp, glm::uvec2 src0, glm::uvec2 src1, glm::uvec2 dst0, glm::uvec2 dst1) {
-	//GLbitfield glmask = 0;
-	//if ((mask & COLOR) != 0) glmask |= GL_COLOR_BUFFER_BIT;
-	//if ((mask & DEPTH) != 0) glmask |= GL_DEPTH_BUFFER_BIT;
-	//if ((mask & STENCIL) != 0) glmask |= GL_STENCIL_BUFFER_BIT;
+void Framebuffer::Blit(Framebuffer& src, Framebuffer& dst, GLenum buffer_mask, GLenum interp,
+	glm::uvec2 src_dim, glm::uvec2 dst_dim, glm::uvec2 src_offset, glm::uvec2 dst_offset) {
 
-	//GLenum glinterp;
-	//glinterp = (interp == NEAREST) ? GL_NEAREST : GL_LINEAR;
+	glm::uvec2 src0, src1, dst0, dst1;
+	if (src_dim == glm::uvec2(0u, 0u)) {
+		src1 = glm::uvec2(src.width, src.height);
+	}
+	if (dst_dim == glm::uvec2(0u, 0u)) {
+		dst1 = glm::uvec2(dst.width, dst.height);
+	}
 
-	src.Bind(GL_READ_BUFFER);
-	dst.Bind(GL_DRAW_BUFFER);
+	src0 = src_offset;
+	dst0 = dst_offset;
+
+	src1 += src0;
+	dst1 += dst0;
+
+	if (src1.x > src.width || src1.y > src.height) {
+		throw std::runtime_error("Reading src framebuffer out of bounds");
+	}
+	if (dst1.x > dst.width || dst1.y > dst.height) {
+		throw std::runtime_error("Writing dst framebuffer out of bounds");
+	}
+
+	src.Bind(GL_READ_FRAMEBUFFER);
+	dst.Bind(GL_DRAW_FRAMEBUFFER);
 	glBlitFramebuffer(
 		src0.x, src0.y, src1.x, src1.y,
 		dst0.x, dst0.y, dst1.x, dst1.y,
-		mask, interp
+		buffer_mask, interp
 	);
 }

@@ -2,6 +2,7 @@
 #define OPENGL_FRAME_BUFFER_CLASS_H
 
 #include <inttypes.h>
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 
@@ -27,14 +28,13 @@ public:
 	Framebuffer(Framebuffer&& other) noexcept;
 	Framebuffer& operator=(Framebuffer&& other) noexcept;
 
+	static Framebuffer* DefaultFramebuffer(uint32_t width, uint32_t height);
 	static Framebuffer* Make(uint32_t width, uint32_t height);
 
-	//enum GL_FB_BIND_STATE { BOTH, DRAW, READ};
-	//enum GL_FB_BUFFER { COLOR = 0b001, DEPTH = 0b010, STENCIL = 0b100 };
-	//enum GL_FB_INTERPOLATION { NEAREST, LINEAR };
-
 	void Bind(GLenum binder);
-	static void ClearBinding();
+	void SetDrawRegion() { SetDrawRegion({ width,height }); }
+	void SetDrawRegion(glm::uvec2 dimensions, glm::uvec2 offset = glm::uvec2(0u, 0u));
+	//static void ClearBinding();
 
 	void BindTexture(Texture& tex, GLenum buffer, int level = 0) noexcept(false);
 	void BindRBO(Renderbuffer& rbo, GLenum buffer) noexcept(false);
@@ -43,7 +43,12 @@ public:
 
 	void Delete();
 
-	static void Blit(Framebuffer& src, Framebuffer& dst, GLenum mask, GLenum interp, glm::uvec2 src0, glm::uvec2 src1, glm::uvec2 dst0, glm::uvec2 dst1);
+	static void Blit(Framebuffer& src, Framebuffer& dst, GLenum buffer_mask, GLenum interp,
+		glm::uvec2 src_dim = glm::uvec2(0u,0u),
+		glm::uvec2 dst_dim = glm::uvec2(0u,0u),
+		glm::uvec2 src_offset = glm::uvec2(0u,0u),
+		glm::uvec2 dst_offset = glm::uvec2(0u,0u)
+	);
 };
 } // gl_engine //
 

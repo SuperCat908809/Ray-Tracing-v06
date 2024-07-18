@@ -280,6 +280,8 @@ void OpenGL_App::Run() {
 	fbo->BindTexture(*fbo_tex, GL_COLOR_ATTACHMENT0);
 	fbo->BindRBO(*fbo_rbo, GL_DEPTH_STENCIL_ATTACHMENT);
 
+	Framebuffer* default_fbo = Framebuffer::DefaultFramebuffer(window_width, window_height);
+
 	Mesh* screen_quad = Mesh::LoadFromObjFile("resources/models/screen_quad.obj");
 	Shader* post_process_shader = nullptr;
 	try {
@@ -327,6 +329,7 @@ void OpenGL_App::Run() {
 		// render
 		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		fbo->Bind(GL_FRAMEBUFFER);
+		fbo->SetDrawRegion();
 
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -388,13 +391,25 @@ void OpenGL_App::Run() {
 			glEnable(GL_DEPTH_TEST);
 		}
 		else {
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			//glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-			fbo->Bind(GL_READ_FRAMEBUFFER);
+			//fbo->Bind(GL_READ_FRAMEBUFFER);
+			//glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+#if 1
+			Framebuffer::Blit(*fbo, *default_fbo, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#else
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->id);
 			glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glViewport(0, 0, window_width, window_height);
 
 		// render ImGUI last so its drawn on top
 		ImGui::Render();
