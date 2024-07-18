@@ -117,8 +117,8 @@ OpenGL_App::OpenGL_App(uint32_t window_width, uint32_t window_height, std::strin
 
 
 	std::shared_ptr<Mesh> object_mesh = std::shared_ptr<Mesh>(Mesh::LoadFromObjFile("resources/models/monkey1.obj"));
-	std::shared_ptr<Texture> object_albedo = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planks.png"));
-	std::shared_ptr<Texture> object_specular = std::shared_ptr<Texture>(Texture::LoadFromImageFileRGB("resources/images/planksSpec.png"));
+	std::shared_ptr<Texture> object_albedo = std::shared_ptr<Texture>(Texture::LoadFromFile("resources/images/planks.png"));
+	std::shared_ptr<Texture> object_specular = std::shared_ptr<Texture>(Texture::LoadFromFile("resources/images/planksSpec.png"));
 
 	object_albedo->slot = 0;
 	object_specular->slot = 1;
