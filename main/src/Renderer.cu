@@ -1,4 +1,4 @@
-#include "Renderer.cuh"
+#include "Renderer.h"
 
 #include <inttypes.h>
 #include <glm/glm.hpp>
@@ -6,19 +6,14 @@
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
-#include "utilities/cuda_utilities/cuError.h"
 #include "utilities/timers.h"
-
-#include "utilities/cuda_utilities/cuda_objects/darray.cuh"
-#include "utilities/cuda_utilities/cuda_objects/dobj.cuh"
+#include "utilities/glm_utils.h"
+#include "utilities/cuda_utilities/cuError.h"
+#include "utilities/cuda_utilities/cuRandom.cuh"
 
 #include "rt_engine/ray_data.cuh"
-
 #include "rt_engine/geometry/hittable.cuh"
-#include "rt_engine/geometry/HittableList.cuh"
-
 #include "rt_engine/shaders/cu_Cameras.cuh"
-#include "rt_engine/shaders/cu_Materials.cuh"
 #include "rt_engine/shaders/material.cuh"
 
 #include "utilities/cuda_utilities/cuThreadManagement.cuh"
@@ -33,26 +28,27 @@ __global__ void init_random_states(uint32_t width, uint32_t height, int seed, cu
 	new (rngs + gid) cuRandom(seed + gid, 0, 0);
 }
 
-void Renderer::_delete() {
-
-}
-
-Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
+Renderer Renderer::MakeRenderer(
+	uint32_t render_width, uint32_t render_height,
 	uint32_t samples_per_pixel, uint32_t max_depth,
-	const MotionBlurCamera& cam,
-	HittableList* d_world_ptr) {
+	const MotionBlurCamera* cam,
+	const Hittable* d_world_ptr
+) {
 
 	printf("Allocating Renderer framebuffer and random number generators... ");
-	darray<glm::vec4> d_output_buffer(render_width * render_height);
-	darray<cuRandom> rngs(render_width * render_height);
-	printf("done.\n");
 
-	//dobj<Material> default_mat = dobj<MetalAbstract>::Make(glm::vec3(1.0f), 0.1f);
+	glm::vec4* d_output_buffer;
+	CUDA_ASSERT(cudaMalloc((void**)&d_output_buffer, sizeof(glm::vec4) * render_width * render_height));
+
+	cuRandom* rngs;
+	CUDA_ASSERT(cudaMalloc((void**)&rngs, sizeof(cuRandom) * render_width * render_height));
+
+	printf("done.\n");
 
 	printf("Initialising random states... ");
 	dim3 threads(8, 8, 1);
 	dim3 blocks(ceilDiv(render_width, threads.x), ceilDiv(render_height, threads.y), 1);
-	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, rngs.getPtr());
+	init_random_states<<<blocks, threads>>>(render_width, render_height, 1984, rngs);
 	CUDA_ASSERT(cudaDeviceSynchronize());
 	printf("done.\n");
 
@@ -64,18 +60,30 @@ Renderer Renderer::MakeRenderer(uint32_t render_width, uint32_t render_height,
 		max_depth,
 		cam,
 		d_world_ptr,
-		std::move(d_output_buffer),
-		std::move(rngs),
+		d_output_buffer,
+		rngs,
 		//std::move(default_mat)
 	});
 }
-Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
 
+void Renderer::_delete() {
+	CUDA_ASSERT(cudaFree(m.d_output_buffer));
+	CUDA_ASSERT(cudaFree(m.rngs));
+
+	m.d_output_buffer = nullptr;
+	m.rngs = nullptr;
+}
+Renderer::Renderer(Renderer&& other) : m(std::move(other.m)) {
+	other.m.d_output_buffer = nullptr;
+	other.m.rngs = nullptr;
 }
 Renderer& Renderer::operator=(Renderer&& other) {
 	_delete();
 
 	m = std::move(other.m);
+
+	other.m.d_output_buffer = nullptr;
+	other.m.rngs = nullptr;
 
 	return *this;
 }
@@ -84,7 +92,7 @@ Renderer::~Renderer() {
 }
 
 void Renderer::DownloadRenderbuffer(glm::vec4* host_dst) const {
-	CUDA_ASSERT(cudaMemcpy(host_dst, m.d_output_buffer.getPtr(), sizeof(glm::vec4) * m.render_width * m.render_height, cudaMemcpyDeviceToHost));
+	CUDA_ASSERT(cudaMemcpy(host_dst, m.d_output_buffer, sizeof(glm::vec4) * m.render_width * m.render_height, cudaMemcpyDeviceToHost));
 }
 
 
@@ -94,8 +102,7 @@ struct LaunchParams {
 	uint32_t samples_per_pixel{};
 	uint32_t max_depth{};
 	MotionBlurCamera cam{};
-	HittableList* world{};
-	//Material* default_mat{};
+	const Hittable* world{};
 	glm::vec4* output_buffer{};
 	cuRandom* rngs{};
 };
@@ -107,11 +114,10 @@ void Renderer::Render() {
 	params.render_height = m.render_height;
 	params.samples_per_pixel = m.samples_per_pixel;
 	params.max_depth = m.max_depth;
-	params.cam = m.cam;
+	params.cam = *m.cam;
 	params.world = m.d_world_ptr;
-	//params.default_mat = m.default_mat.getPtr();
-	params.output_buffer = m.d_output_buffer.getPtr();
-	params.rngs = m.rngs.getPtr();
+	params.output_buffer = m.d_output_buffer;
+	params.rngs = m.rngs;
 
 	// since the program is using virtual functions, the per thread stack size cannot be calculated at compile time,
 	// therefore you must manually set a size that should encompass the entire program.

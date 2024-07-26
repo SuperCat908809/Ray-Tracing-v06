@@ -157,9 +157,9 @@ BVH_Handle& BVH_Handle::operator=(BVH_Handle&& bvhh) {
 BVH_Handle::Factory::Factory(std::vector<std::tuple<aabb, const Hittable*>>& arr)
 	: arr(arr) {}
 
-BVH_Handle BVH_Handle::Factory::MakeHandle() {
+BVH_Handle* BVH_Handle::Factory::MakeHandle() {
 	aabb bounds = bvh_nodes[root_idx].bounds;
-	return BVH_Handle(bounds, root_idx, bvh_nodes, hittables);
+	return new BVH_Handle(bounds, root_idx, bvh_nodes, hittables);
 }
 
 
