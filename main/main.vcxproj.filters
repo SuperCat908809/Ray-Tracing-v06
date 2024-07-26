@@ -5,9 +5,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="externals">
-      <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -27,14 +24,23 @@
     <Filter Include="RT Engine\Shaders">
       <UniqueIdentifier>{a0a5c1b0-fa66-4747-8072-da36930f30fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{18533231-0053-4dcb-b777-bd2df61d202c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\imgui">
+      <UniqueIdentifier>{2235c7b3-bf25-479b-95d7-8313b677c238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GL Engine">
+      <UniqueIdentifier>{741b4869-3876-48ad-9f79-5ed15e2b33ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GL Engine\shaders">
+      <UniqueIdentifier>{d7addaf7-b085-4f92-9e81-f2d5530d0b3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GL Engine\models">
+      <UniqueIdentifier>{0e78adcc-0552-4274-a097-3a279d492d9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\FirstApp.cu">
-      <Filter>Main</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\main.cu">
-      <Filter>Main</Filter>
-    </CudaCompile>
     <CudaCompile Include="src\Renderer.cu">
       <Filter>Main</Filter>
     </CudaCompile>
@@ -49,10 +55,10 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\FirstApp.cuh">
+    <ClInclude Include="src\FirstApp.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer.cuh">
+    <ClInclude Include="src\Renderer.h">
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="src\rt_engine\cu_rtCommon.cuh">
@@ -139,18 +145,144 @@
     <ClInclude Include="src\utilities\cuda_utilities\cuda_objects\dptrarray.cuh">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
     </ClInclude>
+    <ClInclude Include="src\pch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="src\openglApp.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_shader.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_texture.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_mesh.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_camera.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_model.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_framebuffer.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_engine\gl_renderbuffer.h">
+      <Filter>GL Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\stb.cpp">
-      <Filter>externals</Filter>
-    </ClCompile>
     <ClCompile Include="src\utilities\cuda_utilities\cuHostRND.cpp">
       <Filter>Utilities\CUDA utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_draw.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_tables.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_widgets.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\glad\glad.c">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\stb\stb.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_impl_glfw.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FirstApp.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\openglApp.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_shader.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_texture.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_mesh.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_camera.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_model.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\include\tiny_obj\tiny_obj_loader.cc">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_framebuffer.cpp">
+      <Filter>GL Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_engine\gl_renderbuffer.cpp">
+      <Filter>GL Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\utilities\cuda_utilities\cuda_objects\dAbstracts.inl">
       <Filter>Utilities\CUDA utilities\CUDA Objects</Filter>
+    </None>
+    <None Include="resources\shaders\triangle_vert.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\triangle_frag.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\default_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\default_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\light_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\light_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\models\cube.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey1.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey2.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\monkey3.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\models\screen_quad.obj">
+      <Filter>GL Engine\models</Filter>
+    </None>
+    <None Include="resources\shaders\post_process_v.glsl">
+      <Filter>GL Engine\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\post_process_f.glsl">
+      <Filter>GL Engine\shaders</Filter>
     </None>
   </ItemGroup>
 </Project>
